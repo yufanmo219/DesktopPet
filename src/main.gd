@@ -1022,15 +1022,39 @@ func show_widget_preview() -> void:
 		avatar.stop_move()
 		avatar.set_mood("idle")
 	_sync_desktop_idle_animation_state()
+	print(
+		"DESKTOP_COMPANION_READY os=%s display=%s transparency=%s gpu=%s main_station=%s station=%s pet=%s scale=%.2f"
+		% [
+			OS.get_name(),
+			DisplayServer.get_name(),
+			DisplayServer.is_window_transparency_available(),
+			RenderingServer.get_video_adapter_name(),
+			_desktop_station_uses_main_window(),
+			str(get_station_pixel_size()),
+			str(get_pet_widget_pixel_size()),
+			widget_screen_scale,
+		]
+	)
+
+
+func _desktop_station_uses_main_window() -> bool:
+	# On Windows, keeping the real main window visible as the Station avoids a
+	# DWM composition failure where transparent native child windows exist but
+	# render only an empty blurred surface after their host is parked off-screen.
+	return OS.get_name() == "Windows" and DisplayServer.get_name() != "headless"
 
 
 func _build_station_window() -> void:
 	_destroy_station_window()
 	if DisplayServer.get_name() == "headless":
 		return
-	station_window = Window.new()
-	station_window.name = "DesktopStationWindow"
-	station_window.visible = false
+	var uses_main_window := _desktop_station_uses_main_window()
+	if uses_main_window:
+		station_window = get_window()
+	else:
+		station_window = Window.new()
+		station_window.name = "DesktopStationWindow"
+		station_window.visible = false
 	station_window.size = Vector2i(get_station_pixel_size())
 	station_window.content_scale_size = STATION_LOGICAL_SIZE
 	station_window.content_scale_mode = Window.CONTENT_SCALE_MODE_CANVAS_ITEMS
@@ -1040,17 +1064,21 @@ func _build_station_window() -> void:
 	station_window.content_scale_aspect = Window.CONTENT_SCALE_ASPECT_IGNORE
 	# Configure every native flag before adding the window. In particular, this
 	# lets macOS create a genuinely borderless transparent NSWindow with no frame.
-	station_window.force_native = true
+	if not uses_main_window:
+		station_window.force_native = true
 	station_window.transparent_bg = true
 	station_window.borderless = true
 	station_window.transparent = true
-	station_window.transient = false
-	station_window.transient_to_focused = false
+	if not uses_main_window:
+		station_window.transient = false
+		station_window.transient_to_focused = false
 	station_window.always_on_top = true
 	station_window.unresizable = true
 	station_window.position = Vector2i(widget_station_position)
-	station_window.focus_entered.connect(_schedule_pet_window_raise)
-	add_child(station_window)
+	if not station_window.focus_entered.is_connected(_schedule_pet_window_raise):
+		station_window.focus_entered.connect(_schedule_pet_window_raise)
+	if not uses_main_window:
+		add_child(station_window)
 	_apply_station_window_transparency()
 
 
@@ -1083,6 +1111,8 @@ func _finish_initial_station_window_order() -> void:
 
 
 func _park_main_window_for_desktop() -> void:
+	if _desktop_station_uses_main_window():
+		return
 	# Godot does not allow its main Window to be hidden. Keep it as a fully
 	# transparent one-pixel process host far outside the desktop instead; only the
 	# purpose-built Station and pet windows remain visible to the user.
@@ -1101,8 +1131,12 @@ func _park_main_window_for_desktop() -> void:
 
 func _destroy_station_window() -> void:
 	if is_instance_valid(station_window):
-		station_window.hide()
-		station_window.queue_free()
+		if station_window == get_window():
+			if is_instance_valid(desktop_station):
+				desktop_station.queue_free()
+		else:
+			station_window.hide()
+			station_window.queue_free()
 	station_window = null
 	desktop_station = null
 	station_top_art = null
@@ -1311,6 +1345,9 @@ func _build_pet_window(pet: Dictionary) -> void:
 		# transparent transient child behind its parent after the parent is moved or
 		# focused, which made the cat slip behind the Station. Re-raising this
 		# independent window keeps the cat in front without stealing button focus.
+		# Keep this independent from the Station. Windows refuses to create a
+		# transient Window that also uses always_on_top; the visible main Station
+		# host already keeps DWM composition active for this second native window.
 		pet_window.transient = false
 		pet_window.transient_to_focused = false
 		pet_window.always_on_top = true
