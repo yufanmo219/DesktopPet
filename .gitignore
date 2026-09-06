@@ -2,6 +2,8 @@
 builds/
 build/
 dev_only/__pycache__/
+__pycache__/
+*.py[cod]
 dev_only/artifacts/
 dev_only/design/
 dev_only/documents/
