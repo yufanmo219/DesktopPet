@@ -1,0 +1,18 @@
+[gd_scene load_steps=6 format=3]
+
+[ext_resource type="Script" path="res://src/music_manager.gd" id="1_music_manager"]
+[ext_resource type="AudioStream" path="res://assets/audio/music/home/desktop_companion_home_loop_v1.wav" id="2_home_music"]
+[ext_resource type="AudioStream" path="res://assets/audio/music/fishing/cats_fishing_day_loop_v1.wav" id="3_fishing_music"]
+[ext_resource type="AudioStream" path="res://assets/audio/music/aquarium/cats_aquarium.wav" id="4_aquarium_music"]
+[ext_resource type="AudioStream" path="res://assets/audio/music/shop/cozy_cat_boutique.wav" id="5_shop_music"]
+
+[node name="MusicManager" type="Node"]
+script = ExtResource("1_music_manager")
+home_music_source = ExtResource("2_home_music")
+fishing_music_source = ExtResource("3_fishing_music")
+aquarium_music_source = ExtResource("4_aquarium_music")
+shop_music_source = ExtResource("5_shop_music")
+
+[node name="MusicPlayer" type="AudioStreamPlayer" parent="."]
+volume_db = -60.0
+bus = &"Music"
