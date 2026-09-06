@@ -40,6 +40,10 @@
 
 桌面模式使用两个可见的透明原生窗口：Station 保持在自己的位置，猫咪可以独立拖到桌面其他位置，因此不会用一个全屏透明层挡住其他应用。
 
+## Windows 导出与 QA
+
+此分支只包含 Windows 的导出设置和 Desktop Companion 窗口兼容修复。Godot 中选择 **Project > Export > Windows Desktop**，即可导出到 `build/windows/Desktop Pet.exe`；将 EXE 与同目录生成的 PCK 一起压缩后交给 Windows QA。Windows 使用 ANGLE，并让可见主窗口承担 Station，以避免透明子窗口只显示模糊区域的问题。
+
 ## 存档
 
 存档文件名为 `desktop_pet_save.json`，由 Godot 写入本机的 `user://` 目录。它保存当前宠物、共享 XP、钓鱼进度、鱼缸、爱心，以及商店中的 `owned_cat_ids`。旧存档的共享进度字段会在加载时自动迁移成 `progress_stats`，不会重算关卡、XP、爱心或鱼图鉴。当前版本不会把玩家数据上传到服务器。
