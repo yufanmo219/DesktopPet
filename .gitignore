@@ -1,0 +1,13 @@
+.godot/
+builds/
+build/
+dev_only/__pycache__/
+dev_only/artifacts/
+dev_only/design/
+dev_only/documents/
+dev_only/outputs/
+dev_only/removed_pinball/
+dev_only/unused_assets/
+*.tmp
+.DS_Store
+~$*.docx
