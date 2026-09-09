@@ -64,7 +64,7 @@ enum FishId {
 const MIN_RARITY_LEVEL := 0
 const MAX_RARITY_LEVEL := 15
 const AQUARIUM_CAPACITY := 10
-const DEFAULT_AQUARIUM_FISH_IDS: Array[String] = ["green"]
+const DEFAULT_AQUARIUM_FISH_IDS: Array[String] = []
 const BASE_GOAL_COUNTS_BY_RARITY_LEVEL: Array[int] = [
 	10, 10, 10,
 	8, 8, 8,
@@ -688,7 +688,7 @@ const RAW_FISH_TYPES: Array[Dictionary] = [
 static var FISH_TYPES: Array[Dictionary] = _build_balanced_fish_types()
 static var _force_opaque_material: ShaderMaterial
 
-const STARTER_FISH_IDS: Array[String] = ["green"]
+const STARTER_FISH_IDS: Array[String] = []
 
 const RARITY_LEVEL_FISH_IDS: Array[Array] = [
 	["green", "coral", "golden"],

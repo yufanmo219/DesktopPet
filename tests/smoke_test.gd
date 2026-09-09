@@ -246,6 +246,11 @@ func run_tests() -> void:
 	root.add_child(game)
 	await process_frame
 	check(game.current_screen == "home", "Normal startup should bypass title and creator screens")
+	check(
+		game.get_progress_stats().unlocked_fish_ids.is_empty()
+		and game.get_progress_stats().aquarium_fish_ids.is_empty(),
+		"A new player should begin with every fish undiscovered and an empty aquarium"
+	)
 	var music_bus_index := AudioServer.get_bus_index(&"Music")
 	check(music_bus_index >= 0, "The project should provide a dedicated Music audio bus")
 	var sfx_bus_index := AudioServer.get_bus_index(&"SFX")
@@ -476,7 +481,7 @@ func run_tests() -> void:
 	var aquarium_instance_id: int = aquarium.get_instance_id()
 	check(aquarium.get_script().resource_path == "res://src/aquarium_screen.gd", "The aquarium should live in its own readable component")
 	check(aquarium.BACKGROUND_TEXTURE.resource_path.ends_with("aquarium_background_clean_v1.png"), "The aquarium should use a clean fish-free background layer")
-	check(aquarium.extra_fish_actors.size() == 1, "A fresh aquarium should begin with Green Fish only")
+	check(aquarium.extra_fish_actors.size() == 1, "An existing aquarium selection should retain Green Fish")
 	var expected_aquarium_fish_ids := ["green"]
 	check(
 		aquarium.extra_fish_actors.map(func(actor): return actor.fish_id) == expected_aquarium_fish_ids,
@@ -571,7 +576,7 @@ func run_tests() -> void:
 			) > 1000,
 			"%s should visibly animate its tail while resting" % aquarium_fish.fish_id
 		)
-	check(aquarium.fish_count_label.text == "FISH CAP 1 / 10", "A fresh aquarium should show its actual occupied capacity instead of collection progress")
+	check(aquarium.fish_count_label.text == "FISH CAP 1 / 10", "A saved aquarium should show its actual occupied capacity instead of collection progress")
 	aquarium.fish_book_button.emit_signal("pressed")
 	await process_frame
 	check(
@@ -602,7 +607,7 @@ func run_tests() -> void:
 		and fish_book.fish_slot_views.all(func(view): return view.position == fish_book.FISH_SLOT_ICON_CENTER),
 		"Fish encyclopedia grid slots should show centered fish art without species-name labels"
 	)
-	check(fish_book.fish_slot_lock_views.filter(func(lock): return lock.visible).size() == 8, "Only Green Fish should be revealed by default on the first encyclopedia page")
+	check(fish_book.fish_slot_lock_views.filter(func(lock): return lock.visible).size() == 8, "A save containing only Green Fish should keep the other first-page species locked")
 	check(fish_book.selected_fish_id == "green" and fish_book.fish_detail_rarity_label.text == "RARITY LEVEL 0", "The fish detail page should begin with the discovered green fish and its rarity")
 	check(fish_book.fish_detail_view.texture.get_size().x * fish_book.fish_detail_view.scale.x <= fish_book.FISH_DETAIL_ICON_MAX_SIZE.x + 0.01 and fish_book.fish_detail_view.texture.get_size().y * fish_book.fish_detail_view.scale.y <= fish_book.FISH_DETAIL_ICON_MAX_SIZE.y + 0.01, "The selected fish should remain inside the right-page detail image area")
 	check(fish_book.fish_detail_description_label.text == FishCatalogScript.definition("green").description, "The fish detail page should show the selected species' humorous description")
@@ -2088,8 +2093,8 @@ func run_tests() -> void:
 		electric_eel.swim_size == Vector2(171.6, 72.8),
 		"Electric Eel should swim at 1.3 times its former gameplay size"
 	)
-	check(FishCatalogScript.STARTER_FISH_IDS == ["green"], "Green Fish should be the only species discovered by default")
-	check(FishingLevelCatalogScript.newly_introduced_fish_ids(1).is_empty(), "Green Fish should be the only species available on level one")
+	check(FishCatalogScript.STARTER_FISH_IDS.is_empty(), "A new player should not have any fish discovered by default")
+	check(FishingLevelCatalogScript.newly_introduced_fish_ids(1) == ["green"], "Green Fish should be introduced as a new discovery on level one")
 	check(FishingLevelCatalogScript.newly_introduced_fish_ids(2) == ["coral"], "Coral Angelfish should be introduced on level two")
 	check(FishingLevelCatalogScript.newly_introduced_fish_ids(3) == ["golden"], "Golden Ribbonfish should be introduced on level three")
 	check(game.fishing_game.FISH_TYPES.all(func(fish): return not fish.has("xp")), "Fish definitions should no longer grant per-species XP")
@@ -2805,8 +2810,8 @@ func run_tests() -> void:
 	check(game.fishing_game.fish_caught == 1, "Casting should catch one fish")
 	check(int(game.fishing_game.round_goal_counts.get("green", 0)) == 1, "Catching Green Fish should update the level-one Green Fish target")
 	check(int(game.get_progress_stats().experience) == xp_before_fishing and game.fishing_game.xp_earned == 0, "Catching an individual fish should not award XP")
-	check(game.fishing_game.result_overlay != null and game.fishing_game.result_overlay.name == "FishingCatchPopupOverlay", "The default Green Fish should go directly to the catch summary without an unlock popup")
-	check(game.get_progress_stats().unlocked_fish_ids == ["green"], "Only Green Fish should initially belong to every player")
+	check(game.fishing_game.result_overlay != null and game.fishing_game.result_overlay.name == "FishingCatchPopupOverlay", "A previously discovered Green Fish should go directly to the catch summary without another unlock popup")
+	check(game.get_progress_stats().unlocked_fish_ids == ["green"], "An existing save should retain its discovered Green Fish")
 	var catch_popup_background = game.fishing_game.result_overlay.find_child("FishingCatchPopupBackground", true, false)
 	var catch_popup_title = game.fishing_game.result_overlay.find_child("FishingCatchPopupTitle", true, false)
 	var catch_popup_footer = game.fishing_game.result_overlay.find_child("FishingCatchPopupFooter", true, false)
