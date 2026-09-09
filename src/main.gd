@@ -99,8 +99,8 @@ var save_data: Dictionary = {
 		"hearts": 5,
 		"next_heart_restore_unix": 0,
 		"fishing_level": 1,
-		"unlocked_fish_ids": ["green"],
-		"aquarium_fish_ids": ["green"]
+		"unlocked_fish_ids": [],
+		"aquarium_fish_ids": []
 	},
 	"last_updated_unix": 0
 }
@@ -2099,8 +2099,8 @@ func _seed_preview_pets(preview_pet_id := "") -> void:
 			"hearts": 5,
 			"next_heart_restore_unix": 0,
 			"fishing_level": 1,
-			"unlocked_fish_ids": ["green"],
-			"aquarium_fish_ids": ["green"]
+			"unlocked_fish_ids": [],
+			"aquarium_fish_ids": []
 		},
 		"last_updated_unix": int(Time.get_unix_time_from_system())
 	}
