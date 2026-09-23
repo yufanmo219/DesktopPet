@@ -61,6 +61,7 @@ func _run() -> void:
 		_test_return_speed(scale_value)
 	_test_delta_independence()
 	_test_return_delta_independence()
+	_test_long_return_stays_awake()
 	_test_screen_boundaries()
 	_test_interactions_and_drag()
 	_test_unfollow()
@@ -70,7 +71,7 @@ func _run() -> void:
 	if music != null:
 		music.stop_music(0.0)
 	if failures.is_empty():
-		print("DESKTOP FOLLOW TEST PASS: immediate targeting, one-time short reaction, continuous retargeting, 60/100 hysteresis, matching follow/return speeds, display scaling/seams, double-click, drag, and Unfollow")
+		print("DESKTOP FOLLOW TEST PASS: immediate targeting, one-time short reaction, continuous retargeting, 60/100 hysteresis, matching follow/return speeds, awake long returns, display scaling/seams, double-click, drag, and Unfollow")
 		quit(0)
 	else:
 		print("DESKTOP FOLLOW TEST FAIL: %d failure(s)" % failures.size())
@@ -193,6 +194,39 @@ func _test_return_delta_independence() -> void:
 		_check(absf(game.widget_pet_position.distance_to(initial) - 150.0) < 0.01, "Returning must move 150 logical pixels per second at every frame rate")
 		game.update_desktop_companion(20.0)
 		_check(game.widget_pet_at_station and game.widget_pet_position == station_target, "A large return delta must stop exactly at the Station")
+
+
+func _test_long_return_stays_awake() -> void:
+	_reset()
+	var station_target := game.get_station_pet_anchor()
+	game.set_widget_pet_position(station_target + Vector2(2600, 0), false)
+	game.test_pointer = Vector2(-3000, -2000)
+	# Model a manual drag whose return starts after 15 seconds. Without resetting
+	# the independent 30-second sleep timer, this distance sleeps for its final
+	# 2.3 seconds while the pet window keeps moving.
+	game.widget_seconds_since_pet_drag = game.PET_RETURN_SECONDS - 0.1
+	game.widget_seconds_outside_station = game.PET_RETURN_SECONDS - 0.1
+	game.update_desktop_companion(0.2)
+	_check(game.widget_returning_to_station, "A distant pet must begin its automatic return after fifteen seconds")
+	var stayed_awake := game.avatar.mood == "idle"
+	var sleep_timer_stayed_reset := game.widget_seconds_outside_station == 0.0
+	for step in range(200):
+		if game.widget_pet_at_station:
+			break
+		game.update_desktop_companion(0.1)
+		if game.widget_returning_to_station:
+			stayed_awake = stayed_awake and game.avatar.mood == "idle"
+			sleep_timer_stayed_reset = (
+				sleep_timer_stayed_reset
+				and game.widget_seconds_outside_station == 0.0
+			)
+	_check(game.widget_pet_at_station, "The long automatic return must still reach the Station")
+	_check(stayed_awake, "A pet must never enter its sleep pose while returning to the Station")
+	_check(sleep_timer_stayed_reset, "Returning must keep the sleep countdown reset")
+	game.update_desktop_companion(game.STATION_WAKE_SECONDS - 0.1)
+	_check(game.avatar.mood == "idle", "The sleep countdown must restart only after the pet reaches the Station")
+	game.update_desktop_companion(0.2)
+	_check(game.avatar.mood == "sleep", "An idle pet may still sleep thirty seconds after returning")
 
 
 func _test_screen_boundaries() -> void:

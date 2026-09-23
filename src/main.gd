@@ -1696,7 +1696,13 @@ func update_desktop_companion(delta: float, pointer_override := Vector2(-1000000
 
 	var pointer_in_station_space := get_station_wake_rect().has_point(pointer_position)
 	var pointer_on_pet := get_pet_screen_rect().has_point(pointer_position)
-	if pointer_in_station_space or pointer_on_pet or widget_following or widget_pet_dragging:
+	if (
+		pointer_in_station_space
+		or pointer_on_pet
+		or widget_following
+		or widget_pet_dragging
+		or widget_returning_to_station
+	):
 		widget_seconds_outside_station = 0.0
 	else:
 		widget_seconds_outside_station += delta
@@ -1758,14 +1764,16 @@ func update_desktop_companion(delta: float, pointer_override := Vector2(-1000000
 		if widget_seconds_since_pet_drag >= PET_RETURN_SECONDS:
 			widget_returning_to_station = true
 	if widget_returning_to_station and not widget_pet_dragging:
+		# Returning is active movement, so it must keep the cat awake and restart
+		# the sleep countdown only after the cat has reached the Station.
+		widget_seconds_outside_station = 0.0
 		var station_target := get_station_pet_anchor()
 		# Use the same fixed walking speed as Follow Me. Interpolating a fraction
 		# of the remaining distance made distant cats rush back to the Station.
 		var return_distance := PET_FOLLOW_RUN_SPEED * widget_screen_scale * maxf(0.0, delta)
 		var next_return_position := widget_pet_position.move_toward(station_target, return_distance)
-		if avatar.mood != "sleep":
-			avatar.set_mood("idle")
-			avatar.play_move(next_return_position - widget_pet_position)
+		avatar.set_mood("idle")
+		avatar.play_move(next_return_position - widget_pet_position)
 		# Just like Follow Me, the return path must be allowed to pass through a
 		# display seam. Clamping every intermediate point can pin the native pet
 		# window to the edge of the display it is leaving.
