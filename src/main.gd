@@ -15,6 +15,7 @@ const StoreScreenScript = preload("res://src/store_screen.gd")
 const FishBookScreenScript = preload("res://src/fish_book_screen.gd")
 const GameFontStylesScript = preload("res://src/game_font_styles.gd")
 const FishCatalogScript = preload("res://src/fish_catalog.gd")
+const SaveGameRepositoryScript = preload("res://src/persistence/save_game_repository.gd")
 const HOME_DAY_TEXTURE: Texture2D = preload("res://assets/ui/home/home_day_layout_v3.png")
 const HOME_NIGHT_TEXTURE: Texture2D = preload("res://assets/ui/home/home_night_layout_v3.png")
 
@@ -161,6 +162,8 @@ var normal_window_min_size := Vector2i(960, 540)
 var normal_content_scale_size := Vector2i(1280, 720)
 var normal_window_unresizable := false
 var save_enabled := true
+var save_read_only := false
+var save_repository
 var launch_directly_to_widget := false
 
 var palette := {
@@ -1913,29 +1916,53 @@ func save_game() -> void:
 		return
 	save_data["version"] = CURRENT_SAVE_VERSION
 	save_data["last_updated_unix"] = int(Time.get_unix_time_from_system())
-	var file := FileAccess.open(SAVE_PATH, FileAccess.WRITE)
-	if file:
-		file.store_string(JSON.stringify(save_data, "  "))
+	var repository = _get_save_repository()
+	var save_error: Error = repository.save(save_data)
+	if save_error != OK:
+		push_error("Could not save Desktop Pet progress: %s" % repository.last_error_message)
 
 
 func _can_write_save() -> bool:
-	return save_enabled and not preview_session
+	return save_enabled and not preview_session and not save_read_only
+
+
+func _get_save_repository():
+	if save_repository == null:
+		save_repository = SaveGameRepositoryScript.new(SAVE_PATH)
+	return save_repository
 
 
 func load_save() -> void:
-	var parsed = null
-	if FileAccess.file_exists(SAVE_PATH):
-		var file := FileAccess.open(SAVE_PATH, FileAccess.READ)
-		if file:
-			parsed = JSON.parse_string(file.get_as_text())
-	if parsed is Dictionary and parsed.has("pet_pool"):
-		var loaded_version := int(parsed.get("version", 0))
-		var uses_legacy_progress_key: bool = bool(parsed.has(LEGACY_PROGRESS_SAVE_KEY))
-		save_data = parsed
+	var repository = _get_save_repository()
+	var load_result = repository.load(CURRENT_SAVE_VERSION)
+	if load_result.status == SaveGameRepositoryScript.LoadStatus.FUTURE_VERSION:
+		save_read_only = true
+		push_warning(load_result.message)
+		if load_result.data.has("pet_pool"):
+			var future_version := int(load_result.data.get("version", CURRENT_SAVE_VERSION + 1))
+			save_data = load_result.data
+			normalize_save_data()
+			# normalize_save_data() targets this executable's schema. Preserve the
+			# original version in memory so no caller mistakes this for writable data.
+			save_data["version"] = future_version
+		return
+	if load_result.status in [
+		SaveGameRepositoryScript.LoadStatus.LOADED,
+		SaveGameRepositoryScript.LoadStatus.RECOVERED_BACKUP
+	] and load_result.data.has("pet_pool"):
+		var loaded_version := int(load_result.data.get("version", 0))
+		var uses_legacy_progress_key: bool = bool(
+			load_result.data.has(LEGACY_PROGRESS_SAVE_KEY)
+		)
+		save_data = load_result.data
 		normalize_save_data()
+		if load_result.status == SaveGameRepositoryScript.LoadStatus.RECOVERED_BACKUP:
+			push_warning(load_result.message)
 		if loaded_version < CURRENT_SAVE_VERSION or uses_legacy_progress_key:
 			save_game()
 		return
+	if load_result.status == SaveGameRepositoryScript.LoadStatus.INVALID:
+		push_warning("Desktop Pet could not read the player save. %s" % load_result.message)
 	if FileAccess.file_exists(LEGACY_SAVE_PATH):
 		migrate_legacy_save()
 

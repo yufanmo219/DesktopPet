@@ -61,5 +61,13 @@ python3 tools/build_original_handwriting_ttf.py
 ## 自动验证
 
 ```bash
-/Applications/Godot.app/Contents/MacOS/Godot --headless --path . --log-file /private/tmp/desktop-pet-smoke.log -s res://tests/smoke_test.gd -- --test-mode
+python3 tools/run_tests.py
+```
+
+测试入口会自动发现并顺序执行 `tests/*_test.gd`，为每个测试设置独立日志和超时。可以通过
+`GODOT_BIN` 或 `--godot` 指定 Godot 可执行文件，也可以只执行某类测试：
+
+```bash
+python3 tools/run_tests.py --test smoke
+python3 tools/run_tests.py --test save_game_repository
 ```
