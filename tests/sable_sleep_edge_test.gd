@@ -44,7 +44,9 @@ func _warm_lower_edge_pixels(image: Image) -> int:
 
 
 func _run() -> void:
-	var frames := AvatarScript.BLACK_CAT_FALL_ASLEEP_FRAMES
+	var sable_assets := AvatarScript.new()
+	sable_assets.set_pet({"id": "black_cat", "name": "Sable"})
+	var frames := sable_assets.BLACK_CAT_FALL_ASLEEP_FRAMES
 	_check(frames.size() == 8, "Sable's complete fall-asleep sequence must keep all eight frames")
 	var final_image_data: PackedByteArray
 	for index in range(frames.size()):
@@ -62,7 +64,7 @@ func _run() -> void:
 		_check(soft_edge_pixels > 250, "Sable sleep frame %02d must retain a soft antialiased silhouette" % (index + 1))
 		if index == frames.size() - 1:
 			final_image_data = image.get_data()
-	var static_image := Image.load_from_file(ProjectSettings.globalize_path(AvatarScript.BLACK_CAT_SLEEP_TEXTURE.resource_path))
+	var static_image := Image.load_from_file(ProjectSettings.globalize_path(sable_assets.BLACK_CAT_SLEEP_TEXTURE.resource_path))
 	_check(static_image.get_data() == final_image_data, "Sable's final sleeping pose must exactly match the last cleaned transition frame")
 
 	var avatar := AvatarScript.new()
@@ -74,9 +76,10 @@ func _run() -> void:
 	for index in range(frames.size()):
 		_check(avatar.cat_sprite.texture_filter == CanvasItem.TEXTURE_FILTER_LINEAR, "Home and Desktop must linearly filter every Sable sleep frame")
 		avatar._process(float(AvatarScript.BLACK_CAT_FALL_ASLEEP_FRAME_DURATIONS[index]) + 0.01)
-	_check(avatar.cat_sprite.texture == AvatarScript.BLACK_CAT_SLEEP_TEXTURE, "Sable must settle on the cleaned final sleeping pose")
+	_check(avatar.cat_sprite.texture == avatar.BLACK_CAT_SLEEP_TEXTURE, "Sable must settle on the cleaned final sleeping pose")
 	_check(avatar.cat_sprite.texture_filter == CanvasItem.TEXTURE_FILTER_LINEAR, "Sable's final sleeping pose must remain linearly filtered")
 	avatar.queue_free()
+	sable_assets.free()
 	await process_frame
 
 	if failures.is_empty():

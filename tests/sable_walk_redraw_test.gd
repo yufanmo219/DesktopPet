@@ -18,8 +18,10 @@ func _check(condition: bool, message: String) -> void:
 
 
 func _run() -> void:
-	var left_frames := AvatarScript.BLACK_CAT_MOVE_LEFT_FRAMES
-	var right_frames := AvatarScript.BLACK_CAT_MOVE_RIGHT_FRAMES
+	var sable_assets := AvatarScript.new()
+	sable_assets.set_pet({"id": "black_cat", "name": "Sable"})
+	var left_frames := sable_assets.BLACK_CAT_MOVE_LEFT_FRAMES
+	var right_frames := sable_assets.BLACK_CAT_MOVE_RIGHT_FRAMES
 	_check(left_frames.size() == 12 and right_frames.size() == 12, "Both new Sable directions must have twelve frames")
 	_check(AvatarScript.BLACK_CAT_MOVE_FPS == 10.0 and AvatarScript.MOVE_FPS == 7.0 and AvatarScript.LUNA_MOVE_FPS == 12.0, "Only Sable may gain the new ten-FPS cadence")
 	var leg_silhouettes: Dictionary = {}
@@ -134,13 +136,13 @@ func _run() -> void:
 			_check(avatar.move_frame == 0, "Changing direction must begin the opposite side-profile cycle cleanly")
 			_check(avatar.cat_sprite.position.is_equal_approx(fixed_position) and avatar.cat_sprite.scale.is_equal_approx(fixed_scale), "Turning must preserve Sable's exact body anchor")
 			avatar.stop_move()
-			_check(avatar.cat_sprite.texture == AvatarScript.BLACK_CAT_IDLE_TEXTURE, "Stopping must restore Sable's unchanged seated art")
+			_check(avatar.cat_sprite.texture == avatar.BLACK_CAT_IDLE_TEXTURE, "Stopping must restore Sable's unchanged seated art")
 			_check(avatar.cat_sprite.texture_filter == CanvasItem.TEXTURE_FILTER_LINEAR, "Sable's side-sitting art must use linear filtering so the paw and tail undersides stay smooth")
 		avatar.play_belly_roll()
-		_check(avatar.cat_sprite.texture == AvatarScript.BLACK_CAT_LICK_PAW_FRAMES[0], "The redraw must not change Sable's double-click animation")
+		_check(avatar.cat_sprite.texture == avatar.BLACK_CAT_LICK_PAW_FRAMES[0], "The redraw must not change Sable's double-click animation")
 		avatar._process(10.0)
 		avatar.set_mood("sleep")
-		_check(avatar.cat_sprite.texture in AvatarScript.BLACK_CAT_FALL_ASLEEP_FRAMES, "The redraw must not change Sable's sleep animation")
+		_check(avatar.cat_sprite.texture in avatar.BLACK_CAT_FALL_ASLEEP_FRAMES, "The redraw must not change Sable's sleep animation")
 		avatar.set_pet({"id": "mochi", "name": "Mochi"})
 		avatar.set_mood("idle")
 		avatar.play_move(Vector2.LEFT)

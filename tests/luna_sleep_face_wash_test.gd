@@ -16,12 +16,14 @@ func _check(condition: bool, message: String) -> void:
 
 
 func _run() -> void:
-	var frames := AvatarScript.LUNA_SLEEP_IDLE_FRAMES
+	var luna_assets := AvatarScript.new()
+	luna_assets.set_pet({"id": "luna", "name": "Luna"})
+	var frames := luna_assets.LUNA_SLEEP_IDLE_FRAMES
 	var durations := AvatarScript.LUNA_SLEEP_IDLE_FRAME_DURATIONS
-	var base := Image.load_from_file(ProjectSettings.globalize_path(AvatarScript.LUNA_SLEEP_TEXTURE.resource_path))
+	var base := Image.load_from_file(ProjectSettings.globalize_path(luna_assets.LUNA_SLEEP_TEXTURE.resource_path))
 	var bounds := base.get_used_rect()
 	_check(frames.size() == 12 and durations.size() == frames.size(), "The face wash must have twelve timed poses")
-	_check(frames[0] == AvatarScript.LUNA_SLEEP_TEXTURE and frames[-1] == AvatarScript.LUNA_SLEEP_TEXTURE, "Bookends must reuse the repaired original resting texture")
+	_check(frames[0] == luna_assets.LUNA_SLEEP_TEXTURE and frames[-1] == luna_assets.LUNA_SLEEP_TEXTURE, "Bookends must reuse the repaired original resting texture")
 	for index in range(frames.size()):
 		var frame: Image = frames[index].get_image()
 		_check(frame.get_size() == base.get_size(), "Frame %d must keep the 640x512 canvas" % (index + 1))
@@ -66,24 +68,25 @@ func _run() -> void:
 			_check(avatar.luna_sleep_idle_playing and avatar.luna_sleep_idle_frame == index and avatar.cat_sprite.texture == frames[index], "Sleep must play every new frame in order")
 			_check(avatar.cat_sprite.position.is_equal_approx(initial_position) and avatar.cat_sprite.scale.is_equal_approx(initial_scale), "Paw motion must never recenter or resize the runtime cat")
 			avatar._process(durations[index] + 0.00001)
-		_check(not avatar.luna_sleep_idle_playing and avatar.cat_sprite.texture == AvatarScript.LUNA_SLEEP_TEXTURE, "The wash must settle back onto the repaired resting pose")
+		_check(not avatar.luna_sleep_idle_playing and avatar.cat_sprite.texture == avatar.LUNA_SLEEP_TEXTURE, "The wash must settle back onto the repaired resting pose")
 		_check(avatar.luna_sleep_idle_wait_remaining >= AvatarScript.LUNA_SLEEP_IDLE_MIN_WAIT and avatar.luna_sleep_idle_wait_remaining <= AvatarScript.LUNA_SLEEP_IDLE_MAX_WAIT, "The original random sleep interval must remain intact")
 		avatar.luna_sleep_idle_wait_remaining = 0.0
 		avatar._process(0.001)
 		avatar._process(0.8)
 		avatar.set_mood("idle")
-		_check(not avatar.luna_sleep_idle_playing and avatar.cat_sprite.texture == AvatarScript.LUNA_IDLE_TEXTURE, "Waking mid-wipe must stop the sleep animation")
+		_check(not avatar.luna_sleep_idle_playing and avatar.cat_sprite.texture == avatar.LUNA_IDLE_TEXTURE, "Waking mid-wipe must stop the sleep animation")
 		avatar.play_move(Vector2.LEFT)
-		_check(avatar.cat_sprite.texture in AvatarScript.LUNA_MOVE_LEFT_FRAMES, "Walking must work normally after waking")
+		_check(avatar.cat_sprite.texture in avatar.LUNA_MOVE_LEFT_FRAMES, "Walking must work normally after waking")
 		avatar.stop_move()
 		avatar.set_mood("sleep")
 		avatar.luna_sleep_idle_wait_remaining = 0.0
 		avatar._process(0.001)
 		avatar.set_pet({"id": "biscuit", "name": "Biscuit"})
-		_check(not avatar.luna_sleep_idle_playing and avatar.cat_sprite.texture == AvatarScript.BISCUIT_SLEEP_TEXTURE, "Switching cats mid-wipe must clear Luna's animation")
+		_check(not avatar.luna_sleep_idle_playing and avatar.cat_sprite.texture == avatar.BISCUIT_SLEEP_TEXTURE, "Switching cats mid-wipe must clear Luna's animation")
 		avatar.queue_free()
 		await process_frame
 
+	luna_assets.free()
 	if OS.get_cmdline_user_args().has("--capture-face-wash"):
 		await _capture_runtime_frames()
 	if failures.is_empty():
@@ -106,7 +109,7 @@ func _capture_runtime_frames() -> void:
 	avatar.mood_badge.hide()
 	avatar.luna_sleep_idle_wait_remaining = 0.0
 	avatar._process(0.001)
-	for index in range(AvatarScript.LUNA_SLEEP_IDLE_FRAMES.size()):
+	for index in range(avatar.LUNA_SLEEP_IDLE_FRAMES.size()):
 		await RenderingServer.frame_post_draw
 		root.get_texture().get_image().save_png("/private/tmp/luna-face-wash-runtime-%02d.png" % (index + 1))
 		await create_timer(AvatarScript.LUNA_SLEEP_IDLE_FRAME_DURATIONS[index]).timeout

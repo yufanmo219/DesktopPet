@@ -58,6 +58,8 @@ python3 tools/build_original_handwriting_ttf.py
 
 `assets/` 只保留当前运行时会直接或动态加载的资源。未接入游戏的源图、旧版图、预览图和动画母版保存在 `dev_only/unused_assets/`，并维持原来的相对路径。`dev_only/.gdignore` 让 Godot 跳过整个目录，因此这些文件不会被导入或跟随游戏导出。完整移动清单在 `dev_only/unused_assets_manifest.txt`；可运行 `python3 dev_only/audit_unused_assets.py` 重新审计，必要时用 `--restore` 恢复归档。
 
+宠物的稳定存档 ID、商店信息、Station 主题与资源路径统一由 `src/pets/pet_catalog.gd` 管理。`PetAvatar` 只在选中宠物时加载该宠物的贴图和动画，避免启动时预加载全部猫咪资源。新增宠物时应先添加 `PetDefinition`，再通过 `pet_catalog_test.gd` 校验 ID 唯一性和资源完整性。
+
 ## 自动验证
 
 ```bash
@@ -70,4 +72,5 @@ python3 tools/run_tests.py
 ```bash
 python3 tools/run_tests.py --test smoke
 python3 tools/run_tests.py --test save_game_repository
+python3 tools/run_tests.py --test pet_catalog
 ```
