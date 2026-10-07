@@ -504,8 +504,11 @@ func run_tests() -> void:
 	)
 	for rebuilt_fish_id in ["pink_salmon", "mint_catfish"]:
 		var rebuilt_paths: Array[String] = aquarium._fish_asset_paths(rebuilt_fish_id)
-		var rebuilt_swim = aquarium._make_animation_frames(load(rebuilt_paths[0]))
-		var rebuilt_idle = aquarium._make_idle_animation_frames(load(rebuilt_paths[2]), false)
+		var rebuilt_swim = green_aquarium_fish._make_animation_frames(load(rebuilt_paths[0]))
+		var rebuilt_idle = green_aquarium_fish._make_idle_animation_frames(
+			load(rebuilt_paths[2]),
+			false
+		)
 		var rebuilt_first_bounds: Rect2i = rebuilt_swim.frames[0].get_image().get_used_rect()
 		check(
 			rebuilt_swim.frames.size() == 8
