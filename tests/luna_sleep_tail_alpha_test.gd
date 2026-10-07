@@ -18,6 +18,8 @@ func _check(condition: bool, message: String) -> void:
 
 
 func _run() -> void:
+	var luna_assets := AvatarScript.new()
+	luna_assets.set_pet({"id": "luna", "name": "Luna"})
 	# Compare the actual PNG bytes decoded as pixels, before Godot's optional
 	# transparent-border RGB preprocessing. Only erased green pixels may change.
 	var original := Image.load_from_file(ProjectSettings.globalize_path(ORIGINAL_PATH))
@@ -48,7 +50,7 @@ func _run() -> void:
 	_check(changed_rgb == 0, "All RGB outside the erased green pixels must remain unchanged, including fur, outlines and tail")
 	_check(changed_alpha > 0 and changed_alpha < 200 and unexpected_changes == 0, "Only the small green tail crescent may become transparent")
 	_check(remaining_green == 0, "No visible green may remain in the tail gap")
-	_check(AvatarScript.LUNA_SLEEP_TEXTURE.resource_path == REPAIRED_PATH, "Luna's static sleeping pose must use the repaired local asset")
+	_check(luna_assets.LUNA_SLEEP_TEXTURE.resource_path == REPAIRED_PATH, "Luna's static sleeping pose must use the repaired local asset")
 	for display_size in [Vector2(460, 390), Vector2(400, 300), Vector2(800, 600)]:
 		var avatar := AvatarScript.new()
 		avatar.size = display_size
@@ -57,7 +59,7 @@ func _run() -> void:
 		avatar.set_process(false)
 		avatar.set_mood("sleep")
 		avatar._update_layout()
-		_check(avatar.cat_sprite.texture == AvatarScript.LUNA_SLEEP_TEXTURE, "Home/Desktop sleep must display the fixed static sprite")
+		_check(avatar.cat_sprite.texture == avatar.LUNA_SLEEP_TEXTURE, "Home/Desktop sleep must display the fixed static sprite")
 		var texture_size := Vector2(original.get_size())
 		var expected_scale := minf(display_size.x / texture_size.x, display_size.y / texture_size.y) * 0.95
 		var bounds := Rect2(original.get_used_rect())
@@ -68,9 +70,10 @@ func _run() -> void:
 		_check(avatar.cat_sprite.scale.is_equal_approx(Vector2.ONE * expected_scale) and avatar.cat_sprite.position.is_equal_approx(expected_position), "Transparency-only repair must not shift or resize Luna")
 		avatar.luna_sleep_idle_wait_remaining = 0.0
 		avatar._process(0.01)
-		_check(avatar.cat_sprite.texture == AvatarScript.LUNA_SLEEP_IDLE_FRAMES[0] and AvatarScript.LUNA_SLEEP_IDLE_FRAMES.size() == 12, "The twelve-frame sleep animation must still start from the repaired static pose")
+		_check(avatar.cat_sprite.texture == avatar.LUNA_SLEEP_IDLE_FRAMES[0] and avatar.LUNA_SLEEP_IDLE_FRAMES.size() == 12, "The twelve-frame sleep animation must still start from the repaired static pose")
 		avatar.queue_free()
 		await process_frame
+	luna_assets.free()
 	print("Luna tail repair pixel audit: erased green pixels=", changed_alpha, ", protected RGB changes=", changed_rgb, ", unrelated alpha changes=", unexpected_changes)
 	if failures.is_empty():
 		print("LUNA SLEEP TAIL TEST PASS: only the green crescent is transparent, static pixels/size/position preserved, sleep animation starts correctly")

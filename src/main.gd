@@ -16,6 +16,7 @@ const FishBookScreenScript = preload("res://src/fish_book_screen.gd")
 const GameFontStylesScript = preload("res://src/game_font_styles.gd")
 const FishCatalogScript = preload("res://src/fish_catalog.gd")
 const SaveGameRepositoryScript = preload("res://src/persistence/save_game_repository.gd")
+const PetCatalogScript = preload("res://src/pets/pet_catalog.gd")
 const HOME_DAY_TEXTURE: Texture2D = preload("res://assets/ui/home/home_day_layout_v3.png")
 const HOME_NIGHT_TEXTURE: Texture2D = preload("res://assets/ui/home/home_night_layout_v3.png")
 
@@ -23,33 +24,6 @@ const HOME_WAKE_AREA := Rect2(0.0, 0.0, 700.0, 720.0)
 const HOME_POINTER_MOVE_THRESHOLD := 2.0
 const HOME_SLEEP_DELAY_SECONDS := 10.0
 const HOME_WELCOME_TEXT_COLOR := Color("#fff3cf")
-const ORANGE_CAT_STATION_TOP_TEXTURE: Texture2D = preload(
-	"res://assets/ui/desktop_station/orange_cat_grass_station_side_v1.png"
-)
-const MOCHI_STATION_TOP_TEXTURE: Texture2D = preload(
-	"res://assets/ui/desktop_station/mochi/mochi_lotus_pink_daybed_v1.png"
-)
-const BISCUIT_STATION_TOP_TEXTURE: Texture2D = preload(
-	"res://assets/ui/desktop_station/biscuit/biscuit_cardboard_station.png"
-)
-const LUNA_STATION_TOP_TEXTURE: Texture2D = preload(
-	"res://assets/ui/desktop_station/luna/luna_mushroom_grass_station_v1.png"
-)
-const POPPY_STATION_TOP_TEXTURE: Texture2D = preload(
-	"res://assets/ui/desktop_station/blue_british/blue_british_mushroom_grass_station_v1.png"
-)
-const BLACK_CAT_STATION_TOP_TEXTURE: Texture2D = preload(
-	"res://assets/ui/desktop_station/black_cat/black_cat_folded_blanket_station.png"
-)
-const MAINE_COON_STATION_TOP_TEXTURE: Texture2D = preload(
-	"res://assets/ui/desktop_station/maine_coon/maine_coon_forest_wool_station.png"
-)
-const GOLDEN_MUNCHKIN_STATION_TOP_TEXTURE: Texture2D = preload(
-	"res://assets/ui/desktop_station/golden_munchkin/golden_munchkin_ivory_blanket_station.png"
-)
-const SIAMESE_STATION_TOP_TEXTURE: Texture2D = preload(
-	"res://assets/ui/desktop_station/siamese/siamese_tree_branch_station.png"
-)
 const DESKTOP_WIDGET_SCALE := 0.90
 const STATION_LOGICAL_SIZE := Vector2i(360, 166)
 const PET_WIDGET_LOGICAL_SIZE := Vector2i(400, 300)
@@ -68,28 +42,6 @@ const PET_FOLLOW_REACTION_MAX := 0.6
 # restart radius separate so nearby cursor motion cannot repeatedly wake a cat.
 const PET_FOLLOW_ARRIVAL_DISTANCE := 60.0
 const PET_FOLLOW_RESUME_DISTANCE := 100.0
-const STATION_THEMES := {
-	"maple": {"primary": "#f2b36f", "secondary": "#fff0d1", "accent": "#b95d3d", "motif": "MAPLE LEAF"},
-	"mochi": {"primary": "#c9b7df", "secondary": "#f5effc", "accent": "#71568f", "motif": "MOON"},
-	"biscuit": {"primary": "#d9a85f", "secondary": "#fff0c9", "accent": "#81552d", "motif": "BISCUIT"},
-	"luna": {"primary": "#7888bd", "secondary": "#e8edff", "accent": "#404f83", "motif": "STARS"},
-	"poppy": {"primary": "#e78f9f", "secondary": "#ffe8ec", "accent": "#9b4156", "motif": "POPPY"},
-	"black_cat": {"primary": "#5f6270", "secondary": "#e5e4e8", "accent": "#30323c", "motif": "MIDNIGHT"},
-	"maine_coon": {"primary": "#667660", "secondary": "#f0eadc", "accent": "#34453a", "motif": "FOREST WOOL"},
-	"golden_munchkin": {"primary": "#d6ad65", "secondary": "#fff8e7", "accent": "#8b6331", "motif": "IVORY CLOUD"},
-	"siamese": {"primary": "#c9b08b", "secondary": "#f7efe2", "accent": "#5a718c", "motif": "SIAMESE SILK"}
-}
-const ONLINE_CAT_PET_PROFILES := {
-	"maple": {"id": "default_orange_cat", "name": "Maple", "type": "Cat"},
-	"mochi": {"id": "mochi", "name": "Mochi", "type": "Cat"},
-	"biscuit": {"id": "biscuit", "name": "Biscuit", "type": "Cat"},
-	"luna": {"id": "luna", "name": "Luna", "type": "Cat"},
-	"poppy": {"id": "poppy", "name": "Poppy", "type": "Cat"},
-	"black_cat": {"id": "black_cat", "name": "Sable", "type": "Cat"},
-	"siamese": {"id": "siamese", "name": "Pearl", "type": "Cat"},
-	"golden_munchkin": {"id": "golden_munchkin", "name": "Honey", "type": "Cat"},
-	"maine_coon": {"id": "maine_coon", "name": "Cedar", "type": "Cat"}
-}
 var save_data: Dictionary = {
 	"version": CURRENT_SAVE_VERSION,
 	"pet_pool": [],
@@ -790,14 +742,14 @@ func _on_store_cat_selected(cat_id: String) -> void:
 
 func _ensure_online_cat_in_pet_pool(cat_id: String) -> String:
 	var normalized_cat_id := cat_id.to_lower()
-	if not ONLINE_CAT_PET_PROFILES.has(normalized_cat_id):
+	var definition = PetCatalogScript.definition_by_catalog_id(normalized_cat_id)
+	if definition == null:
 		return ""
-	var profile: Dictionary = ONLINE_CAT_PET_PROFILES[normalized_cat_id]
-	var pet_id := str(profile.id)
+	var pet_id := str(definition.pet_id)
 	if get_pet_index(pet_id) >= 0:
 		return pet_id
 	var pet_pool := get_pet_pool()
-	var new_pet := profile.duplicate(true)
+	var new_pet: Dictionary = definition.save_profile()
 	new_pet["created_at"] = Time.get_datetime_string_from_system()
 	pet_pool.append(new_pet)
 	save_data["pet_pool"] = pet_pool
@@ -1160,35 +1112,14 @@ func _build_desktop_station(pet: Dictionary) -> void:
 	controls_panel.add_child(quit_button)
 
 func _make_station_top_art(station_id: String, theme: Dictionary) -> Control:
-	if station_id in [
-		"maple", "mochi", "biscuit", "luna", "poppy", "black_cat", "maine_coon",
-		"golden_munchkin", "siamese"
-	]:
+	var definition = PetCatalogScript.definition_by_catalog_id(station_id)
+	if definition != null:
 		var art := Control.new()
 		art.name = "StationTopArt"
 		art.position = STATION_TOP_ART_POSITION
 		art.size = STATION_TOP_ART_SIZE
 		art.mouse_filter = Control.MOUSE_FILTER_IGNORE
-		var source_texture: Texture2D
-		if station_id == "mochi":
-			source_texture = MOCHI_STATION_TOP_TEXTURE
-		elif station_id == "biscuit":
-			source_texture = BISCUIT_STATION_TOP_TEXTURE
-		elif station_id == "luna":
-			source_texture = LUNA_STATION_TOP_TEXTURE
-		elif station_id == "poppy":
-			source_texture = POPPY_STATION_TOP_TEXTURE
-		elif station_id == "black_cat":
-			source_texture = BLACK_CAT_STATION_TOP_TEXTURE
-		elif station_id == "maine_coon":
-			source_texture = MAINE_COON_STATION_TOP_TEXTURE
-		elif station_id == "golden_munchkin":
-			source_texture = GOLDEN_MUNCHKIN_STATION_TOP_TEXTURE
-		elif station_id == "siamese":
-			source_texture = SIAMESE_STATION_TOP_TEXTURE
-		else:
-			source_texture = ORANGE_CAT_STATION_TOP_TEXTURE
-
+		var source_texture: Texture2D = definition.load_texture("station")
 		var source_image := source_texture.get_image()
 		var visible_region := _station_art_visible_region(source_image)
 		if visible_region.size == Vector2i.ZERO:
@@ -1395,19 +1326,20 @@ func _destroy_pet_window() -> void:
 
 func get_pet_station_id(pet: Dictionary) -> String:
 	var pet_id := str(pet.get("id", "")).to_lower()
-	if pet_id == "default_orange_cat":
-		return "maple"
-	if STATION_THEMES.has(pet_id):
-		return pet_id
+	var definition = PetCatalogScript.definition_by_pet_id(pet_id)
+	if definition != null:
+		return definition.catalog_id
 	var name_id := str(pet.get("name", "maple")).to_lower()
-	return name_id if STATION_THEMES.has(name_id) else "maple"
+	return name_id if PetCatalogScript.definition_by_catalog_id(name_id) != null else "maple"
 
 
 func get_desktop_station_theme(station_id: String) -> Dictionary:
 	var normalized_id := station_id.to_lower()
-	var source: Dictionary = STATION_THEMES.get(normalized_id, STATION_THEMES.maple)
-	var theme := source.duplicate(true)
-	theme["id"] = normalized_id if STATION_THEMES.has(normalized_id) else "maple"
+	var definition = PetCatalogScript.definition_by_catalog_id(normalized_id)
+	if definition == null:
+		definition = PetCatalogScript.default_definition()
+	var theme: Dictionary = definition.station_theme.duplicate(true)
+	theme["id"] = definition.catalog_id
 	return theme
 
 
@@ -1838,12 +1770,8 @@ func ensure_default_pet() -> void:
 	var pool := get_pet_pool()
 	var changed := false
 	if pool.is_empty():
-		var default_pet := {
-			"id": "default_orange_cat",
-			"name": "Maple",
-			"type": "Cat",
-			"created_at": Time.get_datetime_string_from_system()
-		}
+		var default_pet: Dictionary = PetCatalogScript.default_definition().save_profile()
+		default_pet["created_at"] = Time.get_datetime_string_from_system()
 		pool = [default_pet]
 		save_data["pet_pool"] = pool
 		save_data["active_pet_id"] = default_pet.id
@@ -1852,11 +1780,11 @@ func ensure_default_pet() -> void:
 		save_data["active_pet_id"] = str(pool[0].get("id", "default_orange_cat"))
 		changed = true
 	var owned_cat_ids := get_owned_cat_ids()
-	for cat_id in ONLINE_CAT_PET_PROFILES:
+	for cat_id in PetCatalogScript.catalog_ids():
 		if not owned_cat_ids.has(cat_id):
 			continue
-		var profile: Dictionary = ONLINE_CAT_PET_PROFILES[cat_id]
-		if get_pet_index(str(profile.id)) < 0:
+		var definition = PetCatalogScript.definition_by_catalog_id(cat_id)
+		if get_pet_index(str(definition.pet_id)) < 0:
 			_ensure_online_cat_in_pet_pool(cat_id)
 			changed = true
 	if not save_data.has("owned_cat_ids") or save_data.get("owned_cat_ids") != owned_cat_ids:
@@ -1972,7 +1900,7 @@ func normalize_save_data() -> void:
 	var raw_owned_cat_ids: Variant = save_data.get("owned_cat_ids", [])
 	var relock_development_catalog := saved_version < CURRENT_SAVE_VERSION and raw_owned_cat_ids is Array
 	if relock_development_catalog:
-		for cat_id in ONLINE_CAT_PET_PROFILES:
+		for cat_id in PetCatalogScript.catalog_ids():
 			if not raw_owned_cat_ids.has(cat_id):
 				relock_development_catalog = false
 				break
@@ -2005,16 +1933,9 @@ func normalize_save_data() -> void:
 				if seen_pet_ids.has(pet_id):
 					continue
 				pet["name"] = str(pet.get("name", "Mochi"))
-				if pet_id == "default_orange_cat" and str(pet.get("name", "")) == "Mochi":
-					pet["name"] = "Maple"
-				elif pet_id == "black_cat":
-					pet["name"] = "Sable"
-				elif pet_id == "maine_coon":
-					pet["name"] = "Cedar"
-				elif pet_id == "golden_munchkin":
-					pet["name"] = "Honey"
-				elif pet_id == "siamese":
-					pet["name"] = "Pearl"
+				var definition = PetCatalogScript.definition_by_pet_id(pet_id)
+				if definition != null:
+					pet["name"] = definition.display_name
 				pet["type"] = str(pet.get("type", "Cat"))
 				pet.erase("personality")
 				pet.erase("energy")
@@ -2075,14 +1996,13 @@ func migrate_legacy_save() -> void:
 
 func _seed_preview_pets(preview_pet_id := "") -> void:
 	var active_preview_id := preview_pet_id if preview_pet_id != "" else "demo_1"
-	var active_preview_name := (
-		"Mochi" if active_preview_id == "mochi"
-		else "Biscuit" if active_preview_id == "biscuit"
-		else "Maple"
+	var preview_definition = PetCatalogScript.definition_by_pet_id(active_preview_id)
+	var active_preview_name: String = (
+		preview_definition.display_name if preview_definition != null else "Maple"
 	)
 	var preview_owned_cat_ids: Array[String] = ["maple"]
-	if active_preview_id == "mochi" or active_preview_id == "biscuit":
-		preview_owned_cat_ids.append(active_preview_id)
+	if preview_definition != null and preview_definition.catalog_id != "maple":
+		preview_owned_cat_ids.append(preview_definition.catalog_id)
 	save_data = {
 		"version": CURRENT_SAVE_VERSION,
 		"pet_pool": [

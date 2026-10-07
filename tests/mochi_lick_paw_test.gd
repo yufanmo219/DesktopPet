@@ -19,9 +19,11 @@ func _check(condition: bool, message: String) -> void:
 
 
 func _run_tests() -> void:
-	var idle := AvatarScript.MOCHI_HOME_TAIL_BLINK_FRAMES[0].get_image()
+	var mochi_assets := AvatarScript.new()
+	mochi_assets.set_pet({"id": "mochi", "name": "Mochi"})
+	var idle := mochi_assets.MOCHI_HOME_TAIL_BLINK_FRAMES[0].get_image()
 	var idle_bounds := idle.get_used_rect()
-	var frames := AvatarScript.MOCHI_LICK_PAW_FRAMES
+	var frames := mochi_assets.MOCHI_LICK_PAW_FRAMES
 	_check(frames.size() == 12, "Mochi should retain her twelve-frame paw-licking sequence")
 	_check(frames[0].get_image().get_data() == idle.get_data(), "The first interaction frame must exactly match the approved idle artwork")
 	_check(frames[-1].get_image().get_data() == idle.get_data(), "The last interaction frame must return to the exact idle artwork")
@@ -77,6 +79,7 @@ func _run_tests() -> void:
 		avatar.queue_free()
 		await process_frame
 
+	mochi_assets.free()
 	# Verify the actual double-click routes, not just a direct animation call.
 	var main = load("res://main.tscn").instantiate()
 	main.save_enabled = false

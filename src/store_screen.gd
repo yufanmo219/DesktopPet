@@ -7,58 +7,6 @@ signal cat_purchased(cat_id: String, remaining_experience: int)
 signal cat_selected(cat_id: String)
 
 const BACKGROUND_TEXTURE: Texture2D = preload("res://assets/ui/store/concepts/adopt_cat_store_background_v3.png")
-const CAT_HEAD_TEXTURE: Texture2D = preload("res://assets/ui/store/cats/processed/orange_cat_head.png")
-const CAT_BODY_TEXTURE: Texture2D = preload(
-	"res://assets/ui/store/cats/processed/orange_cat_store_detail_front.png"
-)
-const MOCHI_STORE_PORTRAIT_TEXTURE: Texture2D = preload(
-	"res://assets/pets/mochi/store/mochi_store_portrait.png"
-)
-const MOCHI_STORE_DETAIL_TEXTURE: Texture2D = preload(
-	"res://assets/pets/mochi/mochi_front_sitting_eyelashes.png"
-)
-const BISCUIT_STORE_PORTRAIT_TEXTURE: Texture2D = preload(
-	"res://assets/pets/biscuit/store/biscuit_store_portrait.png"
-)
-const BISCUIT_STORE_DETAIL_TEXTURE: Texture2D = preload(
-	"res://assets/pets/biscuit/fishing/default/biscuit_fishing_default.png"
-)
-const LUNA_STORE_PORTRAIT_TEXTURE: Texture2D = preload(
-	"res://assets/pets/russian_blue/store/luna_store_portrait.png"
-)
-const LUNA_STORE_DETAIL_TEXTURE: Texture2D = preload(
-	"res://assets/pets/russian_blue/fishing/default/luna_fishing_default.png"
-)
-const POPPY_STORE_PORTRAIT_TEXTURE: Texture2D = preload(
-	"res://assets/pets/blue_british/store/poppy_store_portrait.png"
-)
-const POPPY_STORE_DETAIL_TEXTURE: Texture2D = preload(
-	"res://assets/pets/blue_british/fishing/default/poppy_fishing_default.png"
-)
-const BLACK_CAT_STORE_PORTRAIT_TEXTURE: Texture2D = preload(
-	"res://assets/pets/black_cat/store/black_cat_store_portrait.png"
-)
-const BLACK_CAT_STORE_DETAIL_TEXTURE: Texture2D = preload(
-	"res://assets/pets/black_cat/fishing/default/black_cat_fishing_default.png"
-)
-const MAINE_COON_STORE_PORTRAIT_TEXTURE: Texture2D = preload(
-	"res://assets/pets/maine_coon/store/maine_coon_store_portrait.png"
-)
-const MAINE_COON_STORE_DETAIL_TEXTURE: Texture2D = preload(
-	"res://assets/pets/maine_coon/fishing/default/maine_coon_fishing_default.png"
-)
-const GOLDEN_MUNCHKIN_STORE_PORTRAIT_TEXTURE: Texture2D = preload(
-	"res://assets/pets/golden_munchkin/store/golden_munchkin_store_portrait.png"
-)
-const GOLDEN_MUNCHKIN_STORE_DETAIL_TEXTURE: Texture2D = preload(
-	"res://assets/pets/golden_munchkin/fishing/default/golden_munchkin_fishing_default.png"
-)
-const SIAMESE_STORE_PORTRAIT_TEXTURE: Texture2D = preload(
-	"res://assets/pets/siamese/store/siamese_store_portrait.png"
-)
-const SIAMESE_STORE_DETAIL_TEXTURE: Texture2D = preload(
-	"res://assets/pets/siamese/fishing/default/siamese_fishing_default.png"
-)
 const LOCK_TEXTURE: Texture2D = preload("res://assets/ui/store/overlays/processed/cat_lock_icon_simple_warm.png")
 const CELEBRATION_POPUP_TEXTURE: Texture2D = preload(
 	"res://assets/ui/fishing/popups/processed/fishing_success_popup_base.png"
@@ -68,6 +16,7 @@ const PURCHASE_CONFIRMATION_TEXTURE: Texture2D = preload(
 )
 const GameFontStylesScript = preload("res://src/game_font_styles.gd")
 const FishCatalogScript = preload("res://src/fish_catalog.gd")
+const PetCatalogScript = preload("res://src/pets/pet_catalog.gd")
 
 const CAT_CATALOG_TITLE_TEXT := "Cat Shelter"
 const FISH_CATALOG_TITLE_TEXT := "Fishipedia"
@@ -118,27 +67,8 @@ const CAT_LOCKED_SLOT_MODULATE := Color(0.50, 0.47, 0.44, 0.64)
 const CAT_LOCKED_SLOT_VEIL_COLOR := Color(0.34, 0.29, 0.27, 0.36)
 const CAT_LOCKED_DETAIL_MODULATE := Color(0.34, 0.34, 0.34, 0.78)
 
-const CAT_CATALOG := [
-	{
-		"id": "maple",
-		"name": "Maple",
-		"price": 0,
-		"description": "Maple is a warm and curious orange tabby who loves cozy naps and little adventures. With a cheerful heart, Maple will always stay by your side."
-	},
-	{"id": "mochi", "name": "Mochi", "price": 500, "description": "A gentle new companion is waiting to meet you."},
-	{"id": "biscuit", "name": "Biscuit", "price": 1500, "description": "A playful new companion is waiting to meet you."},
-	{"id": "luna", "name": "Luna", "price": 3000, "description": "A dreamy new companion is waiting to meet you."},
-	{"id": "poppy", "name": "Poppy", "price": 5000, "description": "A cheerful new companion is waiting to meet you."},
-	{"id": "black_cat", "name": "Sable", "price": 7000, "description": "A cool and distant companion with a quietly loyal heart."},
-	{"id": "siamese", "name": "Pearl", "price": 9000, "description": "A graceful seal-point companion with bright sky-blue eyes and a curious, affectionate nature."},
-	{"id": "golden_munchkin", "name": "Honey", "price": 11000, "description": "A round golden short-legged companion who loves soft blankets and cozy naps."},
-	{"id": "maine_coon", "name": "Cedar", "price": 20000, "description": "A gentle gray-and-white giant with a proud ruff and a soft heart."}
-]
-const ONLINE_CAT_IDS := [
-	"maple", "mochi", "biscuit", "luna", "poppy", "black_cat", "siamese",
-	"golden_munchkin", "maine_coon"
-]
-
+var CAT_CATALOG: Array = PetCatalogScript.store_entries()
+var ONLINE_CAT_IDS: Array[String] = PetCatalogScript.catalog_ids()
 var experience := 0
 var owned_cat_ids: Array[String] = ["maple"]
 var selected_cat_id := "maple"
@@ -758,12 +688,13 @@ func _build_detail_page() -> void:
 
 	detail_cat_view = Sprite2D.new()
 	detail_cat_view.name = "DetailCat"
-	detail_cat_view.texture = CAT_BODY_TEXTURE
+	var default_detail_texture := _cat_detail_texture("maple")
+	detail_cat_view.texture = default_detail_texture
 	detail_cat_view.position = CAT_DETAIL_VIEW_POSITION
 	detail_cat_view.centered = false
 	detail_cat_view.scale = Vector2(
-		CAT_DETAIL_VIEW_SIZE.x / CAT_BODY_TEXTURE.get_width(),
-		CAT_DETAIL_VIEW_SIZE.y / CAT_BODY_TEXTURE.get_height()
+		CAT_DETAIL_VIEW_SIZE.x / default_detail_texture.get_width(),
+		CAT_DETAIL_VIEW_SIZE.y / default_detail_texture.get_height()
 	)
 	cat_detail_panel.add_child(detail_cat_view)
 
@@ -1059,43 +990,17 @@ func is_cat_owned(cat_id: String) -> bool:
 
 
 func _cat_head_texture(cat_id: String) -> Texture2D:
-	if cat_id == "mochi":
-		return MOCHI_STORE_PORTRAIT_TEXTURE
-	if cat_id == "biscuit":
-		return BISCUIT_STORE_PORTRAIT_TEXTURE
-	if cat_id == "luna":
-		return LUNA_STORE_PORTRAIT_TEXTURE
-	if cat_id == "poppy":
-		return POPPY_STORE_PORTRAIT_TEXTURE
-	if cat_id == "black_cat":
-		return BLACK_CAT_STORE_PORTRAIT_TEXTURE
-	if cat_id == "maine_coon":
-		return MAINE_COON_STORE_PORTRAIT_TEXTURE
-	if cat_id == "golden_munchkin":
-		return GOLDEN_MUNCHKIN_STORE_PORTRAIT_TEXTURE
-	if cat_id == "siamese":
-		return SIAMESE_STORE_PORTRAIT_TEXTURE
-	return CAT_HEAD_TEXTURE
+	var definition = PetCatalogScript.definition_by_catalog_id(cat_id)
+	if definition == null:
+		definition = PetCatalogScript.default_definition()
+	return definition.load_texture("store_portrait")
 
 
 func _cat_detail_texture(cat_id: String) -> Texture2D:
-	if cat_id == "mochi":
-		return MOCHI_STORE_DETAIL_TEXTURE
-	if cat_id == "biscuit":
-		return BISCUIT_STORE_DETAIL_TEXTURE
-	if cat_id == "luna":
-		return LUNA_STORE_DETAIL_TEXTURE
-	if cat_id == "poppy":
-		return POPPY_STORE_DETAIL_TEXTURE
-	if cat_id == "black_cat":
-		return BLACK_CAT_STORE_DETAIL_TEXTURE
-	if cat_id == "maine_coon":
-		return MAINE_COON_STORE_DETAIL_TEXTURE
-	if cat_id == "golden_munchkin":
-		return GOLDEN_MUNCHKIN_STORE_DETAIL_TEXTURE
-	if cat_id == "siamese":
-		return SIAMESE_STORE_DETAIL_TEXTURE
-	return CAT_BODY_TEXTURE
+	var definition = PetCatalogScript.definition_by_catalog_id(cat_id)
+	if definition == null:
+		definition = PetCatalogScript.default_definition()
+	return definition.load_texture("store_detail")
 
 
 func get_catalog_index(cat_id: String) -> int:

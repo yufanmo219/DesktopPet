@@ -37,7 +37,7 @@ func _run() -> void:
 		avatar.play_belly_roll()
 		for index in range(16):
 			_check(avatar.interaction_frame == index, "Biscuit must retain all sixteen frames and their timing")
-			_check(avatar.cat_sprite.texture == AvatarScript.BISCUIT_BUTTERFLY_FRAMES[index], "Biscuit must use her unchanged original butterfly textures")
+			_check(avatar.cat_sprite.texture == avatar.BISCUIT_BUTTERFLY_FRAMES[index], "Biscuit must use her unchanged original butterfly textures")
 			_check(avatar.cat_sprite.scale.is_equal_approx(original_scale), "Biscuit must not change size")
 			_check(avatar.cat_sprite.position.is_equal_approx(_unshifted_position(avatar) + Vector2(0, -8)), "Every double-click frame must move exactly eight pixels up, never horizontally")
 			_check(avatar.cat_sprite.modulate == Color.WHITE and avatar.cat_sprite.self_modulate == Color.WHITE, "No tint may change Biscuit's coat")

@@ -3,6 +3,7 @@ extends SceneTree
 const GameFontStylesScript = preload("res://src/game_font_styles.gd")
 const FishCatalogScript = preload("res://src/fish_catalog.gd")
 const FishingLevelCatalogScript = preload("res://src/fishing_level_catalog.gd")
+const PetCatalogScript = preload("res://src/pets/pet_catalog.gd")
 
 var failures: Array[String] = []
 
@@ -15,6 +16,10 @@ func check(condition: bool, message: String) -> void:
 	if not condition:
 		failures.append(message)
 		push_error(message)
+
+
+func pet_texture(catalog_id: String, key: String) -> Texture2D:
+	return PetCatalogScript.definition_by_catalog_id(catalog_id).load_texture(key)
 
 
 func wait_for_screen(game: Node, screen_name: String, maximum_frames := 600) -> bool:
@@ -748,7 +753,7 @@ func run_tests() -> void:
 	check(
 		sable_catalog_entries.size() == 1
 		and str(sable_catalog_entries[0].name) == "Sable"
-		and str(game.ONLINE_CAT_PET_PROFILES.black_cat.name) == "Sable",
+		and PetCatalogScript.definition_by_catalog_id("black_cat").display_name == "Sable",
 		"The black cat should display as Sable in both the Store and carried-pet profile"
 	)
 	var cedar_catalog_entries: Array = store.CAT_CATALOG.filter(
@@ -757,7 +762,7 @@ func run_tests() -> void:
 	check(
 		cedar_catalog_entries.size() == 1
 		and str(cedar_catalog_entries[0].name) == "Cedar"
-		and str(game.ONLINE_CAT_PET_PROFILES.maine_coon.name) == "Cedar",
+		and PetCatalogScript.definition_by_catalog_id("maine_coon").display_name == "Cedar",
 		"The Maine Coon should display as Cedar in both the Store and carried-pet profile"
 	)
 	var honey_catalog_entries: Array = store.CAT_CATALOG.filter(
@@ -766,7 +771,7 @@ func run_tests() -> void:
 	check(
 		honey_catalog_entries.size() == 1
 		and str(honey_catalog_entries[0].name) == "Honey"
-		and str(game.ONLINE_CAT_PET_PROFILES.golden_munchkin.name) == "Honey",
+		and PetCatalogScript.definition_by_catalog_id("golden_munchkin").display_name == "Honey",
 		"The Golden Munchkin should display as Honey in both the Store and carried-pet profile"
 	)
 	var pearl_catalog_entries: Array = store.CAT_CATALOG.filter(
@@ -775,7 +780,7 @@ func run_tests() -> void:
 	check(
 		pearl_catalog_entries.size() == 1
 		and str(pearl_catalog_entries[0].name) == "Pearl"
-		and str(game.ONLINE_CAT_PET_PROFILES.siamese.name) == "Pearl",
+		and PetCatalogScript.definition_by_catalog_id("siamese").display_name == "Pearl",
 		"The Siamese cat should display as Pearl in both the Store and carried-pet profile"
 	)
 	var total_cat_unlock_xp := 0
@@ -805,8 +810,8 @@ func run_tests() -> void:
 	check(
 		store.selected_cat_id == "luna"
 		and store.detail_locked
-		and luna_slot_head.texture == store.LUNA_STORE_PORTRAIT_TEXTURE
-		and store.detail_cat_view.texture == store.LUNA_STORE_DETAIL_TEXTURE
+		and luna_slot_head.texture == pet_texture("luna", "store_portrait")
+		and store.detail_cat_view.texture == pet_texture("luna", "store_detail")
 		and store.detail_unlock_label.text == "UNLOCK WITH 3,000 XP",
 		"Locked Luna should show her Russian Blue artwork and unlock price"
 	)
@@ -815,8 +820,8 @@ func run_tests() -> void:
 	check(
 		store.selected_cat_id == "poppy"
 		and store.detail_locked
-		and poppy_slot_head.texture == store.POPPY_STORE_PORTRAIT_TEXTURE
-		and store.detail_cat_view.texture == store.POPPY_STORE_DETAIL_TEXTURE
+		and poppy_slot_head.texture == pet_texture("poppy", "store_portrait")
+		and store.detail_cat_view.texture == pet_texture("poppy", "store_detail")
 		and store.detail_unlock_label.text == "UNLOCK WITH 5,000 XP",
 		"Locked Poppy should show her own artwork and unlock price"
 	)
@@ -828,8 +833,8 @@ func run_tests() -> void:
 	check(store.selected_cat_id == "mochi" and store.detail_locked, "Selecting an unowned placeholder should switch to the locked detail state")
 	var mochi_slot_head: Sprite2D = store.cat_grid_layer.get_node("CatSlot1/CatHead")
 	check(
-		mochi_slot_head.texture == store.MOCHI_STORE_PORTRAIT_TEXTURE
-		and store.detail_cat_view.texture == store.MOCHI_STORE_DETAIL_TEXTURE,
+		mochi_slot_head.texture == pet_texture("mochi", "store_portrait")
+		and store.detail_cat_view.texture == pet_texture("mochi", "store_detail"),
 		"Mochi should use her head portrait in the slot and her approved front-sitting art in the detail card"
 	)
 	check(
@@ -879,7 +884,7 @@ func run_tests() -> void:
 	check(store.purchase_popup_stage == "congratulations" and store.purchase_popup != null, "Yes should replace the confirmation with the congratulations popup")
 	var celebration_background = store.purchase_popup.find_child("CelebrationBackground", true, false)
 	check(celebration_background is TextureRect and celebration_background.texture == store.CELEBRATION_POPUP_TEXTURE, "The congratulations popup should reuse Fishing's confetti celebration artwork")
-	check(store.congratulations_cat_view.texture == store.MOCHI_STORE_DETAIL_TEXTURE and store.congratulations_name_label.text == "MOCHI!", "The congratulations popup should show Mochi's full-body art and name")
+	check(store.congratulations_cat_view.texture == pet_texture("mochi", "store_detail") and store.congratulations_name_label.text == "MOCHI!", "The congratulations popup should show Mochi's full-body art and name")
 	var congratulations_labels: Array[Node] = store.purchase_popup.find_children("*", "Label", true, false)
 	check(congratulations_labels.any(func(label): return label.text == "CONGRATULATIONS!") and congratulations_labels.any(func(label): return label.text == "YOU NOW OWN"), "The congratulations popup should show only the requested ownership heading")
 	check(store.is_cat_owned("mochi") and store.experience == 500, "Confirming a purchase should deduct Mochi's 500 XP and unlock the cat")
@@ -896,8 +901,8 @@ func run_tests() -> void:
 	store.slot_buttons[2].emit_signal("pressed")
 	var biscuit_slot_head: Sprite2D = store.cat_grid_layer.get_node("CatSlot2/CatHead")
 	check(
-		biscuit_slot_head.texture == store.BISCUIT_STORE_PORTRAIT_TEXTURE
-		and store.detail_cat_view.texture == store.BISCUIT_STORE_DETAIL_TEXTURE,
+		biscuit_slot_head.texture == pet_texture("biscuit", "store_portrait")
+		and store.detail_cat_view.texture == pet_texture("biscuit", "store_detail"),
 		"Biscuit should use her calico head portrait in the slot and front-sitting art in the detail card"
 	)
 	check(store.detail_unlock_button.disabled and store.detail_unlock_label.text == "UNLOCK WITH 1,500 XP", "A cat that costs more than the player's remaining XP should stay visibly priced but disabled")
@@ -917,7 +922,7 @@ func run_tests() -> void:
 	check(
 		store.is_cat_owned("biscuit")
 		and store.experience == 500
-		and store.congratulations_cat_view.texture == store.BISCUIT_STORE_DETAIL_TEXTURE
+		and store.congratulations_cat_view.texture == pet_texture("biscuit", "store_detail")
 		and store.congratulations_name_label.text == "BISCUIT!",
 		"Confirming Biscuit should unlock her and show her own full-body celebration art"
 	)
@@ -1014,7 +1019,7 @@ func run_tests() -> void:
 	check(
 		_station_art_is_standardized(
 			biscuit_station_art,
-			game.BISCUIT_STATION_TOP_TEXTURE,
+			pet_texture("biscuit", "station"),
 			game.STATION_TOP_ART_POSITION,
 			game.STATION_TOP_ART_SIZE
 		),
@@ -1097,7 +1102,7 @@ func run_tests() -> void:
 	check(
 		_station_art_is_standardized(
 			luna_station_art,
-			game.LUNA_STATION_TOP_TEXTURE,
+			pet_texture("luna", "station"),
 			game.STATION_TOP_ART_POSITION,
 			game.STATION_TOP_ART_SIZE
 		),
@@ -1182,7 +1187,7 @@ func run_tests() -> void:
 	check(
 		_station_art_is_standardized(
 			poppy_station_art,
-			game.POPPY_STATION_TOP_TEXTURE,
+			pet_texture("poppy", "station"),
 			game.STATION_TOP_ART_POSITION,
 			game.STATION_TOP_ART_SIZE
 		),
@@ -1311,7 +1316,7 @@ func run_tests() -> void:
 	check(
 		_station_art_is_standardized(
 			black_cat_station_art,
-			game.BLACK_CAT_STATION_TOP_TEXTURE,
+			pet_texture("black_cat", "station"),
 			game.STATION_TOP_ART_POSITION,
 			game.STATION_TOP_ART_SIZE
 		),
@@ -1321,10 +1326,10 @@ func run_tests() -> void:
 	var black_cat_store = load("res://src/store_screen.gd").new()
 	check(
 		black_cat_store._cat_head_texture("black_cat")
-		== black_cat_store.BLACK_CAT_STORE_PORTRAIT_TEXTURE
+		== pet_texture("black_cat", "store_portrait")
 		and black_cat_store._cat_detail_texture("black_cat")
-		== black_cat_store.BLACK_CAT_STORE_DETAIL_TEXTURE
-		and black_cat_store.BLACK_CAT_STORE_DETAIL_TEXTURE.resource_path.ends_with(
+		== pet_texture("black_cat", "store_detail")
+		and pet_texture("black_cat", "store_detail").resource_path.ends_with(
 			"black_cat_fishing_default.png"
 		),
 		"The black cat Store slot should use the head portrait and the detail card should use her front-facing full body"
@@ -1415,7 +1420,7 @@ func run_tests() -> void:
 	check(
 		_station_art_is_standardized(
 			maine_coon_station_art,
-			game.MAINE_COON_STATION_TOP_TEXTURE,
+			pet_texture("maine_coon", "station"),
 			game.STATION_TOP_ART_POSITION,
 			game.STATION_TOP_ART_SIZE
 		),
@@ -1425,10 +1430,10 @@ func run_tests() -> void:
 	var maine_coon_store = load("res://src/store_screen.gd").new()
 	check(
 		maine_coon_store._cat_head_texture("maine_coon")
-		== maine_coon_store.MAINE_COON_STORE_PORTRAIT_TEXTURE
+		== pet_texture("maine_coon", "store_portrait")
 		and maine_coon_store._cat_detail_texture("maine_coon")
-		== maine_coon_store.MAINE_COON_STORE_DETAIL_TEXTURE
-		and maine_coon_store.MAINE_COON_STORE_DETAIL_TEXTURE.resource_path.ends_with(
+		== pet_texture("maine_coon", "store_detail")
+		and pet_texture("maine_coon", "store_detail").resource_path.ends_with(
 			"maine_coon_fishing_default.png"
 		),
 		"The Maine Coon Store slot should use her portrait and front-facing full body"
@@ -1562,7 +1567,7 @@ func run_tests() -> void:
 	check(
 		_station_art_is_standardized(
 			golden_munchkin_station_art,
-			game.GOLDEN_MUNCHKIN_STATION_TOP_TEXTURE,
+			pet_texture("golden_munchkin", "station"),
 			game.STATION_TOP_ART_POSITION,
 			game.STATION_TOP_ART_SIZE
 		),
@@ -1572,10 +1577,10 @@ func run_tests() -> void:
 	var golden_munchkin_store = load("res://src/store_screen.gd").new()
 	check(
 		golden_munchkin_store._cat_head_texture("golden_munchkin")
-		== golden_munchkin_store.GOLDEN_MUNCHKIN_STORE_PORTRAIT_TEXTURE
+		== pet_texture("golden_munchkin", "store_portrait")
 		and golden_munchkin_store._cat_detail_texture("golden_munchkin")
-		== golden_munchkin_store.GOLDEN_MUNCHKIN_STORE_DETAIL_TEXTURE
-		and golden_munchkin_store.GOLDEN_MUNCHKIN_STORE_DETAIL_TEXTURE.resource_path.ends_with(
+		== pet_texture("golden_munchkin", "store_detail")
+		and pet_texture("golden_munchkin", "store_detail").resource_path.ends_with(
 			"golden_munchkin_fishing_default.png"
 		)
 		and golden_munchkin_store.get_catalog_index("golden_munchkin") == 7,
@@ -1709,7 +1714,7 @@ func run_tests() -> void:
 	check(
 		_station_art_is_standardized(
 			siamese_station_art,
-			game.SIAMESE_STATION_TOP_TEXTURE,
+			pet_texture("siamese", "station"),
 			game.STATION_TOP_ART_POSITION,
 			game.STATION_TOP_ART_SIZE
 		),
@@ -1719,10 +1724,10 @@ func run_tests() -> void:
 	var siamese_store = load("res://src/store_screen.gd").new()
 	check(
 		siamese_store._cat_head_texture("siamese")
-		== siamese_store.SIAMESE_STORE_PORTRAIT_TEXTURE
+		== pet_texture("siamese", "store_portrait")
 		and siamese_store._cat_detail_texture("siamese")
-		== siamese_store.SIAMESE_STORE_DETAIL_TEXTURE
-		and siamese_store.SIAMESE_STORE_DETAIL_TEXTURE.resource_path.ends_with(
+		== pet_texture("siamese", "store_detail")
+		and pet_texture("siamese", "store_detail").resource_path.ends_with(
 			"siamese_fishing_default.png"
 		)
 		and siamese_store.get_catalog_index("siamese") == 6
@@ -1896,7 +1901,7 @@ func run_tests() -> void:
 	check(
 		_station_art_is_standardized(
 			mochi_station_art,
-			game.MOCHI_STATION_TOP_TEXTURE,
+			pet_texture("mochi", "station"),
 			game.STATION_TOP_ART_POSITION,
 			game.STATION_TOP_ART_SIZE
 		),
@@ -3160,7 +3165,7 @@ func run_tests() -> void:
 	check(game.fetch_count == 1, "Clicking the ball should count one retrieval")
 	check(int(game.get_progress_stats().experience) == xp_before_fetch, "Reverse fetch should stay an interaction and not award progression XP")
 
-	var station_ids: Array = game.STATION_THEMES.keys()
+	var station_ids: Array[String] = PetCatalogScript.catalog_ids()
 	var station_colors := {}
 	var station_motifs := {}
 	for station_id in station_ids:
@@ -3200,7 +3205,7 @@ func run_tests() -> void:
 	check(
 		_station_art_is_standardized(
 			station_top,
-			game.ORANGE_CAT_STATION_TOP_TEXTURE,
+			pet_texture("maple", "station"),
 			game.STATION_TOP_ART_POSITION,
 			game.STATION_TOP_ART_SIZE
 		),
