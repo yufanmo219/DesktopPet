@@ -96,11 +96,11 @@ func _run_tests() -> void:
 	_check(main.avatar.is_playing_interaction(), "Home double-click should start the repaired Mochi animation")
 	main.enter_desktop_mode()
 	main.avatar.set_process(false)
-	var position_before: Vector2 = main.widget_pet_position
-	main._on_pet_drag_input(double_click)
-	_check(main.avatar.is_playing_interaction() and not main.widget_pet_dragging, "Desktop double-click should animate Mochi without dragging")
-	main.update_desktop_companion(0.1, Vector2(-100000.0, -100000.0))
-	_check(main.widget_pet_position.is_equal_approx(position_before), "Double-clicking must not move Mochi's native window")
+	var position_before: Vector2 = main.desktop_controller.widget_pet_position
+	main.desktop_controller._on_pet_drag_input(double_click)
+	_check(main.avatar.is_playing_interaction() and not main.desktop_controller.widget_pet_dragging, "Desktop double-click should animate Mochi without dragging")
+	main.desktop_controller.update(0.1, Vector2(-100000.0, -100000.0))
+	_check(main.desktop_controller.widget_pet_position.is_equal_approx(position_before), "Double-clicking must not move Mochi's native window")
 	main.queue_free()
 	await process_frame
 	var music = root.get_node_or_null("MusicManager")

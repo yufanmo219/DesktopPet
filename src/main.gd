@@ -27,28 +27,6 @@ const HOME_WAKE_AREA := Rect2(0.0, 0.0, 700.0, 720.0)
 const HOME_POINTER_MOVE_THRESHOLD := 2.0
 const HOME_SLEEP_DELAY_SECONDS := 10.0
 const HOME_WELCOME_TEXT_COLOR := Color("#fff3cf")
-const DESKTOP_WIDGET_SCALE := DesktopCompanionControllerScript.DESKTOP_WIDGET_SCALE
-const STATION_LOGICAL_SIZE := DesktopCompanionControllerScript.STATION_LOGICAL_SIZE
-const PET_WIDGET_LOGICAL_SIZE := DesktopCompanionControllerScript.PET_WIDGET_LOGICAL_SIZE
-const STATION_SCREEN_MARGIN := DesktopCompanionControllerScript.STATION_SCREEN_MARGIN
-const STATION_CONTROLS_Y := DesktopCompanionControllerScript.STATION_CONTROLS_Y
-const STATION_TOP_ART_POSITION := DesktopCompanionControllerScript.STATION_TOP_ART_POSITION
-const STATION_TOP_ART_SIZE := DesktopCompanionControllerScript.STATION_TOP_ART_SIZE
-const STATION_ART_VISIBLE_ALPHA_THRESHOLD := (
-	DesktopCompanionControllerScript.STATION_ART_VISIBLE_ALPHA_THRESHOLD
-)
-const STATION_PET_FOOT_Y := DesktopCompanionControllerScript.STATION_PET_FOOT_Y
-const STATION_WAKE_SECONDS := DesktopCompanionControllerScript.STATION_WAKE_SECONDS
-const PET_RETURN_SECONDS := DesktopCompanionControllerScript.PET_RETURN_SECONDS
-const PET_FOLLOW_RUN_SPEED := DesktopCompanionControllerScript.PET_FOLLOW_RUN_SPEED
-const PET_FOLLOW_REACTION_MIN := DesktopCompanionControllerScript.PET_FOLLOW_REACTION_MIN
-const PET_FOLLOW_REACTION_MAX := DesktopCompanionControllerScript.PET_FOLLOW_REACTION_MAX
-const PET_FOLLOW_ARRIVAL_DISTANCE := (
-	DesktopCompanionControllerScript.PET_FOLLOW_ARRIVAL_DISTANCE
-)
-const PET_FOLLOW_RESUME_DISTANCE := (
-	DesktopCompanionControllerScript.PET_FOLLOW_RESUME_DISTANCE
-)
 var save_data: Dictionary = {
 	"version": CURRENT_SAVE_VERSION,
 	"pet_pool": [],
@@ -88,86 +66,6 @@ var fetch_count := 0
 
 var desktop_mode := false
 var desktop_controller: DesktopCompanionController = DesktopCompanionControllerScript.new()
-
-# Transitional read/write proxies keep the public surface stable while desktop
-# ownership moves out of Main. New code should use desktop_controller directly.
-var desktop_station: Panel:
-	get: return desktop_controller.desktop_station
-var station_top_art: Control:
-	get: return desktop_controller.station_top_art
-var station_window: Window:
-	get: return desktop_controller.station_window
-var station_drag_handle: Control:
-	get: return desktop_controller.station_drag_handle
-var follow_button: Button:
-	get: return desktop_controller.follow_button
-var pet_window: Window:
-	get: return desktop_controller.pet_window
-var pet_drag_surface: Control:
-	get: return desktop_controller.pet_drag_surface
-var pet_station_top_art: Control:
-	get: return desktop_controller.pet_station_top_art
-var pet_window_raise_pending: bool:
-	get: return desktop_controller.pet_window_raise_pending
-var normal_window_unresizable: bool:
-	get: return desktop_controller.normal_window_unresizable
-var widget_following: bool:
-	get: return desktop_controller.widget_following
-	set(value): desktop_controller.widget_following = value
-var widget_station_dragging: bool:
-	get: return desktop_controller.widget_station_dragging
-	set(value): desktop_controller.widget_station_dragging = value
-var widget_pet_dragging: bool:
-	get: return desktop_controller.widget_pet_dragging
-	set(value): desktop_controller.widget_pet_dragging = value
-var widget_pet_at_station: bool:
-	get: return desktop_controller.widget_pet_at_station
-	set(value): desktop_controller.widget_pet_at_station = value
-var widget_returning_to_station: bool:
-	get: return desktop_controller.widget_returning_to_station
-	set(value): desktop_controller.widget_returning_to_station = value
-var widget_seconds_outside_station: float:
-	get: return desktop_controller.widget_seconds_outside_station
-	set(value): desktop_controller.widget_seconds_outside_station = value
-var widget_seconds_since_pet_drag: float:
-	get: return desktop_controller.widget_seconds_since_pet_drag
-	set(value): desktop_controller.widget_seconds_since_pet_drag = value
-var widget_screen_scale: float:
-	get: return desktop_controller.widget_screen_scale
-	set(value): desktop_controller.widget_screen_scale = value
-var widget_station_position: Vector2:
-	get: return desktop_controller.widget_station_position
-	set(value): desktop_controller.widget_station_position = value
-var widget_pet_position: Vector2:
-	get: return desktop_controller.widget_pet_position
-	set(value): desktop_controller.widget_pet_position = value
-var widget_station_drag_start_mouse: Vector2:
-	get: return desktop_controller.widget_station_drag_start_mouse
-	set(value): desktop_controller.widget_station_drag_start_mouse = value
-var widget_station_drag_start_position: Vector2:
-	get: return desktop_controller.widget_station_drag_start_position
-	set(value): desktop_controller.widget_station_drag_start_position = value
-var widget_pet_drag_start_mouse: Vector2:
-	get: return desktop_controller.widget_pet_drag_start_mouse
-	set(value): desktop_controller.widget_pet_drag_start_mouse = value
-var widget_pet_drag_start_position: Vector2:
-	get: return desktop_controller.widget_pet_drag_start_position
-	set(value): desktop_controller.widget_pet_drag_start_position = value
-var widget_follow_last_pointer: Vector2:
-	get: return desktop_controller.widget_follow_last_pointer
-	set(value): desktop_controller.widget_follow_last_pointer = value
-var widget_follow_target: Vector2:
-	get: return desktop_controller.widget_follow_target
-	set(value): desktop_controller.widget_follow_target = value
-var widget_follow_reaction_remaining: float:
-	get: return desktop_controller.widget_follow_reaction_remaining
-	set(value): desktop_controller.widget_follow_reaction_remaining = value
-var widget_follow_has_target: bool:
-	get: return desktop_controller.widget_follow_has_target
-	set(value): desktop_controller.widget_follow_has_target = value
-var widget_follow_chasing: bool:
-	get: return desktop_controller.widget_follow_chasing
-	set(value): desktop_controller.widget_follow_chasing = value
 var save_enabled := true
 var save_read_only := false
 var save_repository
@@ -258,7 +156,7 @@ func _process(delta: float) -> void:
 		update_home_pointer_state(pointer_position, home_pointer_has_moved, delta)
 
 	if desktop_mode:
-		update_desktop_companion(delta)
+		desktop_controller.update(delta)
 
 
 func _notification(what: int) -> void:
@@ -988,66 +886,6 @@ func show_widget_preview() -> void:
 	avatar = desktop_controller.avatar
 
 
-func _make_station_top_art(station_id: String, theme: Dictionary) -> Control:
-	return desktop_controller._make_station_top_art(station_id, theme)
-
-
-func get_pet_station_id(pet: Dictionary) -> String:
-	return desktop_controller.get_pet_station_id(pet)
-
-
-func get_desktop_station_theme(station_id: String) -> Dictionary:
-	return desktop_controller.get_desktop_station_theme(station_id)
-
-
-func get_initial_station_position(screen_rect: Rect2) -> Vector2:
-	return desktop_controller.get_initial_station_position(screen_rect)
-
-
-func get_station_pixel_size() -> Vector2:
-	return desktop_controller.get_station_pixel_size()
-
-
-func get_pet_widget_pixel_size() -> Vector2:
-	return desktop_controller.get_pet_widget_pixel_size()
-
-
-func get_station_pet_anchor() -> Vector2:
-	return desktop_controller.get_station_pet_anchor()
-
-
-func get_station_wake_rect() -> Rect2:
-	return desktop_controller.get_station_wake_rect()
-
-
-func get_pet_screen_rect() -> Rect2:
-	return desktop_controller.get_pet_screen_rect()
-
-
-func set_widget_station_position(value: Vector2) -> void:
-	desktop_controller.set_widget_station_position(value)
-
-
-func set_widget_pet_position(value: Vector2, clamp_to_screen := true) -> void:
-	desktop_controller.set_widget_pet_position(value, clamp_to_screen)
-
-
-func clamp_desktop_item_position(value: Vector2, item_size: Vector2) -> Vector2:
-	return desktop_controller.clamp_desktop_item_position(value, item_size)
-
-
-func clamp_desktop_item_position_to_screens(
-	value: Vector2,
-	item_size: Vector2,
-	screen_rects: Array[Rect2]
-) -> Vector2:
-	return desktop_controller.clamp_desktop_item_position_to_screens(
-		value,
-		item_size,
-		screen_rects
-	)
-
-
 func get_desktop_screen_rects() -> Array[Rect2]:
 	var screen_rects: Array[Rect2] = []
 	if DisplayServer.get_name() == "headless":
@@ -1058,41 +896,14 @@ func get_desktop_screen_rects() -> Array[Rect2]:
 	return screen_rects
 
 
-func get_desktop_screen_rect() -> Rect2:
-	return desktop_controller.get_desktop_screen_rect()
-
-
-func get_current_desktop_screen_rect() -> Rect2:
-	return desktop_controller.get_current_desktop_screen_rect()
-
-
-func _on_station_drag_input(event: InputEvent) -> void:
-	desktop_controller._on_station_drag_input(event)
-
-
-func _on_pet_drag_input(event: InputEvent) -> void:
-	desktop_controller._on_pet_drag_input(event)
-
-
 func get_desktop_pointer_position() -> Vector2:
 	if DisplayServer.get_name() == "headless":
-		return widget_pet_position + get_pet_widget_pixel_size() * 0.5
+		return (
+			desktop_controller.widget_pet_position
+			+ desktop_controller.get_pet_widget_pixel_size() * 0.5
+		)
 	return Vector2(DisplayServer.mouse_get_position())
 
-
-func toggle_widget_follow() -> void:
-	desktop_controller.toggle_widget_follow()
-
-
-func set_widget_following(enabled: bool) -> void:
-	desktop_controller.set_widget_following(enabled)
-
-
-func update_desktop_companion(
-	delta: float,
-	pointer_override := Vector2(-1000000.0, -1000000.0)
-) -> void:
-	desktop_controller.update(delta, pointer_override)
 
 func restore_from_widget() -> void:
 	leave_desktop_mode()
