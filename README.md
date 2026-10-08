@@ -44,6 +44,10 @@
 
 存档文件名为 `desktop_pet_save.json`，由 Godot 写入本机的 `user://` 目录。它保存当前宠物、共享 XP、钓鱼进度、鱼缸、爱心，以及商店中的 `owned_cat_ids`。旧存档的共享进度字段会在加载时自动迁移成 `progress_stats`，不会重算关卡、XP、爱心或鱼图鉴。当前版本不会把玩家数据上传到服务器。
 
+## Desktop Companion 架构
+
+`main.gd` 只负责进入/退出 Desktop 模式和页面导航。`DesktopCompanionController` 把鼠标输入、状态决策、窗口移动与 `PetAvatar` 动画组合起来；`DesktopCompanionStateMachine` 是不依赖 Godot 窗口的纯行为模型；`DesktopWindowHost` 则集中处理透明原生窗口、置顶、多显示器与主窗口恢复。新的行为规则应先加入状态机并通过纯状态测试，不要在 Controller 中增加互相依赖的布尔标记。
+
 ## 原创字体
 
 手写原稿保存在 `dev_only/unused_assets/assets/font_source/original_handwriting_filled.png`，最终游戏使用的矢量字体是 `assets/fonts/original_handwriting/yufan_original_handwriting.ttf`。Godot 会在任意字号下实时抗锯齿渲染，颜色、描边和阴影由界面样式生成，不再缩放固定分辨率的字形图集。字体来自玩家原创手写内容，不依赖第三方商业字体许可。

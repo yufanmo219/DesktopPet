@@ -8,6 +8,9 @@ const PetAvatarScript = preload("res://src/pet_avatar.gd")
 const PetCatalogScript = preload("res://src/pets/pet_catalog.gd")
 const GameFontStylesScript = preload("res://src/game_font_styles.gd")
 const DesktopWindowHostScript = preload("res://src/desktop/desktop_window_host.gd")
+const DesktopCompanionStateMachineScript = preload(
+	"res://src/desktop/desktop_companion_state_machine.gd"
+)
 
 const DESKTOP_WIDGET_SCALE := 0.90
 const STATION_LOGICAL_SIZE := Vector2i(360, 166)
@@ -18,13 +21,21 @@ const STATION_TOP_ART_POSITION := Vector2.ZERO
 const STATION_TOP_ART_SIZE := Vector2(360.0, STATION_CONTROLS_Y)
 const STATION_ART_VISIBLE_ALPHA_THRESHOLD := 0.03
 const STATION_PET_FOOT_Y := 107.0
-const STATION_WAKE_SECONDS := 30.0
-const PET_RETURN_SECONDS := 15.0
-const PET_FOLLOW_RUN_SPEED := 150.0
-const PET_FOLLOW_REACTION_MIN := 0.3
-const PET_FOLLOW_REACTION_MAX := 0.6
-const PET_FOLLOW_ARRIVAL_DISTANCE := 60.0
-const PET_FOLLOW_RESUME_DISTANCE := 100.0
+const STATION_WAKE_SECONDS := DesktopCompanionStateMachineScript.STATION_WAKE_SECONDS
+const PET_RETURN_SECONDS := DesktopCompanionStateMachineScript.PET_RETURN_SECONDS
+const PET_FOLLOW_RUN_SPEED := DesktopCompanionStateMachineScript.PET_FOLLOW_RUN_SPEED
+const PET_FOLLOW_REACTION_MIN := (
+	DesktopCompanionStateMachineScript.PET_FOLLOW_REACTION_MIN
+)
+const PET_FOLLOW_REACTION_MAX := (
+	DesktopCompanionStateMachineScript.PET_FOLLOW_REACTION_MAX
+)
+const PET_FOLLOW_ARRIVAL_DISTANCE := (
+	DesktopCompanionStateMachineScript.PET_FOLLOW_ARRIVAL_DISTANCE
+)
+const PET_FOLLOW_RESUME_DISTANCE := (
+	DesktopCompanionStateMachineScript.PET_FOLLOW_RESUME_DISTANCE
+)
 
 var active := false
 var desktop_station: Panel
@@ -35,13 +46,7 @@ var pet_drag_surface: Control
 var pet_station_top_art: Control
 var avatar: PetAvatar
 
-var widget_following := false
 var widget_station_dragging := false
-var widget_pet_dragging := false
-var widget_pet_at_station := true
-var widget_returning_to_station := false
-var widget_seconds_outside_station := 0.0
-var widget_seconds_since_pet_drag := 0.0
 var widget_screen_scale := DESKTOP_WIDGET_SCALE
 var widget_station_position := Vector2.ZERO
 var widget_pet_position := Vector2.ZERO
@@ -49,13 +54,9 @@ var widget_station_drag_start_mouse := Vector2.ZERO
 var widget_station_drag_start_position := Vector2.ZERO
 var widget_pet_drag_start_mouse := Vector2.ZERO
 var widget_pet_drag_start_position := Vector2.ZERO
-var widget_follow_last_pointer := Vector2.ZERO
-var widget_follow_target := Vector2.ZERO
-var widget_follow_reaction_remaining := 0.0
-var widget_follow_has_target := false
-var widget_follow_chasing := false
 
 var window_host: DesktopWindowHost
+var state_machine: DesktopCompanionStateMachine = DesktopCompanionStateMachineScript.new()
 var fallback_parent: Control
 var pointer_position_provider: Callable
 var screen_rects_provider: Callable
@@ -84,6 +85,72 @@ var normal_window_unresizable: bool:
 			if is_instance_valid(window_host)
 			else false
 		)
+
+var widget_following: bool:
+	get:
+		return state_machine.is_follow_mode()
+	set(value):
+		set_widget_following(value)
+
+var widget_pet_dragging: bool:
+	get:
+		return state_machine.is_dragging()
+	set(value):
+		state_machine.force_dragging(value)
+
+var widget_pet_at_station: bool:
+	get:
+		return state_machine.is_docked()
+	set(value):
+		state_machine.force_docked(value)
+
+var widget_returning_to_station: bool:
+	get:
+		return state_machine.is_returning()
+	set(value):
+		state_machine.force_returning(value)
+
+var widget_seconds_outside_station: float:
+	get:
+		return state_machine.seconds_outside_station
+	set(value):
+		state_machine.seconds_outside_station = value
+
+var widget_seconds_since_pet_drag: float:
+	get:
+		return state_machine.seconds_since_pet_drag
+	set(value):
+		state_machine.seconds_since_pet_drag = value
+
+var widget_follow_last_pointer: Vector2:
+	get:
+		return state_machine.follow_last_pointer
+	set(value):
+		state_machine.follow_last_pointer = value
+
+var widget_follow_target: Vector2:
+	get:
+		return state_machine.follow_target
+	set(value):
+		state_machine.follow_target = value
+
+var widget_follow_reaction_remaining: float:
+	get:
+		return state_machine.follow_reaction_remaining
+	set(value):
+		state_machine.follow_reaction_remaining = value
+
+var widget_follow_has_target: bool:
+	get:
+		return state_machine.follow_has_target
+	set(value):
+		state_machine.follow_has_target = value
+
+var widget_follow_chasing: bool:
+	get:
+		return state_machine.is_follow_chasing()
+	set(value):
+		state_machine.force_follow_chasing(value)
 
 
 func configure(
@@ -134,10 +201,7 @@ func start(pet: Dictionary) -> void:
 	window_host.show_windows(widget_station_position, widget_pet_position)
 	if DisplayServer.get_name() != "headless":
 		window_host.park_main_window(get_desktop_screen_rect())
-	widget_pet_at_station = true
-	widget_returning_to_station = false
-	widget_seconds_outside_station = 0.0
-	widget_seconds_since_pet_drag = 0.0
+	state_machine.arrive_at_station()
 	if is_instance_valid(avatar):
 		avatar.stop_move()
 		avatar.set_mood("idle")
@@ -150,7 +214,7 @@ func stop() -> void:
 	active = false
 	if is_instance_valid(avatar):
 		avatar.set_desktop_idle_enabled(false)
-	widget_following = false
+	state_machine.reset()
 	_destroy_visuals()
 	if is_instance_valid(window_host):
 		window_host.shutdown()
@@ -165,16 +229,8 @@ func _ensure_window_host() -> void:
 
 
 func _reset_behavior() -> void:
-	widget_following = false
 	widget_station_dragging = false
-	widget_pet_dragging = false
-	widget_pet_at_station = true
-	widget_returning_to_station = false
-	widget_seconds_outside_station = 0.0
-	widget_seconds_since_pet_drag = 0.0
-	widget_follow_reaction_remaining = 0.0
-	widget_follow_has_target = false
-	widget_follow_chasing = false
+	state_machine.reset()
 
 
 func _destroy_visuals() -> void:
@@ -515,18 +571,20 @@ func clamp_desktop_item_position_to_screens(
 		clampf(
 			value.x,
 			target_screen.position.x,
-			target_screen.end.x - item_size.x
+			target_screen.position.x
+				+ maxf(0.0, target_screen.size.x - item_size.x)
 		),
 		clampf(
 			value.y,
 			target_screen.position.y,
-			target_screen.end.y - item_size.y
+			target_screen.position.y
+				+ maxf(0.0, target_screen.size.y - item_size.y)
 		)
 	)
 
 
 func get_desktop_screen_rects() -> Array[Rect2]:
-	if pointer_position_provider.is_valid() and screen_rects_provider.is_valid():
+	if screen_rects_provider.is_valid():
 		var provided: Variant = screen_rects_provider.call()
 		if provided is Array:
 			var result: Array[Rect2] = []
@@ -580,22 +638,21 @@ func _on_station_drag_input(event: InputEvent) -> void:
 func _on_pet_drag_input(event: InputEvent) -> void:
 	if event is InputEventMouseButton and event.button_index == MOUSE_BUTTON_LEFT:
 		if event.pressed and event.double_click:
-			widget_pet_dragging = false
+			state_machine.end_drag()
 			avatar.play_belly_roll()
 			pet_drag_surface.accept_event()
 			return
-		widget_pet_dragging = event.pressed
 		if event.pressed:
+			state_machine.begin_drag()
 			widget_pet_drag_start_mouse = get_desktop_pointer_position()
 			widget_pet_drag_start_position = widget_pet_position
-			widget_pet_at_station = false
-			widget_returning_to_station = false
-			widget_seconds_since_pet_drag = 0.0
 			if is_instance_valid(avatar):
 				avatar.set_mood("idle")
 			_sync_desktop_station_art_layer()
+		else:
+			state_machine.end_drag()
 		pet_drag_surface.accept_event()
-	elif event is InputEventMouseMotion and widget_pet_dragging:
+	elif event is InputEventMouseMotion and state_machine.is_dragging():
 		var next_position := (
 			widget_pet_drag_start_position
 			+ get_desktop_pointer_position()
@@ -604,7 +661,7 @@ func _on_pet_drag_input(event: InputEvent) -> void:
 		if is_instance_valid(avatar):
 			avatar.play_move(next_position - widget_pet_position)
 		set_widget_pet_position(next_position)
-		widget_seconds_since_pet_drag = 0.0
+		state_machine.seconds_since_pet_drag = 0.0
 		pet_drag_surface.accept_event()
 
 
@@ -617,71 +674,39 @@ func get_desktop_pointer_position() -> Vector2:
 
 
 func toggle_widget_follow() -> void:
-	set_widget_following(not widget_following)
+	set_widget_following(not state_machine.is_follow_mode())
 
 
 func set_widget_following(enabled: bool) -> void:
-	widget_following = enabled
-	widget_returning_to_station = false
-	widget_seconds_since_pet_drag = 0.0
-	widget_follow_reaction_remaining = 0.0
-	widget_follow_has_target = false
-	widget_follow_chasing = false
-	widget_follow_target = widget_pet_position
-	widget_follow_last_pointer = get_desktop_pointer_position()
+	var pointer_position := get_desktop_pointer_position()
+	if enabled:
+		_update_widget_follow_target(pointer_position)
+		state_machine.enable_follow(widget_pet_position, widget_screen_scale)
+	else:
+		var pet_is_at_station := (
+			widget_pet_position.distance_to(get_station_pet_anchor()) < 3.0
+		)
+		state_machine.disable_follow(pet_is_at_station)
 	if is_instance_valid(follow_button):
 		follow_button.text = "UNFOLLOW" if enabled else "FOLLOW ME"
 	if is_instance_valid(avatar):
 		avatar.stop_move()
 		avatar.set_mood("follow" if enabled else "idle")
-	if enabled:
-		_update_widget_follow_target(widget_follow_last_pointer)
-		if (
-			widget_follow_target.distance_to(widget_pet_position)
-			> PET_FOLLOW_RESUME_DISTANCE * widget_screen_scale
-		):
-			_start_widget_follow_chase()
-	else:
-		widget_pet_at_station = (
-			widget_pet_position.distance_to(get_station_pet_anchor()) < 3.0
-		)
-		widget_returning_to_station = not widget_pet_at_station
 	_sync_desktop_idle_animation_state()
 
 
 func _update_widget_follow_target(pointer_position: Vector2) -> void:
-	widget_follow_last_pointer = pointer_position
-	widget_follow_target = (
+	var target := (
 		pointer_position
 		- get_pet_widget_pixel_size() * 0.5
 		+ Vector2(28.0, 28.0) * widget_screen_scale
 	)
-	widget_follow_target = clamp_desktop_item_position(
-		widget_follow_target,
-		get_pet_widget_pixel_size()
-	)
-	widget_follow_has_target = true
-
-
-func _start_widget_follow_chase() -> void:
-	widget_follow_chasing = true
-	widget_follow_reaction_remaining = randf_range(
-		PET_FOLLOW_REACTION_MIN,
-		PET_FOLLOW_REACTION_MAX
-	)
-	if is_instance_valid(avatar):
-		avatar.stop_move()
-
-
-func _stop_widget_follow_chase() -> void:
-	widget_follow_chasing = false
-	widget_follow_reaction_remaining = 0.0
-	if is_instance_valid(avatar):
-		avatar.stop_move()
+	target = clamp_desktop_item_position(target, get_pet_widget_pixel_size())
+	state_machine.update_follow_target(target, pointer_position)
 
 
 func _sync_desktop_station_art_layer() -> void:
-	var use_pet_window_art := widget_pet_at_station
+	var use_pet_window_art := state_machine.is_docked()
 	if is_instance_valid(station_top_art):
 		station_top_art.visible = not use_pet_window_art
 	if is_instance_valid(pet_station_top_art):
@@ -694,10 +719,9 @@ func _sync_desktop_idle_animation_state() -> void:
 		return
 	avatar.set_desktop_idle_enabled(
 		active
-		and widget_pet_at_station
-		and not widget_pet_dragging
-		and not widget_following
-		and not widget_returning_to_station
+		and state_machine.is_docked()
+		and state_machine.rest_state
+			== DesktopCompanionStateMachine.RestState.AWAKE
 		and avatar.mood == "idle"
 	)
 
@@ -710,9 +734,8 @@ func update(
 		return
 	if widget_station_dragging and not Input.is_mouse_button_pressed(MOUSE_BUTTON_LEFT):
 		widget_station_dragging = false
-	if widget_pet_dragging and not Input.is_mouse_button_pressed(MOUSE_BUTTON_LEFT):
-		widget_pet_dragging = false
-		widget_seconds_since_pet_drag = 0.0
+	if state_machine.is_dragging() and not Input.is_mouse_button_pressed(MOUSE_BUTTON_LEFT):
+		state_machine.end_drag()
 	_sync_desktop_idle_animation_state()
 	var pointer_position := pointer_override
 	if pointer_position.x <= -999999.0:
@@ -720,101 +743,62 @@ func update(
 
 	var pointer_in_station_space := get_station_wake_rect().has_point(pointer_position)
 	var pointer_on_pet := get_pet_screen_rect().has_point(pointer_position)
-	if (
+	state_machine.update_rest(
+		delta,
 		pointer_in_station_space
-		or pointer_on_pet
-		or widget_following
-		or widget_pet_dragging
-		or widget_returning_to_station
-	):
-		widget_seconds_outside_station = 0.0
-	else:
-		widget_seconds_outside_station += delta
+			or pointer_on_pet
+			or state_machine.is_follow_mode()
+			or state_machine.is_dragging()
+			or state_machine.is_returning(),
+		pointer_on_pet
+	)
 
-	if widget_following and not widget_pet_dragging:
+	if state_machine.is_follow_mode() and not state_machine.is_dragging():
 		avatar.set_mood("follow")
 		_update_widget_follow_target(pointer_position)
 		if avatar.is_playing_interaction():
 			_sync_desktop_idle_animation_state()
 			return
-		var follow_displacement := widget_follow_target - widget_pet_position
-		var arrival_distance := PET_FOLLOW_ARRIVAL_DISTANCE * widget_screen_scale
-		var resume_distance := PET_FOLLOW_RESUME_DISTANCE * widget_screen_scale
-		if follow_displacement.length() <= arrival_distance:
-			_stop_widget_follow_chase()
-			_sync_desktop_idle_animation_state()
-			return
-		if not widget_follow_chasing:
-			if follow_displacement.length() <= resume_distance:
-				avatar.stop_move()
-				_sync_desktop_idle_animation_state()
-				return
-			_start_widget_follow_chase()
-		var movement_delta := maxf(0.0, delta)
-		if widget_follow_reaction_remaining > 0.0:
-			var reaction_delta := minf(
-				movement_delta,
-				widget_follow_reaction_remaining
-			)
-			widget_follow_reaction_remaining -= reaction_delta
-			movement_delta -= reaction_delta
-		if movement_delta > 0.0:
-			var follow_distance := minf(
-				PET_FOLLOW_RUN_SPEED * widget_screen_scale * movement_delta,
-				follow_displacement.length() - arrival_distance
-			)
-			var next_follow_position := widget_pet_position.move_toward(
-				widget_follow_target,
-				follow_distance
-			)
-			avatar.play_move(next_follow_position - widget_pet_position)
+		var previous_position := widget_pet_position
+		var next_follow_position := state_machine.update_follow_position(
+			widget_pet_position,
+			delta,
+			widget_screen_scale
+		)
+		if not next_follow_position.is_equal_approx(previous_position):
+			avatar.play_move(next_follow_position - previous_position)
 			set_widget_pet_position(next_follow_position, false)
-			widget_pet_at_station = false
-			if (
-				widget_pet_position.distance_to(widget_follow_target)
-				<= arrival_distance + 0.001
-			):
-				_stop_widget_follow_chase()
+			if not state_machine.is_follow_chasing():
+				avatar.stop_move()
+		elif not state_machine.is_follow_chasing():
+			avatar.stop_move()
 		_sync_desktop_idle_animation_state()
 		return
 
-	if pointer_on_pet:
-		if avatar.mood == "sleep":
-			avatar.set_mood("idle")
-	elif (
-		widget_seconds_outside_station >= STATION_WAKE_SECONDS
-		and not widget_pet_dragging
-	):
+	if state_machine.rest_state == DesktopCompanionStateMachine.RestState.SLEEPING:
 		avatar.set_mood("sleep")
+	elif pointer_on_pet and avatar.mood == "sleep":
+		avatar.set_mood("idle")
 
 	if avatar.is_playing_interaction():
 		_sync_desktop_idle_animation_state()
 		return
 
-	if not widget_pet_at_station and not widget_pet_dragging:
-		widget_seconds_since_pet_drag += delta
-		if widget_seconds_since_pet_drag >= PET_RETURN_SECONDS:
-			widget_returning_to_station = true
-	if widget_returning_to_station and not widget_pet_dragging:
-		widget_seconds_outside_station = 0.0
+	state_machine.advance_away_timer(delta)
+	if state_machine.is_returning():
 		var station_target := get_station_pet_anchor()
-		var return_distance := (
-			PET_FOLLOW_RUN_SPEED
-			* widget_screen_scale
-			* maxf(0.0, delta)
-		)
-		var next_return_position := widget_pet_position.move_toward(
+		var previous_position := widget_pet_position
+		var next_return_position := state_machine.update_return_position(
+			widget_pet_position,
 			station_target,
-			return_distance
+			delta,
+			widget_screen_scale
 		)
 		avatar.set_mood("idle")
-		avatar.play_move(next_return_position - widget_pet_position)
+		avatar.play_move(next_return_position - previous_position)
 		set_widget_pet_position(next_return_position, false)
-		if widget_pet_position == station_target:
+		if state_machine.is_docked():
 			set_widget_pet_position(station_target)
-			widget_pet_at_station = true
-			widget_returning_to_station = false
-			widget_seconds_since_pet_drag = 0.0
 			avatar.stop_move()
 			avatar.set_mood("idle")
 			window_host.schedule_pet_window_raise()

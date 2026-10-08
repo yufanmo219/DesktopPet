@@ -248,6 +248,7 @@ func run_tests() -> void:
 		await process_frame
 	var packed: PackedScene = load("res://main.tscn")
 	var game = packed.instantiate()
+	var desktop: DesktopCompanionController = game.desktop_controller
 	root.add_child(game)
 	await process_frame
 	check(game.current_screen == "home", "Normal startup should bypass title and creator screens")
@@ -1012,16 +1013,16 @@ func run_tests() -> void:
 		and game.avatar.cat_sprite.scale.is_equal_approx(biscuit_interaction_scale),
 		"Biscuit's butterfly interaction should stay the same size as her default side-sitting pose"
 	)
-	var biscuit_station_art: Control = game._make_station_top_art(
+	var biscuit_station_art: Control = desktop._make_station_top_art(
 		"biscuit",
-		game.get_desktop_station_theme("biscuit")
+		desktop.get_desktop_station_theme("biscuit")
 	)
 	check(
 		_station_art_is_standardized(
 			biscuit_station_art,
 			pet_texture("biscuit", "station"),
-			game.STATION_TOP_ART_POSITION,
-			game.STATION_TOP_ART_SIZE
+			desktop.STATION_TOP_ART_POSITION,
+			desktop.STATION_TOP_ART_SIZE
 		),
 		"Biscuit's Desktop Station should use her worn cardboard play-box scene"
 	)
@@ -1095,16 +1096,16 @@ func run_tests() -> void:
 		),
 		"Every Luna stretch frame should be free of green-screen residue near her feet"
 	)
-	var luna_station_art: Control = game._make_station_top_art(
+	var luna_station_art: Control = desktop._make_station_top_art(
 		"luna",
-		game.get_desktop_station_theme("luna")
+		desktop.get_desktop_station_theme("luna")
 	)
 	check(
 		_station_art_is_standardized(
 			luna_station_art,
 			pet_texture("luna", "station"),
-			game.STATION_TOP_ART_POSITION,
-			game.STATION_TOP_ART_SIZE
+			desktop.STATION_TOP_ART_POSITION,
+			desktop.STATION_TOP_ART_SIZE
 		),
 		"Luna's Desktop Station should use her dark iridescent green velvet cushion"
 	)
@@ -1180,16 +1181,16 @@ func run_tests() -> void:
 		and game.avatar.POPPY_SLEEP_FACE_RUB_FRAMES.size() == 12,
 		"Sleeping Poppy should occasionally play her aligned face-rub animation"
 	)
-	var poppy_station_art: Control = game._make_station_top_art(
+	var poppy_station_art: Control = desktop._make_station_top_art(
 		"poppy",
-		game.get_desktop_station_theme("poppy")
+		desktop.get_desktop_station_theme("poppy")
 	)
 	check(
 		_station_art_is_standardized(
 			poppy_station_art,
 			pet_texture("poppy", "station"),
-			game.STATION_TOP_ART_POSITION,
-			game.STATION_TOP_ART_SIZE
+			desktop.STATION_TOP_ART_POSITION,
+			desktop.STATION_TOP_ART_SIZE
 		),
 		"Poppy's Desktop Station should use her grass-and-mushroom scene"
 	)
@@ -1199,7 +1200,7 @@ func run_tests() -> void:
 		poppy_station_region.end.y <= 510.0
 		and is_equal_approx(
 			poppy_station_artwork.position.y + poppy_station_artwork.size.y,
-			game.STATION_CONTROLS_Y
+			desktop.STATION_CONTROLS_Y
 		),
 		"Poppy's visible grass should ignore transparent residue and sit flush against the controls panel"
 	)
@@ -1309,16 +1310,16 @@ func run_tests() -> void:
 		and game.avatar.cat_sprite.texture == game.avatar.BLACK_CAT_SLEEP_TEXTURE,
 		"The black cat should finish with her head on both paws and remain asleep"
 	)
-	var black_cat_station_art: Control = game._make_station_top_art(
+	var black_cat_station_art: Control = desktop._make_station_top_art(
 		"black_cat",
-		game.get_desktop_station_theme("black_cat")
+		desktop.get_desktop_station_theme("black_cat")
 	)
 	check(
 		_station_art_is_standardized(
 			black_cat_station_art,
 			pet_texture("black_cat", "station"),
-			game.STATION_TOP_ART_POSITION,
-			game.STATION_TOP_ART_SIZE
+			desktop.STATION_TOP_ART_POSITION,
+			desktop.STATION_TOP_ART_SIZE
 		),
 		"The black cat's Desktop Station should use the low front-facing folded gray blanket"
 	)
@@ -1413,16 +1414,16 @@ func run_tests() -> void:
 		and game.avatar.cat_sprite.texture == game.avatar.MAINE_COON_SLEEP_TEXTURE,
 		"The Maine Coon should settle back into the approved fixed-position sleeping pose"
 	)
-	var maine_coon_station_art: Control = game._make_station_top_art(
+	var maine_coon_station_art: Control = desktop._make_station_top_art(
 		"maine_coon",
-		game.get_desktop_station_theme("maine_coon")
+		desktop.get_desktop_station_theme("maine_coon")
 	)
 	check(
 		_station_art_is_standardized(
 			maine_coon_station_art,
 			pet_texture("maine_coon", "station"),
-			game.STATION_TOP_ART_POSITION,
-			game.STATION_TOP_ART_SIZE
+			desktop.STATION_TOP_ART_POSITION,
+			desktop.STATION_TOP_ART_SIZE
 		),
 		"The Maine Coon's Desktop Station should use the low front-facing forest wool mat"
 	)
@@ -1560,16 +1561,16 @@ func run_tests() -> void:
 		and game.avatar.cat_sprite.texture == game.avatar.GOLDEN_MUNCHKIN_IDLE_TEXTURE,
 		"Golden Munchkin idle should never reuse the removed sleep tail animation"
 	)
-	var golden_munchkin_station_art: Control = game._make_station_top_art(
+	var golden_munchkin_station_art: Control = desktop._make_station_top_art(
 		"golden_munchkin",
-		game.get_desktop_station_theme("golden_munchkin")
+		desktop.get_desktop_station_theme("golden_munchkin")
 	)
 	check(
 		_station_art_is_standardized(
 			golden_munchkin_station_art,
 			pet_texture("golden_munchkin", "station"),
-			game.STATION_TOP_ART_POSITION,
-			game.STATION_TOP_ART_SIZE
+			desktop.STATION_TOP_ART_POSITION,
+			desktop.STATION_TOP_ART_SIZE
 		),
 		"The Golden Munchkin's Desktop Station should use her low ivory fluffy blanket"
 	)
@@ -1707,16 +1708,16 @@ func run_tests() -> void:
 		and not game.avatar.sleep_bubble_sprite.visible,
 		"Sleeping Siamese should use only the approved static sleep photo"
 	)
-	var siamese_station_art: Control = game._make_station_top_art(
+	var siamese_station_art: Control = desktop._make_station_top_art(
 		"siamese",
-		game.get_desktop_station_theme("siamese")
+		desktop.get_desktop_station_theme("siamese")
 	)
 	check(
 		_station_art_is_standardized(
 			siamese_station_art,
 			pet_texture("siamese", "station"),
-			game.STATION_TOP_ART_POSITION,
-			game.STATION_TOP_ART_SIZE
+			desktop.STATION_TOP_ART_POSITION,
+			desktop.STATION_TOP_ART_SIZE
 		),
 		"The Siamese Desktop Station should use her low front-facing tree branch"
 	)
@@ -1894,16 +1895,16 @@ func run_tests() -> void:
 		and game.avatar.cat_sprite.texture == game.avatar.MOCHI_LICK_PAW_FRAMES[1],
 		"Mochi's paw-licking interaction should advance through its own frames"
 	)
-	var mochi_station_art: Control = game._make_station_top_art(
+	var mochi_station_art: Control = desktop._make_station_top_art(
 		"mochi",
-		game.get_desktop_station_theme("mochi")
+		desktop.get_desktop_station_theme("mochi")
 	)
 	check(
 		_station_art_is_standardized(
 			mochi_station_art,
 			pet_texture("mochi", "station"),
-			game.STATION_TOP_ART_POSITION,
-			game.STATION_TOP_ART_SIZE
+			desktop.STATION_TOP_ART_POSITION,
+			desktop.STATION_TOP_ART_SIZE
 		),
 		"Mochi's Desktop Station should use the pale lotus-pink daybed"
 	)
@@ -3169,11 +3170,11 @@ func run_tests() -> void:
 	var station_colors := {}
 	var station_motifs := {}
 	for station_id in station_ids:
-		var station_theme: Dictionary = game.get_desktop_station_theme(str(station_id))
+		var station_theme: Dictionary = desktop.get_desktop_station_theme(str(station_id))
 		station_colors[str(station_theme.primary)] = true
 		station_motifs[str(station_theme.motif)] = true
 	check(station_ids.size() == 9 and station_colors.size() == 9 and station_motifs.size() == 9, "Every catalog cat should have a distinct desktop Station theme")
-	check(game.get_desktop_station_theme("unknown").id == "maple", "Unknown legacy cats should safely use Maple's Station")
+	check(desktop.get_desktop_station_theme("unknown").id == "maple", "Unknown legacy cats should safely use Maple's Station")
 	game.show_home()
 	check(music_manager.is_home_music_active(), "Desktop music regression should start from a HOME screen with music playing")
 	game.enter_desktop_mode()
@@ -3182,38 +3183,38 @@ func run_tests() -> void:
 		"Entering Desktop Companion should immediately stop all background music and pending fades"
 	)
 	await process_frame
-	check(game.current_screen == "widget" and game.desktop_station != null, "Desktop companion should build a dedicated Station")
-	check(game.normal_window_unresizable == false, "Normal game windows should remain resizable outside Desktop mode")
-	check(game.desktop_station.get_meta("station_id") == "maple", "Maple should receive Maple's unique Station")
-	check(game.station_drag_handle != null and game.pet_drag_surface != null, "Both the Station and the pet should expose drag surfaces")
-	check(game.follow_button.text == "FOLLOW ME", "The Station should start with a compact Follow Me button")
-	var station_top = game.desktop_station.find_child("StationTopArt", true, false)
-	var station_controls = game.desktop_station.find_child("StationControlsPanel", true, false)
-	var station_buttons: Array[Node] = game.desktop_station.find_children("*", "Button", true, false)
-	var station_labels: Array[Node] = game.desktop_station.find_children("*", "Label", true, false)
+	check(game.current_screen == "widget" and desktop.desktop_station != null, "Desktop companion should build a dedicated Station")
+	check(desktop.normal_window_unresizable == false, "Normal game windows should remain resizable outside Desktop mode")
+	check(desktop.desktop_station.get_meta("station_id") == "maple", "Maple should receive Maple's unique Station")
+	check(desktop.station_drag_handle != null and desktop.pet_drag_surface != null, "Both the Station and the pet should expose drag surfaces")
+	check(desktop.follow_button.text == "FOLLOW ME", "The Station should start with a compact Follow Me button")
+	var station_top = desktop.desktop_station.find_child("StationTopArt", true, false)
+	var station_controls = desktop.desktop_station.find_child("StationControlsPanel", true, false)
+	var station_buttons: Array[Node] = desktop.desktop_station.find_children("*", "Button", true, false)
+	var station_labels: Array[Node] = desktop.desktop_station.find_children("*", "Label", true, false)
 	check(
-		is_instance_valid(game.pet_station_top_art)
+		is_instance_valid(desktop.pet_station_top_art)
 		and not station_top.visible
-		and game.pet_station_top_art.visible
-		and game.pet_station_top_art.get_index() < game.avatar.get_index(),
+		and desktop.pet_station_top_art.visible
+		and desktop.pet_station_top_art.get_index() < game.avatar.get_index(),
 		"A seated cat and its mat should share the pet canvas with the mat permanently below the cat"
 	)
 	check(
-		game.pet_station_top_art.position == Vector2(20.0, 193.0),
+		desktop.pet_station_top_art.position == Vector2(20.0, 193.0),
 		"The pet-window copy of the Station art should line up exactly with the original Station"
 	)
 	check(
 		_station_art_is_standardized(
 			station_top,
 			pet_texture("maple", "station"),
-			game.STATION_TOP_ART_POSITION,
-			game.STATION_TOP_ART_SIZE
+			desktop.STATION_TOP_ART_POSITION,
+			desktop.STATION_TOP_ART_SIZE
 		),
 		"Maple's Station top should use the new side-view flower grass artwork"
 	)
 	check(
 		station_controls is Panel
-		and station_controls.position.y == game.STATION_CONTROLS_Y
+		and station_controls.position.y == desktop.STATION_CONTROLS_Y
 		and station_top.position.y + station_top.size.y == station_controls.position.y,
 		"Every cat-specific Station top should use one shared frame touching the controls panel"
 	)
@@ -3226,22 +3227,22 @@ func run_tests() -> void:
 	)
 	check(station_buttons.all(func(button): return button.get_theme_stylebox("normal") is StyleBoxFlat and button.get_theme_stylebox("normal").corner_radius_top_left >= 20), "Every Station button should use a strongly rounded style")
 	check(station_labels.is_empty(), "The Station should not contain the removed title, XP, motif, or drag-helper text")
-	check(game.station_drag_handle == game.desktop_station and game.station_drag_handle.size == Vector2(game.STATION_LOGICAL_SIZE), "The full Station background should be draggable while its buttons remain interactive")
+	check(desktop.station_drag_handle == desktop.desktop_station and desktop.station_drag_handle.size == Vector2(desktop.STATION_LOGICAL_SIZE), "The full Station background should be draggable while its buttons remain interactive")
 	check(station_controls.mouse_filter == Control.MOUSE_FILTER_PASS and station_buttons.all(func(button): return button.mouse_filter == Control.MOUSE_FILTER_STOP), "Station background drag events should pass upward while buttons keep their clicks")
-	check(is_equal_approx(game.DESKTOP_WIDGET_SCALE, 0.90) and is_equal_approx(game.widget_screen_scale, 0.90), "The desktop cat and Station should share the requested ten-percent size reduction")
-	check(game.get_station_pixel_size() == Vector2(324, 149), "Fractional 90-percent Station dimensions should round to whole pixels instead of creating edge letterboxing")
-	check(game.PET_WIDGET_LOGICAL_SIZE == Vector2i(400, 300), "The desktop pet should use a wider transparent window so same-size run poses are never squeezed")
-	check(game.STATION_PET_FOOT_Y == 107.0, "The resting desktop pet should sit five pixels higher on its Station")
-	var desktop_rect: Rect2 = game.get_current_desktop_screen_rect()
-	var expected_station_position: Vector2 = game.get_initial_station_position(desktop_rect)
-	check(game.widget_station_position.is_equal_approx(expected_station_position), "The Station should initially be fixed to the lower-right corner")
+	check(is_equal_approx(desktop.DESKTOP_WIDGET_SCALE, 0.90) and is_equal_approx(desktop.widget_screen_scale, 0.90), "The desktop cat and Station should share the requested ten-percent size reduction")
+	check(desktop.get_station_pixel_size() == Vector2(324, 149), "Fractional 90-percent Station dimensions should round to whole pixels instead of creating edge letterboxing")
+	check(desktop.PET_WIDGET_LOGICAL_SIZE == Vector2i(400, 300), "The desktop pet should use a wider transparent window so same-size run poses are never squeezed")
+	check(desktop.STATION_PET_FOOT_Y == 107.0, "The resting desktop pet should sit five pixels higher on its Station")
+	var desktop_rect: Rect2 = desktop.get_current_desktop_screen_rect()
+	var expected_station_position: Vector2 = desktop.get_initial_station_position(desktop_rect)
+	check(desktop.widget_station_position.is_equal_approx(expected_station_position), "The Station should initially be fixed to the lower-right corner")
 	check(
-		game.widget_pet_at_station and game.widget_pet_position.is_equal_approx(game.get_station_pet_anchor()),
-		"The pet should begin on its Station (actual %s, anchor %s)" % [game.widget_pet_position, game.get_station_pet_anchor()]
+		desktop.widget_pet_at_station and desktop.widget_pet_position.is_equal_approx(desktop.get_station_pet_anchor()),
+		"The pet should begin on its Station (actual %s, anchor %s)" % [desktop.widget_pet_position, desktop.get_station_pet_anchor()]
 	)
-	check(game.widget_pet_position.y + game.get_pet_widget_pixel_size().y > game.widget_station_position.y + game.STATION_CONTROLS_Y * game.widget_screen_scale, "The enlarged pet should visually meet the grass instead of floating above it")
-	game._on_pet_drag_input(pet_double_click)
-	check(game.avatar.is_playing_interaction() and not game.widget_pet_dragging, "Double-clicking the cat on its Station should roll without starting a drag")
+	check(desktop.widget_pet_position.y + desktop.get_pet_widget_pixel_size().y > desktop.widget_station_position.y + desktop.STATION_CONTROLS_Y * desktop.widget_screen_scale, "The enlarged pet should visually meet the grass instead of floating above it")
+	desktop._on_pet_drag_input(pet_double_click)
+	check(game.avatar.is_playing_interaction() and not desktop.widget_pet_dragging, "Double-clicking the cat on its Station should roll without starting a drag")
 	for station_roll_step in range(game.avatar.DESKTOP_BELLY_FRAMES.size() + 1):
 		game.avatar._process(1.0 / game.avatar.DESKTOP_BELLY_FPS + 0.01)
 	check(not game.avatar.is_playing_interaction(), "The Station belly-roll interaction should complete and return to the seated state")
@@ -3310,113 +3311,113 @@ func run_tests() -> void:
 	game.avatar._stop_desktop_idle_animation()
 	game.avatar._schedule_next_desktop_idle()
 	game.avatar._apply_current_texture()
-	check(game.get_station_wake_rect().size.x == game.get_station_wake_rect().size.y, "The Station wake area should be a square directly above it")
+	check(desktop.get_station_wake_rect().size.x == desktop.get_station_wake_rect().size.y, "The Station wake area should be a square directly above it")
 	var simulated_screens: Array[Rect2] = [
 		Rect2(-1440.0, 0.0, 1440.0, 900.0),
 		Rect2(0.0, 0.0, 1280.0, 720.0),
 		Rect2(1280.0, -180.0, 1920.0, 1080.0)
 	]
-	var right_screen_position: Vector2 = game.clamp_desktop_item_position_to_screens(
+	var right_screen_position: Vector2 = desktop.clamp_desktop_item_position_to_screens(
 		Vector2(1750.0, 100.0),
-		game.get_station_pixel_size(),
+		desktop.get_station_pixel_size(),
 		simulated_screens
 	)
-	var left_screen_position: Vector2 = game.clamp_desktop_item_position_to_screens(
+	var left_screen_position: Vector2 = desktop.clamp_desktop_item_position_to_screens(
 		Vector2(-1200.0, 100.0),
-		game.get_station_pixel_size(),
+		desktop.get_station_pixel_size(),
 		simulated_screens
 	)
 	check(right_screen_position.x >= 1280.0 and left_screen_position.x < 0.0, "Station clamping should allow placement on monitors on either side of the MacBook display")
 	var cross_screen_step := Vector2(1300.0, 120.0)
-	var pet_position_before_cross_screen_test: Vector2 = game.widget_pet_position
-	game.set_widget_pet_position(cross_screen_step, false)
-	check(game.widget_pet_position.is_equal_approx(cross_screen_step), "Follow movement should cross a display seam instead of being pinned to the current screen edge")
-	game.set_widget_pet_position(pet_position_before_cross_screen_test, false)
-	var return_target_across_screen_seam: Vector2 = game.get_station_pet_anchor()
+	var pet_position_before_cross_screen_test: Vector2 = desktop.widget_pet_position
+	desktop.set_widget_pet_position(cross_screen_step, false)
+	check(desktop.widget_pet_position.is_equal_approx(cross_screen_step), "Follow movement should cross a display seam instead of being pinned to the current screen edge")
+	desktop.set_widget_pet_position(pet_position_before_cross_screen_test, false)
+	var return_target_across_screen_seam: Vector2 = desktop.get_station_pet_anchor()
 	var return_start_across_screen_seam := return_target_across_screen_seam + Vector2(2600.0, -120.0)
-	game.widget_pet_at_station = false
-	game.widget_returning_to_station = true
-	game.set_widget_pet_position(return_start_across_screen_seam, false)
+	desktop.widget_pet_at_station = false
+	desktop.widget_returning_to_station = true
+	desktop.set_widget_pet_position(return_start_across_screen_seam, false)
 	var expected_cross_screen_return_step := return_start_across_screen_seam.move_toward(
 		return_target_across_screen_seam,
-		0.02 * game.PET_FOLLOW_RUN_SPEED * game.widget_screen_scale
+		0.02 * desktop.PET_FOLLOW_RUN_SPEED * desktop.widget_screen_scale
 	)
-	game.update_desktop_companion(0.02, Vector2(-100000.0, -100000.0))
+	desktop.update(0.02, Vector2(-100000.0, -100000.0))
 	check(
-		game.widget_pet_position.is_equal_approx(expected_cross_screen_return_step),
+		desktop.widget_pet_position.is_equal_approx(expected_cross_screen_return_step),
 		"Returning after Unfollow should cross a display seam instead of being pinned to the display edge"
 	)
-	game.widget_returning_to_station = false
-	game.widget_pet_at_station = true
-	game.set_widget_pet_position(return_target_across_screen_seam)
+	desktop.widget_returning_to_station = false
+	desktop.widget_pet_at_station = true
+	desktop.set_widget_pet_position(return_target_across_screen_seam)
 
-	var original_station_position: Vector2 = game.widget_station_position
-	game.set_widget_station_position(original_station_position - Vector2(90, 45))
-	check(not game.widget_station_position.is_equal_approx(original_station_position), "Dragging logic should be able to move the Station from its initial position")
-	check(game.widget_pet_position.is_equal_approx(game.get_station_pet_anchor()), "A pet resting on the Station should move with the Station")
+	var original_station_position: Vector2 = desktop.widget_station_position
+	desktop.set_widget_station_position(original_station_position - Vector2(90, 45))
+	check(not desktop.widget_station_position.is_equal_approx(original_station_position), "Dragging logic should be able to move the Station from its initial position")
+	check(desktop.widget_pet_position.is_equal_approx(desktop.get_station_pet_anchor()), "A pet resting on the Station should move with the Station")
 
-	game.widget_pet_at_station = false
-	game.set_widget_pet_position(game.widget_pet_position - Vector2(260, 120))
-	game.widget_seconds_since_pet_drag = game.PET_RETURN_SECONDS - 0.1
-	var far_pointer: Vector2 = Vector2(game.widget_station_position) - Vector2(600, 600)
-	game.update_desktop_companion(0.2, far_pointer)
-	check(game.widget_returning_to_station or game.widget_pet_at_station, "A pet left away from the Station for fifteen seconds should begin returning")
+	desktop.widget_pet_at_station = false
+	desktop.set_widget_pet_position(desktop.widget_pet_position - Vector2(260, 120))
+	desktop.widget_seconds_since_pet_drag = desktop.PET_RETURN_SECONDS - 0.1
+	var far_pointer: Vector2 = Vector2(desktop.widget_station_position) - Vector2(600, 600)
+	desktop.update(0.2, far_pointer)
+	check(desktop.widget_returning_to_station or desktop.widget_pet_at_station, "A pet left away from the Station for fifteen seconds should begin returning")
 	for return_step in range(30):
-		game.update_desktop_companion(0.1, far_pointer)
+		desktop.update(0.1, far_pointer)
 	check(
-		game.widget_pet_at_station
-		and game.widget_pet_position.distance_to(game.get_station_pet_anchor()) < 2.0
+		desktop.widget_pet_at_station
+		and desktop.widget_pet_position.distance_to(desktop.get_station_pet_anchor()) < 2.0
 		and game.avatar.move_time_remaining == 0.0,
 		"The returning pet should settle at the Station and leave its walking pose"
 	)
 
-	game.widget_seconds_outside_station = game.STATION_WAKE_SECONDS - 0.1
-	game.update_desktop_companion(0.2, far_pointer)
+	desktop.widget_seconds_outside_station = desktop.STATION_WAKE_SECONDS - 0.1
+	desktop.update(0.2, far_pointer)
 	check(game.avatar.mood == "sleep", "Thirty seconds without the pointer in the Station space should put the pet to sleep")
-	game.update_desktop_companion(0.1, game.get_pet_screen_rect().get_center())
+	desktop.update(0.1, desktop.get_pet_screen_rect().get_center())
 	check(game.avatar.mood == "idle", "Moving the pointer onto the sleeping pet should wake it")
 
-	var before_follow_position: Vector2 = game.widget_pet_position
-	var follow_pointer: Vector2 = Vector2(game.widget_station_position) - Vector2(300, 220)
+	var before_follow_position: Vector2 = desktop.widget_pet_position
+	var follow_pointer: Vector2 = Vector2(desktop.widget_station_position) - Vector2(300, 220)
 	game.avatar.mood_badge.text = "STALE COMING!"
 	game.avatar.mood_badge.visible = true
-	game.set_widget_following(true)
-	game.update_desktop_companion(0.0, game.widget_follow_last_pointer)
-	check(game.widget_follow_has_target and game.widget_pet_position.is_equal_approx(before_follow_position), "Clicking Follow Me should immediately capture the current pointer without teleporting the pet")
-	game.update_desktop_companion(0.0, follow_pointer)
-	check(game.widget_following and game.follow_button.text == "UNFOLLOW", "Follow Me should stay enabled and change the button to Unfollow")
+	desktop.set_widget_following(true)
+	desktop.update(0.0, desktop.widget_follow_last_pointer)
+	check(desktop.widget_follow_has_target and desktop.widget_pet_position.is_equal_approx(before_follow_position), "Clicking Follow Me should immediately capture the current pointer without teleporting the pet")
+	desktop.update(0.0, follow_pointer)
+	check(desktop.widget_following and desktop.follow_button.text == "UNFOLLOW", "Follow Me should stay enabled and change the button to Unfollow")
 	check(
 		game.avatar.mood_badge.text == "" and not game.avatar.mood_badge.visible,
 		"Follow Me should never show a Coming badge above the cat"
 	)
-	check(game.widget_follow_has_target and game.widget_follow_chasing and game.widget_follow_reaction_remaining >= 0.3 and game.widget_follow_reaction_remaining <= 0.6, "Starting a chase should give the pet one short reaction delay")
-	check(game.widget_pet_position.is_equal_approx(before_follow_position) and game.avatar.mood == "follow", "The following pet should stay seated during its reaction time")
-	game.update_desktop_companion(0.1, follow_pointer)
-	check(game.widget_pet_position.is_equal_approx(before_follow_position), "The pet should not start running before its reaction timer finishes")
-	game.widget_follow_reaction_remaining = 0.0
-	game.update_desktop_companion(0.1, follow_pointer)
-	var slow_follow_distance: float = game.widget_pet_position.distance_to(before_follow_position)
-	check(slow_follow_distance > 0.0 and slow_follow_distance <= game.PET_FOLLOW_RUN_SPEED * game.widget_screen_scale * 0.1 + 0.1, "The following pet should run at the new slower fixed speed")
-	check(station_top.visible and not game.pet_station_top_art.visible, "The Station should restore its own mat after the cat walks away")
+	check(desktop.widget_follow_has_target and desktop.widget_follow_chasing and desktop.widget_follow_reaction_remaining >= 0.3 and desktop.widget_follow_reaction_remaining <= 0.6, "Starting a chase should give the pet one short reaction delay")
+	check(desktop.widget_pet_position.is_equal_approx(before_follow_position) and game.avatar.mood == "follow", "The following pet should stay seated during its reaction time")
+	desktop.update(0.1, follow_pointer)
+	check(desktop.widget_pet_position.is_equal_approx(before_follow_position), "The pet should not start running before its reaction timer finishes")
+	desktop.widget_follow_reaction_remaining = 0.0
+	desktop.update(0.1, follow_pointer)
+	var slow_follow_distance: float = desktop.widget_pet_position.distance_to(before_follow_position)
+	check(slow_follow_distance > 0.0 and slow_follow_distance <= desktop.PET_FOLLOW_RUN_SPEED * desktop.widget_screen_scale * 0.1 + 0.1, "The following pet should run at the new slower fixed speed")
+	check(station_top.visible and not desktop.pet_station_top_art.visible, "The Station should restore its own mat after the cat walks away")
 	check(game.avatar.cat_sprite.texture in game.avatar.MOVE_LEFT_FRAMES + game.avatar.MOVE_RIGHT_FRAMES, "Follow Me should use only the left or right running animation")
-	var position_before_new_reaction: Vector2 = game.widget_pet_position
+	var position_before_new_reaction: Vector2 = desktop.widget_pet_position
 	var second_follow_pointer := follow_pointer + Vector2(120.0, 0.0)
-	game.update_desktop_companion(0.0, second_follow_pointer)
-	check(game.widget_pet_position.is_equal_approx(position_before_new_reaction) and game.widget_follow_chasing and is_zero_approx(game.widget_follow_reaction_remaining) and game.avatar.move_time_remaining > 0.0, "Moving the pointer again must update the target without pausing the cat or restarting its reaction")
-	game._on_pet_drag_input(pet_double_click)
-	game.update_desktop_companion(0.4, second_follow_pointer)
-	check(game.avatar.is_playing_interaction() and game.widget_pet_position.is_equal_approx(position_before_new_reaction), "Double-clicking during Follow Me should pause movement while the cat rolls")
+	desktop.update(0.0, second_follow_pointer)
+	check(desktop.widget_pet_position.is_equal_approx(position_before_new_reaction) and desktop.widget_follow_chasing and is_zero_approx(desktop.widget_follow_reaction_remaining) and game.avatar.move_time_remaining > 0.0, "Moving the pointer again must update the target without pausing the cat or restarting its reaction")
+	desktop._on_pet_drag_input(pet_double_click)
+	desktop.update(0.4, second_follow_pointer)
+	check(game.avatar.is_playing_interaction() and desktop.widget_pet_position.is_equal_approx(position_before_new_reaction), "Double-clicking during Follow Me should pause movement while the cat rolls")
 	for follow_roll_step in range(game.avatar.DESKTOP_BELLY_FRAMES.size() + 1):
 		game.avatar._process(1.0 / game.avatar.DESKTOP_BELLY_FPS + 0.01)
-	check(not game.avatar.is_playing_interaction() and game.widget_following, "Follow Me should remain enabled after the double-click roll finishes")
+	check(not game.avatar.is_playing_interaction() and desktop.widget_following, "Follow Me should remain enabled after the double-click roll finishes")
 	check(not game.avatar.desktop_idle_enabled and game.avatar.desktop_idle_animation == "", "Following the pointer should cancel seated Desktop idle gestures")
-	game.set_widget_following(false)
-	check(not game.widget_following and game.follow_button.text == "FOLLOW ME", "Unfollow should stop permanent following and restore the button")
-	check(game.widget_returning_to_station or game.widget_pet_at_station, "Unfollow should immediately send the pet back toward its Station")
+	desktop.set_widget_following(false)
+	check(not desktop.widget_following and desktop.follow_button.text == "FOLLOW ME", "Unfollow should stop permanent following and restore the button")
+	check(desktop.widget_returning_to_station or desktop.widget_pet_at_station, "Unfollow should immediately send the pet back toward its Station")
 	for unfollow_return_step in range(30):
-		game.update_desktop_companion(0.1, far_pointer)
-	check(game.widget_pet_at_station, "The unfollowed pet should finish walking back to its Station")
-	check(not station_top.visible and game.pet_station_top_art.visible, "The returning cat should finish above the mat on the shared pet canvas")
+		desktop.update(0.1, far_pointer)
+	check(desktop.widget_pet_at_station, "The unfollowed pet should finish walking back to its Station")
+	check(not station_top.visible and desktop.pet_station_top_art.visible, "The returning cat should finish above the mat on the shared pet canvas")
 
 	var go_home_buttons := station_buttons.filter(func(button): return button.text == "GO HOME")
 	check(go_home_buttons.size() == 1, "Desktop Station should expose exactly one Go Home action")
@@ -3424,7 +3425,7 @@ func run_tests() -> void:
 	await process_frame
 	await process_frame
 	check(not game.desktop_mode and game.current_screen == "home", "Clicking Go Home should leave Desktop mode and open Home")
-	check(game.desktop_station == null and game.pet_drag_surface == null, "Go Home should close both native Desktop companion surfaces")
+	check(desktop.desktop_station == null and desktop.pet_drag_surface == null, "Go Home should close both native Desktop companion surfaces")
 	check(music_manager.is_home_music_active(), "Go Home from Desktop Companion should restore HOME background music")
 
 	if failures.is_empty():
