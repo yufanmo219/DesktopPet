@@ -17,6 +17,9 @@ const GameFontStylesScript = preload("res://src/game_font_styles.gd")
 const FishCatalogScript = preload("res://src/fish_catalog.gd")
 const SaveGameRepositoryScript = preload("res://src/persistence/save_game_repository.gd")
 const PetCatalogScript = preload("res://src/pets/pet_catalog.gd")
+const DesktopCompanionControllerScript = preload(
+	"res://src/desktop/desktop_companion_controller.gd"
+)
 const HOME_DAY_TEXTURE: Texture2D = preload("res://assets/ui/home/home_day_layout_v3.png")
 const HOME_NIGHT_TEXTURE: Texture2D = preload("res://assets/ui/home/home_night_layout_v3.png")
 
@@ -24,24 +27,28 @@ const HOME_WAKE_AREA := Rect2(0.0, 0.0, 700.0, 720.0)
 const HOME_POINTER_MOVE_THRESHOLD := 2.0
 const HOME_SLEEP_DELAY_SECONDS := 10.0
 const HOME_WELCOME_TEXT_COLOR := Color("#fff3cf")
-const DESKTOP_WIDGET_SCALE := 0.90
-const STATION_LOGICAL_SIZE := Vector2i(360, 166)
-const PET_WIDGET_LOGICAL_SIZE := Vector2i(400, 300)
-const STATION_SCREEN_MARGIN := Vector2i(24, 48)
-const STATION_CONTROLS_Y := 88.0
-const STATION_TOP_ART_POSITION := Vector2.ZERO
-const STATION_TOP_ART_SIZE := Vector2(360.0, STATION_CONTROLS_Y)
-const STATION_ART_VISIBLE_ALPHA_THRESHOLD := 0.03
-const STATION_PET_FOOT_Y := 107.0
-const STATION_WAKE_SECONDS := 30.0
-const PET_RETURN_SECONDS := 15.0
-const PET_FOLLOW_RUN_SPEED := 150.0
-const PET_FOLLOW_REACTION_MIN := 0.3
-const PET_FOLLOW_REACTION_MAX := 0.6
-# Logical-pixel radii around the screen-clamped follow target. Keep the larger
-# restart radius separate so nearby cursor motion cannot repeatedly wake a cat.
-const PET_FOLLOW_ARRIVAL_DISTANCE := 60.0
-const PET_FOLLOW_RESUME_DISTANCE := 100.0
+const DESKTOP_WIDGET_SCALE := DesktopCompanionControllerScript.DESKTOP_WIDGET_SCALE
+const STATION_LOGICAL_SIZE := DesktopCompanionControllerScript.STATION_LOGICAL_SIZE
+const PET_WIDGET_LOGICAL_SIZE := DesktopCompanionControllerScript.PET_WIDGET_LOGICAL_SIZE
+const STATION_SCREEN_MARGIN := DesktopCompanionControllerScript.STATION_SCREEN_MARGIN
+const STATION_CONTROLS_Y := DesktopCompanionControllerScript.STATION_CONTROLS_Y
+const STATION_TOP_ART_POSITION := DesktopCompanionControllerScript.STATION_TOP_ART_POSITION
+const STATION_TOP_ART_SIZE := DesktopCompanionControllerScript.STATION_TOP_ART_SIZE
+const STATION_ART_VISIBLE_ALPHA_THRESHOLD := (
+	DesktopCompanionControllerScript.STATION_ART_VISIBLE_ALPHA_THRESHOLD
+)
+const STATION_PET_FOOT_Y := DesktopCompanionControllerScript.STATION_PET_FOOT_Y
+const STATION_WAKE_SECONDS := DesktopCompanionControllerScript.STATION_WAKE_SECONDS
+const PET_RETURN_SECONDS := DesktopCompanionControllerScript.PET_RETURN_SECONDS
+const PET_FOLLOW_RUN_SPEED := DesktopCompanionControllerScript.PET_FOLLOW_RUN_SPEED
+const PET_FOLLOW_REACTION_MIN := DesktopCompanionControllerScript.PET_FOLLOW_REACTION_MIN
+const PET_FOLLOW_REACTION_MAX := DesktopCompanionControllerScript.PET_FOLLOW_REACTION_MAX
+const PET_FOLLOW_ARRIVAL_DISTANCE := (
+	DesktopCompanionControllerScript.PET_FOLLOW_ARRIVAL_DISTANCE
+)
+const PET_FOLLOW_RESUME_DISTANCE := (
+	DesktopCompanionControllerScript.PET_FOLLOW_RESUME_DISTANCE
+)
 var save_data: Dictionary = {
 	"version": CURRENT_SAVE_VERSION,
 	"pet_pool": [],
@@ -80,39 +87,87 @@ var fetch_status_label: Label
 var fetch_count := 0
 
 var desktop_mode := false
-var desktop_station: Panel
-var station_top_art: Control
-var station_window: Window
-var station_drag_handle: Control
-var follow_button: Button
-var pet_window: Window
-var pet_drag_surface: Control
-var pet_station_top_art: Control
-var pet_window_raise_pending := false
-var widget_following := false
-var widget_station_dragging := false
-var widget_pet_dragging := false
-var widget_pet_at_station := true
-var widget_returning_to_station := false
-var widget_seconds_outside_station := 0.0
-var widget_seconds_since_pet_drag := 0.0
-var widget_screen_scale := DESKTOP_WIDGET_SCALE
-var widget_station_position := Vector2.ZERO
-var widget_pet_position := Vector2.ZERO
-var widget_station_drag_start_mouse := Vector2.ZERO
-var widget_station_drag_start_position := Vector2.ZERO
-var widget_pet_drag_start_mouse := Vector2.ZERO
-var widget_pet_drag_start_position := Vector2.ZERO
-var widget_follow_last_pointer := Vector2.ZERO
-var widget_follow_target := Vector2.ZERO
-var widget_follow_reaction_remaining := 0.0
-var widget_follow_has_target := false
-var widget_follow_chasing := false
-var normal_window_size := Vector2i(1152, 648)
-var normal_window_position := Vector2i.ZERO
-var normal_window_min_size := Vector2i(960, 540)
-var normal_content_scale_size := Vector2i(1280, 720)
-var normal_window_unresizable := false
+var desktop_controller: DesktopCompanionController = DesktopCompanionControllerScript.new()
+
+# Transitional read/write proxies keep the public surface stable while desktop
+# ownership moves out of Main. New code should use desktop_controller directly.
+var desktop_station: Panel:
+	get: return desktop_controller.desktop_station
+var station_top_art: Control:
+	get: return desktop_controller.station_top_art
+var station_window: Window:
+	get: return desktop_controller.station_window
+var station_drag_handle: Control:
+	get: return desktop_controller.station_drag_handle
+var follow_button: Button:
+	get: return desktop_controller.follow_button
+var pet_window: Window:
+	get: return desktop_controller.pet_window
+var pet_drag_surface: Control:
+	get: return desktop_controller.pet_drag_surface
+var pet_station_top_art: Control:
+	get: return desktop_controller.pet_station_top_art
+var pet_window_raise_pending: bool:
+	get: return desktop_controller.pet_window_raise_pending
+var normal_window_unresizable: bool:
+	get: return desktop_controller.normal_window_unresizable
+var widget_following: bool:
+	get: return desktop_controller.widget_following
+	set(value): desktop_controller.widget_following = value
+var widget_station_dragging: bool:
+	get: return desktop_controller.widget_station_dragging
+	set(value): desktop_controller.widget_station_dragging = value
+var widget_pet_dragging: bool:
+	get: return desktop_controller.widget_pet_dragging
+	set(value): desktop_controller.widget_pet_dragging = value
+var widget_pet_at_station: bool:
+	get: return desktop_controller.widget_pet_at_station
+	set(value): desktop_controller.widget_pet_at_station = value
+var widget_returning_to_station: bool:
+	get: return desktop_controller.widget_returning_to_station
+	set(value): desktop_controller.widget_returning_to_station = value
+var widget_seconds_outside_station: float:
+	get: return desktop_controller.widget_seconds_outside_station
+	set(value): desktop_controller.widget_seconds_outside_station = value
+var widget_seconds_since_pet_drag: float:
+	get: return desktop_controller.widget_seconds_since_pet_drag
+	set(value): desktop_controller.widget_seconds_since_pet_drag = value
+var widget_screen_scale: float:
+	get: return desktop_controller.widget_screen_scale
+	set(value): desktop_controller.widget_screen_scale = value
+var widget_station_position: Vector2:
+	get: return desktop_controller.widget_station_position
+	set(value): desktop_controller.widget_station_position = value
+var widget_pet_position: Vector2:
+	get: return desktop_controller.widget_pet_position
+	set(value): desktop_controller.widget_pet_position = value
+var widget_station_drag_start_mouse: Vector2:
+	get: return desktop_controller.widget_station_drag_start_mouse
+	set(value): desktop_controller.widget_station_drag_start_mouse = value
+var widget_station_drag_start_position: Vector2:
+	get: return desktop_controller.widget_station_drag_start_position
+	set(value): desktop_controller.widget_station_drag_start_position = value
+var widget_pet_drag_start_mouse: Vector2:
+	get: return desktop_controller.widget_pet_drag_start_mouse
+	set(value): desktop_controller.widget_pet_drag_start_mouse = value
+var widget_pet_drag_start_position: Vector2:
+	get: return desktop_controller.widget_pet_drag_start_position
+	set(value): desktop_controller.widget_pet_drag_start_position = value
+var widget_follow_last_pointer: Vector2:
+	get: return desktop_controller.widget_follow_last_pointer
+	set(value): desktop_controller.widget_follow_last_pointer = value
+var widget_follow_target: Vector2:
+	get: return desktop_controller.widget_follow_target
+	set(value): desktop_controller.widget_follow_target = value
+var widget_follow_reaction_remaining: float:
+	get: return desktop_controller.widget_follow_reaction_remaining
+	set(value): desktop_controller.widget_follow_reaction_remaining = value
+var widget_follow_has_target: bool:
+	get: return desktop_controller.widget_follow_has_target
+	set(value): desktop_controller.widget_follow_has_target = value
+var widget_follow_chasing: bool:
+	get: return desktop_controller.widget_follow_chasing
+	set(value): desktop_controller.widget_follow_chasing = value
 var save_enabled := true
 var save_read_only := false
 var save_repository
@@ -135,11 +190,15 @@ var palette := {
 func _ready() -> void:
 	theme = GameFontStylesScript.make_game_theme()
 	get_window().min_size = Vector2i(960, 540)
-	normal_window_size = get_window().size
-	normal_window_position = get_window().position
-	normal_window_min_size = get_window().min_size
-	normal_content_scale_size = get_window().content_scale_size
-	normal_window_unresizable = get_window().unresizable
+	desktop_controller.name = "DesktopCompanionController"
+	add_child(desktop_controller)
+	desktop_controller.configure(
+		null,
+		Callable(self, "get_desktop_pointer_position"),
+		Callable(self, "get_desktop_screen_rects")
+	)
+	desktop_controller.home_requested.connect(restore_from_widget)
+	desktop_controller.quit_requested.connect(quit_from_widget)
 
 	var preview_screen := ""
 	var preview_pet_id := ""
@@ -856,31 +915,6 @@ func enter_desktop_mode() -> void:
 		launch_external_desktop_companion()
 		return
 	desktop_mode = true
-	# Keep the outgoing screen until show_widget_preview() has cleaned it up.
-	widget_following = false
-	widget_station_dragging = false
-	widget_pet_dragging = false
-	widget_pet_at_station = true
-	widget_returning_to_station = false
-	widget_seconds_outside_station = 0.0
-	widget_seconds_since_pet_drag = 0.0
-	widget_follow_reaction_remaining = 0.0
-	widget_follow_has_target = false
-	widget_follow_chasing = false
-	if DisplayServer.get_name() != "headless":
-		normal_window_size = get_window().size
-		normal_window_position = get_window().position
-		normal_window_min_size = get_window().min_size
-		normal_content_scale_size = get_window().content_scale_size
-		normal_window_unresizable = get_window().unresizable
-		var screen_index := DisplayServer.window_get_current_screen()
-		widget_screen_scale = maxf(1.0, DisplayServer.screen_get_scale(screen_index)) * DESKTOP_WIDGET_SCALE
-		var screen_rect := Rect2(DisplayServer.screen_get_usable_rect(screen_index))
-		get_viewport().gui_embed_subwindows = false
-		widget_station_position = get_initial_station_position(screen_rect)
-	else:
-		widget_screen_scale = DESKTOP_WIDGET_SCALE
-		_initialize_desktop_geometry()
 	show_widget_preview()
 
 
@@ -949,479 +983,57 @@ func show_widget_preview() -> void:
 	var pet := get_active_pet()
 	if pet.is_empty():
 		return
-	if widget_station_position == Vector2.ZERO:
-		_initialize_desktop_geometry()
-	_build_station_window()
-	_build_desktop_station(pet)
-	_build_pet_window(pet)
-	if is_instance_valid(station_window):
-		_apply_station_window_transparency()
-		station_window.show()
-		call_deferred("_settle_initial_station_window_order")
-		call_deferred("_apply_station_window_transparency")
-	set_widget_pet_position(get_station_pet_anchor())
-	if is_instance_valid(pet_window):
-		_apply_pet_window_transparency()
-		pet_window.show()
-		call_deferred("_apply_pet_window_transparency")
-		_schedule_pet_window_raise()
-	if is_instance_valid(station_window):
-		_park_main_window_for_desktop()
-		station_window.grab_focus()
-		call_deferred("_schedule_pet_window_raise")
-	widget_pet_at_station = true
-	widget_returning_to_station = false
-	widget_seconds_outside_station = 0.0
-	widget_seconds_since_pet_drag = 0.0
-	if is_instance_valid(avatar):
-		avatar.stop_move()
-		avatar.set_mood("idle")
-	_sync_desktop_idle_animation_state()
+	desktop_controller.set_fallback_parent(content)
+	desktop_controller.start(pet)
+	avatar = desktop_controller.avatar
 
-
-func _build_station_window() -> void:
-	_destroy_station_window()
-	if DisplayServer.get_name() == "headless":
-		return
-	station_window = Window.new()
-	station_window.name = "DesktopStationWindow"
-	station_window.visible = false
-	station_window.size = Vector2i(get_station_pixel_size())
-	station_window.content_scale_size = STATION_LOGICAL_SIZE
-	station_window.content_scale_mode = Window.CONTENT_SCALE_MODE_CANVAS_ITEMS
-	# The 90% desktop scale produces fractional physical heights on Retina
-	# displays. Filling the rounded window avoids one-pixel letterbox bars at the
-	# left and right edges.
-	station_window.content_scale_aspect = Window.CONTENT_SCALE_ASPECT_IGNORE
-	# Configure every native flag before adding the window. In particular, this
-	# lets macOS create a genuinely borderless transparent NSWindow with no frame.
-	station_window.force_native = true
-	station_window.transparent_bg = true
-	station_window.borderless = true
-	station_window.transparent = true
-	station_window.transient = false
-	station_window.transient_to_focused = false
-	station_window.always_on_top = true
-	station_window.unresizable = true
-	station_window.position = Vector2i(widget_station_position)
-	station_window.focus_entered.connect(_schedule_pet_window_raise)
-	add_child(station_window)
-	_apply_station_window_transparency()
-
-
-func _apply_station_window_transparency() -> void:
-	if not is_instance_valid(station_window):
-		return
-	station_window.transparent_bg = true
-	station_window.borderless = true
-	station_window.transparent = true
-	station_window.always_on_top = true
-	station_window.unresizable = true
-
-
-func _settle_initial_station_window_order() -> void:
-	if not is_instance_valid(station_window):
-		return
-	station_window.position = Vector2i(widget_station_position) + Vector2i.RIGHT
-	if is_instance_valid(pet_window):
-		pet_window.position = Vector2i(widget_pet_position) + Vector2i.RIGHT
-	call_deferred("_finish_initial_station_window_order")
-
-
-func _finish_initial_station_window_order() -> void:
-	if not is_instance_valid(station_window):
-		return
-	station_window.position = Vector2i(widget_station_position)
-	if is_instance_valid(pet_window):
-		pet_window.position = Vector2i(widget_pet_position)
-	_schedule_pet_window_raise()
-
-
-func _park_main_window_for_desktop() -> void:
-	# Godot does not allow its main Window to be hidden. Keep it as a fully
-	# transparent one-pixel process host far outside the desktop instead; only the
-	# purpose-built Station and pet windows remain visible to the user.
-	var host_window := get_window()
-	host_window.unresizable = true
-	host_window.borderless = true
-	host_window.always_on_top = false
-	get_viewport().transparent_bg = true
-	host_window.transparent = true
-	host_window.min_size = Vector2i.ONE
-	host_window.content_scale_size = Vector2i.ONE
-	host_window.size = Vector2i.ONE
-	var desktop_rect := get_desktop_screen_rect()
-	host_window.position = Vector2i(desktop_rect.position) - Vector2i(4096, 4096)
-
-
-func _destroy_station_window() -> void:
-	if is_instance_valid(station_window):
-		station_window.hide()
-		station_window.queue_free()
-	station_window = null
-	desktop_station = null
-	station_top_art = null
-	station_drag_handle = null
-	follow_button = null
-
-
-func _build_desktop_station(pet: Dictionary) -> void:
-	var station_id := get_pet_station_id(pet)
-	var theme := get_desktop_station_theme(station_id)
-	desktop_station = Panel.new()
-	desktop_station.name = "DesktopStation"
-	desktop_station.position = Vector2.ZERO
-	desktop_station.size = Vector2(STATION_LOGICAL_SIZE)
-	desktop_station.set_meta("station_id", station_id)
-	desktop_station.set_meta("top_kind", str(theme.motif))
-	var transparent_style := StyleBoxEmpty.new()
-	desktop_station.add_theme_stylebox_override("panel", transparent_style)
-	desktop_station.mouse_filter = Control.MOUSE_FILTER_STOP
-	desktop_station.mouse_default_cursor_shape = Control.CURSOR_MOVE
-	desktop_station.gui_input.connect(_on_station_drag_input)
-	if is_instance_valid(station_window):
-		station_window.add_child(desktop_station)
-	else:
-		content.add_child(desktop_station)
-	station_drag_handle = desktop_station
-
-	station_top_art = _make_station_top_art(station_id, theme)
-	desktop_station.add_child(station_top_art)
-
-	var controls_panel := Panel.new()
-	controls_panel.name = "StationControlsPanel"
-	controls_panel.position = Vector2(0, STATION_CONTROLS_Y)
-	controls_panel.size = Vector2(STATION_LOGICAL_SIZE.x, STATION_LOGICAL_SIZE.y - STATION_CONTROLS_Y)
-	controls_panel.mouse_filter = Control.MOUSE_FILTER_PASS
-	controls_panel.add_theme_stylebox_override("panel", _station_controls_style())
-	desktop_station.add_child(controls_panel)
-
-	var go_home_button := _make_station_button("Go Home", restore_from_widget)
-	go_home_button.name = "GoHomeButton"
-	go_home_button.position = Vector2(12, 13)
-	go_home_button.size = Vector2(104, 50)
-	controls_panel.add_child(go_home_button)
-	follow_button = _make_station_button("Follow Me", toggle_widget_follow, true)
-	follow_button.name = "FollowButton"
-	follow_button.position = Vector2(128, 13)
-	follow_button.size = Vector2(104, 50)
-	controls_panel.add_child(follow_button)
-	var quit_button := _make_station_button("Quit", quit_from_widget)
-	quit_button.position = Vector2(244, 13)
-	quit_button.size = Vector2(104, 50)
-	controls_panel.add_child(quit_button)
 
 func _make_station_top_art(station_id: String, theme: Dictionary) -> Control:
-	var definition = PetCatalogScript.definition_by_catalog_id(station_id)
-	if definition != null:
-		var art := Control.new()
-		art.name = "StationTopArt"
-		art.position = STATION_TOP_ART_POSITION
-		art.size = STATION_TOP_ART_SIZE
-		art.mouse_filter = Control.MOUSE_FILTER_IGNORE
-		var source_texture: Texture2D = definition.load_texture("station")
-		var source_image := source_texture.get_image()
-		var visible_region := _station_art_visible_region(source_image)
-		if visible_region.size == Vector2i.ZERO:
-			visible_region = Rect2i(Vector2i.ZERO, source_image.get_size())
-		var cropped_texture := AtlasTexture.new()
-		cropped_texture.atlas = source_texture
-		cropped_texture.region = Rect2(visible_region)
-		var visible_size := Vector2(visible_region.size)
-		var fit_scale := minf(
-			STATION_TOP_ART_SIZE.x / visible_size.x,
-			STATION_TOP_ART_SIZE.y / visible_size.y
-		)
-		var rendered_size := visible_size * fit_scale
-		var artwork := TextureRect.new()
-		artwork.name = "Artwork"
-		artwork.texture = cropped_texture
-		artwork.expand_mode = TextureRect.EXPAND_IGNORE_SIZE
-		artwork.stretch_mode = TextureRect.STRETCH_SCALE
-		artwork.position = Vector2(
-			(STATION_TOP_ART_SIZE.x - rendered_size.x) * 0.5,
-			STATION_TOP_ART_SIZE.y - rendered_size.y
-		)
-		artwork.size = rendered_size
-		artwork.mouse_filter = Control.MOUSE_FILTER_IGNORE
-		art.add_child(artwork)
-		return art
-	var placeholder := Panel.new()
-	placeholder.name = "StationTopArt"
-	placeholder.position = STATION_TOP_ART_POSITION
-	placeholder.size = STATION_TOP_ART_SIZE
-	placeholder.mouse_filter = Control.MOUSE_FILTER_IGNORE
-	var placeholder_style := StyleBoxFlat.new()
-	placeholder_style.bg_color = Color(str(theme.primary))
-	placeholder_style.set_corner_radius_all(25)
-	placeholder.add_theme_stylebox_override("panel", placeholder_style)
-	return placeholder
-
-
-func _station_art_visible_region(source_image: Image) -> Rect2i:
-	# Generated station art can retain almost-transparent background pixels.
-	# Ignoring that invisible residue keeps the visible cushion/grass flush with
-	# the shared controls panel instead of leaving a noticeable gap above it.
-	var image_size := source_image.get_size()
-	var min_x := image_size.x
-	var min_y := image_size.y
-	var max_x := -1
-	var max_y := -1
-	for y in range(image_size.y):
-		for x in range(image_size.x):
-			if source_image.get_pixel(x, y).a < STATION_ART_VISIBLE_ALPHA_THRESHOLD:
-				continue
-			min_x = mini(min_x, x)
-			min_y = mini(min_y, y)
-			max_x = maxi(max_x, x)
-			max_y = maxi(max_y, y)
-	if max_x < min_x or max_y < min_y:
-		return Rect2i()
-	return Rect2i(min_x, min_y, max_x - min_x + 1, max_y - min_y + 1)
-
-
-func _station_controls_style() -> StyleBoxFlat:
-	var style := StyleBoxFlat.new()
-	style.bg_color = Color("#f6dfb3")
-	style.border_color = Color("#a96b45")
-	style.set_border_width_all(3)
-	style.set_corner_radius_all(20)
-	style.shadow_color = Color(0.18, 0.09, 0.05, 0.22)
-	style.shadow_size = 7
-	return style
-
-
-func _make_station_button(text: String, action: Callable, accent := false) -> Button:
-	var button := Button.new()
-	button.text = GameFontStylesScript.display_text(text)
-	GameFontStylesScript.apply_regular(button)
-	button.focus_mode = Control.FOCUS_NONE
-	button.add_theme_font_size_override("font_size", 22)
-	button.add_theme_color_override("font_color", Color("#654033"))
-	button.add_theme_color_override("font_hover_color", Color("#4f342c"))
-	var normal := StyleBoxFlat.new()
-	normal.bg_color = Color("#dcebb2") if accent else Color("#fff6df")
-	normal.border_color = Color("#789453") if accent else Color("#bd835b")
-	normal.set_border_width_all(2)
-	normal.set_corner_radius_all(25)
-	normal.shadow_color = Color(0.18, 0.09, 0.05, 0.16)
-	normal.shadow_size = 4
-	button.add_theme_stylebox_override("normal", normal)
-	var hover: StyleBoxFlat = normal.duplicate()
-	hover.bg_color = Color("#ebf6c9") if accent else Color("#fffdf4")
-	button.add_theme_stylebox_override("hover", hover)
-	var pressed: StyleBoxFlat = normal.duplicate()
-	pressed.bg_color = Color("#c6da91") if accent else Color("#f1d6ae")
-	pressed.shadow_size = 1
-	button.add_theme_stylebox_override("pressed", pressed)
-	button.pressed.connect(action)
-	return button
-
-
-func _build_pet_window(pet: Dictionary) -> void:
-	_destroy_pet_window()
-	var pet_root := Control.new()
-	pet_root.name = "DesktopPetRoot"
-	pet_root.size = Vector2(PET_WIDGET_LOGICAL_SIZE)
-	if DisplayServer.get_name() == "headless":
-		pet_root.visible = false
-		content.add_child(pet_root)
-	else:
-		pet_window = Window.new()
-		pet_window.name = "DesktopPetWindow"
-		pet_window.visible = false
-		pet_window.size = Vector2i(get_pet_widget_pixel_size())
-		pet_window.content_scale_size = PET_WIDGET_LOGICAL_SIZE
-		pet_window.content_scale_mode = Window.CONTENT_SCALE_MODE_CANVAS_ITEMS
-		pet_window.content_scale_aspect = Window.CONTENT_SCALE_ASPECT_IGNORE
-		# A separate native window lets the cat move independently from its station.
-		# Transparent BG must be enabled before the native transparent flag is applied;
-		# otherwise macOS clears transparent pixels to black.
-		pet_window.force_native = true
-		pet_window.transparent_bg = true
-		pet_window.borderless = true
-		pet_window.transparent = true
-		# Keep the cat in an independent top-level native window. macOS can place a
-		# transparent transient child behind its parent after the parent is moved or
-		# focused, which made the cat slip behind the Station. Re-raising this
-		# independent window keeps the cat in front without stealing button focus.
-		pet_window.transient = false
-		pet_window.transient_to_focused = false
-		pet_window.always_on_top = true
-		pet_window.unresizable = true
-		add_child(pet_window)
-		_apply_pet_window_transparency()
-		pet_window.add_child(pet_root)
-	# When the cat is seated, draw a copy of the Station art inside the cat's
-	# native window. This gives the mat and cat one deterministic canvas z-order;
-	# macOS otherwise freely reorders their two transparent top-level windows.
-	if is_instance_valid(station_top_art):
-		pet_station_top_art = station_top_art.duplicate()
-		pet_station_top_art.name = "PetStationTopArt"
-		pet_station_top_art.position += Vector2(
-			(PET_WIDGET_LOGICAL_SIZE.x - STATION_LOGICAL_SIZE.x) * 0.5,
-			PET_WIDGET_LOGICAL_SIZE.y - STATION_PET_FOOT_Y
-		)
-		pet_station_top_art.visible = false
-		pet_root.add_child(pet_station_top_art)
-	avatar = PetAvatarScript.new()
-	avatar.position = Vector2.ZERO
-	avatar.size = Vector2(PET_WIDGET_LOGICAL_SIZE)
-	avatar.set_pet(pet)
-	pet_root.add_child(avatar)
-	pet_drag_surface = Control.new()
-	pet_drag_surface.name = "PetDragSurface"
-	pet_drag_surface.set_anchors_and_offsets_preset(Control.PRESET_FULL_RECT)
-	pet_drag_surface.mouse_filter = Control.MOUSE_FILTER_STOP
-	pet_drag_surface.mouse_default_cursor_shape = Control.CURSOR_DRAG
-	pet_drag_surface.gui_input.connect(_on_pet_drag_input)
-	pet_root.add_child(pet_drag_surface)
-
-
-func _apply_pet_window_transparency() -> void:
-	if not is_instance_valid(pet_window):
-		return
-	pet_window.transparent_bg = true
-	pet_window.borderless = true
-	pet_window.transparent = true
-	pet_window.always_on_top = true
-
-
-func _schedule_pet_window_raise() -> void:
-	if pet_window_raise_pending or not is_instance_valid(pet_window):
-		return
-	pet_window_raise_pending = true
-	# Native macOS ordering settles one frame after a transparent window moves or
-	# receives focus. Apply the cat order on the following frame.
-	call_deferred("_defer_pet_window_raise_once")
-
-
-func _defer_pet_window_raise_once() -> void:
-	call_deferred("_raise_pet_window_above_station")
-
-
-func _raise_pet_window_above_station() -> void:
-	pet_window_raise_pending = false
-	if not is_instance_valid(pet_window) or not pet_window.visible:
-		return
-	# Native top-level windows do not share the Control-node z-order. Re-apply the
-	# Station first and the cat second so the mat stays underneath the cat even
-	# after the Station receives focus or either window moves between displays.
-	if is_instance_valid(station_window) and station_window.visible:
-		station_window.always_on_top = false
-		station_window.always_on_top = true
-	pet_window.always_on_top = false
-	pet_window.always_on_top = true
-
-
-func _destroy_pet_window() -> void:
-	if is_instance_valid(pet_window):
-		pet_window.hide()
-		pet_window.queue_free()
-	pet_window = null
-	pet_drag_surface = null
-	pet_station_top_art = null
-	pet_window_raise_pending = false
+	return desktop_controller._make_station_top_art(station_id, theme)
 
 
 func get_pet_station_id(pet: Dictionary) -> String:
-	var pet_id := str(pet.get("id", "")).to_lower()
-	var definition = PetCatalogScript.definition_by_pet_id(pet_id)
-	if definition != null:
-		return definition.catalog_id
-	var name_id := str(pet.get("name", "maple")).to_lower()
-	return name_id if PetCatalogScript.definition_by_catalog_id(name_id) != null else "maple"
+	return desktop_controller.get_pet_station_id(pet)
 
 
 func get_desktop_station_theme(station_id: String) -> Dictionary:
-	var normalized_id := station_id.to_lower()
-	var definition = PetCatalogScript.definition_by_catalog_id(normalized_id)
-	if definition == null:
-		definition = PetCatalogScript.default_definition()
-	var theme: Dictionary = definition.station_theme.duplicate(true)
-	theme["id"] = definition.catalog_id
-	return theme
-
-
-func _initialize_desktop_geometry() -> void:
-	var screen_rect := get_current_desktop_screen_rect()
-	widget_station_position = get_initial_station_position(screen_rect)
-	widget_pet_position = get_station_pet_anchor()
+	return desktop_controller.get_desktop_station_theme(station_id)
 
 
 func get_initial_station_position(screen_rect: Rect2) -> Vector2:
-	var station_size := get_station_pixel_size()
-	var pet_size := get_pet_widget_pixel_size()
-	var scaled_margin := Vector2(STATION_SCREEN_MARGIN) * widget_screen_scale
-	# The movement window is wider than the Station so stretched running poses keep
-	# the same visual scale. Leave enough room to keep that transparent window
-	# centered over the grass without extending beyond the edge of the display.
-	var pet_side_overhang := maxf(0.0, (pet_size.x - station_size.x) * 0.5)
-	var right_clearance := maxf(scaled_margin.x, pet_side_overhang)
-	return Vector2(
-		screen_rect.end.x - station_size.x - right_clearance,
-		screen_rect.end.y - station_size.y - scaled_margin.y
-	)
+	return desktop_controller.get_initial_station_position(screen_rect)
 
 
 func get_station_pixel_size() -> Vector2:
-	var scaled_size := Vector2(STATION_LOGICAL_SIZE) * widget_screen_scale
-	return Vector2(roundf(scaled_size.x), roundf(scaled_size.y))
+	return desktop_controller.get_station_pixel_size()
 
 
 func get_pet_widget_pixel_size() -> Vector2:
-	var scaled_size := Vector2(PET_WIDGET_LOGICAL_SIZE) * widget_screen_scale
-	return Vector2(roundf(scaled_size.x), roundf(scaled_size.y))
+	return desktop_controller.get_pet_widget_pixel_size()
 
 
 func get_station_pet_anchor() -> Vector2:
-	var station_size := get_station_pixel_size()
-	var pet_size := get_pet_widget_pixel_size()
-	return widget_station_position + Vector2(
-		(station_size.x - pet_size.x) * 0.5,
-		-pet_size.y + STATION_PET_FOOT_Y * widget_screen_scale
-	)
+	return desktop_controller.get_station_pet_anchor()
 
 
 func get_station_wake_rect() -> Rect2:
-	var station_size := get_station_pixel_size()
-	return Rect2(
-		widget_station_position + Vector2(0.0, -station_size.x),
-		Vector2(station_size.x, station_size.x)
-	)
+	return desktop_controller.get_station_wake_rect()
 
 
 func get_pet_screen_rect() -> Rect2:
-	return Rect2(widget_pet_position, get_pet_widget_pixel_size())
+	return desktop_controller.get_pet_screen_rect()
 
 
 func set_widget_station_position(value: Vector2) -> void:
-	widget_station_position = clamp_desktop_item_position(value, get_station_pixel_size())
-	if is_instance_valid(station_window):
-		station_window.position = Vector2i(widget_station_position)
-	if widget_pet_at_station and not widget_pet_dragging and not widget_following:
-		set_widget_pet_position(get_station_pet_anchor())
-		if is_instance_valid(avatar):
-			avatar.stop_move()
-	_schedule_pet_window_raise()
+	desktop_controller.set_widget_station_position(value)
 
 
 func set_widget_pet_position(value: Vector2, clamp_to_screen := true) -> void:
-	# Slow Follow Me movement must be allowed to cross the seam between displays.
-	# Its final target is already clamped to a real screen; clamping every small
-	# intermediate step would pin the window to the edge of its current display.
-	widget_pet_position = (
-		clamp_desktop_item_position(value, get_pet_widget_pixel_size())
-		if clamp_to_screen
-		else value
-	)
-	if is_instance_valid(pet_window):
-		pet_window.position = Vector2i(widget_pet_position)
-	_schedule_pet_window_raise()
+	desktop_controller.set_widget_pet_position(value, clamp_to_screen)
 
 
 func clamp_desktop_item_position(value: Vector2, item_size: Vector2) -> Vector2:
-	return clamp_desktop_item_position_to_screens(value, item_size, get_desktop_screen_rects())
+	return desktop_controller.clamp_desktop_item_position(value, item_size)
 
 
 func clamp_desktop_item_position_to_screens(
@@ -1429,29 +1041,10 @@ func clamp_desktop_item_position_to_screens(
 	item_size: Vector2,
 	screen_rects: Array[Rect2]
 ) -> Vector2:
-	if screen_rects.is_empty():
-		return value
-	var item_center := value + item_size * 0.5
-	var target_screen := screen_rects[0]
-	var closest_distance_squared := INF
-	for screen_rect in screen_rects:
-		if screen_rect.has_point(item_center):
-			target_screen = screen_rect
-			closest_distance_squared = 0.0
-			break
-		var closest_point := Vector2(
-			clampf(item_center.x, screen_rect.position.x, screen_rect.end.x),
-			clampf(item_center.y, screen_rect.position.y, screen_rect.end.y)
-		)
-		var distance_squared := item_center.distance_squared_to(closest_point)
-		if distance_squared < closest_distance_squared:
-			closest_distance_squared = distance_squared
-			target_screen = screen_rect
-	var screen_origin := target_screen.position
-	var screen_size := target_screen.size
-	return Vector2(
-		clampf(value.x, screen_origin.x, screen_origin.x + maxf(0.0, screen_size.x - item_size.x)),
-		clampf(value.y, screen_origin.y, screen_origin.y + maxf(0.0, screen_size.y - item_size.y))
+	return desktop_controller.clamp_desktop_item_position_to_screens(
+		value,
+		item_size,
+		screen_rects
 	)
 
 
@@ -1466,66 +1059,19 @@ func get_desktop_screen_rects() -> Array[Rect2]:
 
 
 func get_desktop_screen_rect() -> Rect2:
-	var screen_rects := get_desktop_screen_rects()
-	if screen_rects.is_empty():
-		return Rect2()
-	var desktop_rect := screen_rects[0]
-	for screen_index in range(1, screen_rects.size()):
-		desktop_rect = desktop_rect.merge(screen_rects[screen_index])
-	return desktop_rect
+	return desktop_controller.get_desktop_screen_rect()
 
 
 func get_current_desktop_screen_rect() -> Rect2:
-	if DisplayServer.get_name() == "headless":
-		return get_desktop_screen_rects()[0]
-	return Rect2(DisplayServer.screen_get_usable_rect(DisplayServer.window_get_current_screen()))
+	return desktop_controller.get_current_desktop_screen_rect()
 
 
 func _on_station_drag_input(event: InputEvent) -> void:
-	if event is InputEventMouseButton and event.button_index == MOUSE_BUTTON_LEFT:
-		widget_station_dragging = event.pressed
-		if event.pressed:
-			widget_station_drag_start_mouse = get_desktop_pointer_position()
-			widget_station_drag_start_position = widget_station_position
-		station_drag_handle.accept_event()
-	elif event is InputEventMouseMotion and widget_station_dragging:
-		set_widget_station_position(
-			widget_station_drag_start_position
-			+ get_desktop_pointer_position()
-			- widget_station_drag_start_mouse
-		)
-		station_drag_handle.accept_event()
+	desktop_controller._on_station_drag_input(event)
 
 
 func _on_pet_drag_input(event: InputEvent) -> void:
-	if event is InputEventMouseButton and event.button_index == MOUSE_BUTTON_LEFT:
-		if event.pressed and event.double_click:
-			widget_pet_dragging = false
-			avatar.play_belly_roll()
-			pet_drag_surface.accept_event()
-			return
-		widget_pet_dragging = event.pressed
-		if event.pressed:
-			widget_pet_drag_start_mouse = get_desktop_pointer_position()
-			widget_pet_drag_start_position = widget_pet_position
-			widget_pet_at_station = false
-			widget_returning_to_station = false
-			widget_seconds_since_pet_drag = 0.0
-			if is_instance_valid(avatar):
-				avatar.set_mood("idle")
-			_sync_desktop_station_art_layer()
-		pet_drag_surface.accept_event()
-	elif event is InputEventMouseMotion and widget_pet_dragging:
-		var next_position := (
-			widget_pet_drag_start_position
-			+ get_desktop_pointer_position()
-			- widget_pet_drag_start_mouse
-		)
-		if is_instance_valid(avatar):
-			avatar.play_move(next_position - widget_pet_position)
-		set_widget_pet_position(next_position)
-		widget_seconds_since_pet_drag = 0.0
-		pet_drag_surface.accept_event()
+	desktop_controller._on_pet_drag_input(event)
 
 
 func get_desktop_pointer_position() -> Vector2:
@@ -1535,194 +1081,18 @@ func get_desktop_pointer_position() -> Vector2:
 
 
 func toggle_widget_follow() -> void:
-	set_widget_following(not widget_following)
+	desktop_controller.toggle_widget_follow()
 
 
 func set_widget_following(enabled: bool) -> void:
-	widget_following = enabled
-	widget_returning_to_station = false
-	widget_seconds_since_pet_drag = 0.0
-	widget_follow_reaction_remaining = 0.0
-	widget_follow_has_target = false
-	widget_follow_chasing = false
-	widget_follow_target = widget_pet_position
-	widget_follow_last_pointer = get_desktop_pointer_position()
-	if is_instance_valid(follow_button):
-		follow_button.text = "UNFOLLOW" if enabled else "FOLLOW ME"
-	if is_instance_valid(avatar):
-		avatar.stop_move()
-		avatar.set_mood("follow" if enabled else "idle")
-	if enabled:
-		# The current pointer is already a target; no extra mouse movement is
-		# required after clicking Follow Me.
-		_update_widget_follow_target(widget_follow_last_pointer)
-		if widget_follow_target.distance_to(widget_pet_position) > PET_FOLLOW_RESUME_DISTANCE * widget_screen_scale:
-			_start_widget_follow_chase()
-	else:
-		widget_pet_at_station = widget_pet_position.distance_to(get_station_pet_anchor()) < 3.0
-		widget_returning_to_station = not widget_pet_at_station
-	_sync_desktop_idle_animation_state()
+	desktop_controller.set_widget_following(enabled)
 
 
-func _update_widget_follow_target(pointer_position: Vector2) -> void:
-	widget_follow_last_pointer = pointer_position
-	widget_follow_target = (
-		pointer_position
-		- get_pet_widget_pixel_size() * 0.5
-		+ Vector2(28.0, 28.0) * widget_screen_scale
-	)
-	widget_follow_target = clamp_desktop_item_position(widget_follow_target, get_pet_widget_pixel_size())
-	widget_follow_has_target = true
-
-
-func _start_widget_follow_chase() -> void:
-	# Only an idle-to-chasing transition gets a reaction delay. Retargeting a
-	# moving pointer must never restart the timer or stop an already moving cat.
-	widget_follow_chasing = true
-	widget_follow_reaction_remaining = randf_range(PET_FOLLOW_REACTION_MIN, PET_FOLLOW_REACTION_MAX)
-	if is_instance_valid(avatar):
-		avatar.stop_move()
-
-
-func _stop_widget_follow_chase() -> void:
-	widget_follow_chasing = false
-	widget_follow_reaction_remaining = 0.0
-	if is_instance_valid(avatar):
-		avatar.stop_move()
-
-
-func _sync_desktop_station_art_layer() -> void:
-	# At Home the visible mat lives in the same native window as the cat and is
-	# inserted before the avatar, so it cannot cover the cat. Once the cat leaves,
-	# restore the original Station-window art so the empty bed stays behind.
-	var use_pet_window_art := widget_pet_at_station
-	if is_instance_valid(station_top_art):
-		station_top_art.visible = not use_pet_window_art
-	if is_instance_valid(pet_station_top_art):
-		pet_station_top_art.visible = use_pet_window_art
-
-
-func _sync_desktop_idle_animation_state() -> void:
-	_sync_desktop_station_art_layer()
-	if not is_instance_valid(avatar):
-		return
-	avatar.set_desktop_idle_enabled(
-		desktop_mode
-		and widget_pet_at_station
-		and not widget_pet_dragging
-		and not widget_following
-		and not widget_returning_to_station
-		and avatar.mood == "idle"
-	)
-
-
-func update_desktop_companion(delta: float, pointer_override := Vector2(-1000000.0, -1000000.0)) -> void:
-	if not is_instance_valid(avatar):
-		return
-	if widget_station_dragging and not Input.is_mouse_button_pressed(MOUSE_BUTTON_LEFT):
-		widget_station_dragging = false
-	if widget_pet_dragging and not Input.is_mouse_button_pressed(MOUSE_BUTTON_LEFT):
-		widget_pet_dragging = false
-		widget_seconds_since_pet_drag = 0.0
-	_sync_desktop_idle_animation_state()
-	var pointer_position := pointer_override
-	if pointer_position.x <= -999999.0:
-		pointer_position = get_desktop_pointer_position()
-
-	var pointer_in_station_space := get_station_wake_rect().has_point(pointer_position)
-	var pointer_on_pet := get_pet_screen_rect().has_point(pointer_position)
-	if (
-		pointer_in_station_space
-		or pointer_on_pet
-		or widget_following
-		or widget_pet_dragging
-		or widget_returning_to_station
-	):
-		widget_seconds_outside_station = 0.0
-	else:
-		widget_seconds_outside_station += delta
-
-	if widget_following and not widget_pet_dragging:
-		avatar.set_mood("follow")
-		_update_widget_follow_target(pointer_position)
-		if avatar.is_playing_interaction():
-			_sync_desktop_idle_animation_state()
-			return
-		var follow_displacement := widget_follow_target - widget_pet_position
-		var arrival_distance := PET_FOLLOW_ARRIVAL_DISTANCE * widget_screen_scale
-		var resume_distance := PET_FOLLOW_RESUME_DISTANCE * widget_screen_scale
-		# Use different stop/restart radii so small cursor movements near a
-		# settled cat do not make it repeatedly change between idle and walking.
-		if follow_displacement.length() <= arrival_distance:
-			_stop_widget_follow_chase()
-			_sync_desktop_idle_animation_state()
-			return
-		if not widget_follow_chasing:
-			if follow_displacement.length() <= resume_distance:
-				avatar.stop_move()
-				_sync_desktop_idle_animation_state()
-				return
-			_start_widget_follow_chase()
-		var movement_delta := maxf(0.0, delta)
-		if widget_follow_reaction_remaining > 0.0:
-			var reaction_delta := minf(movement_delta, widget_follow_reaction_remaining)
-			widget_follow_reaction_remaining -= reaction_delta
-			movement_delta -= reaction_delta
-		if movement_delta > 0.0:
-			# Keep the approved speed and stop at the near radius without snapping
-			# onto the cursor, even when one update has a large delta.
-			var follow_distance := minf(
-				PET_FOLLOW_RUN_SPEED * widget_screen_scale * movement_delta,
-				follow_displacement.length() - arrival_distance
-			)
-			var next_follow_position := widget_pet_position.move_toward(widget_follow_target, follow_distance)
-			avatar.play_move(next_follow_position - widget_pet_position)
-			set_widget_pet_position(next_follow_position, false)
-			widget_pet_at_station = false
-			if widget_pet_position.distance_to(widget_follow_target) <= arrival_distance + 0.001:
-				_stop_widget_follow_chase()
-		_sync_desktop_idle_animation_state()
-		return
-
-	if pointer_on_pet:
-		if avatar.mood == "sleep":
-			avatar.set_mood("idle")
-	elif widget_seconds_outside_station >= STATION_WAKE_SECONDS and not widget_pet_dragging:
-		avatar.set_mood("sleep")
-
-	if avatar.is_playing_interaction():
-		_sync_desktop_idle_animation_state()
-		return
-
-	if not widget_pet_at_station and not widget_pet_dragging:
-		widget_seconds_since_pet_drag += delta
-		if widget_seconds_since_pet_drag >= PET_RETURN_SECONDS:
-			widget_returning_to_station = true
-	if widget_returning_to_station and not widget_pet_dragging:
-		# Returning is active movement, so it must keep the cat awake and restart
-		# the sleep countdown only after the cat has reached the Station.
-		widget_seconds_outside_station = 0.0
-		var station_target := get_station_pet_anchor()
-		# Use the same fixed walking speed as Follow Me. Interpolating a fraction
-		# of the remaining distance made distant cats rush back to the Station.
-		var return_distance := PET_FOLLOW_RUN_SPEED * widget_screen_scale * maxf(0.0, delta)
-		var next_return_position := widget_pet_position.move_toward(station_target, return_distance)
-		avatar.set_mood("idle")
-		avatar.play_move(next_return_position - widget_pet_position)
-		# Just like Follow Me, the return path must be allowed to pass through a
-		# display seam. Clamping every intermediate point can pin the native pet
-		# window to the edge of the display it is leaving.
-		set_widget_pet_position(next_return_position, false)
-		if widget_pet_position == station_target:
-			set_widget_pet_position(station_target)
-			widget_pet_at_station = true
-			widget_returning_to_station = false
-			widget_seconds_since_pet_drag = 0.0
-			avatar.stop_move()
-			avatar.set_mood("idle")
-			_schedule_pet_window_raise()
-	_sync_desktop_idle_animation_state()
-
+func update_desktop_companion(
+	delta: float,
+	pointer_override := Vector2(-1000000.0, -1000000.0)
+) -> void:
+	desktop_controller.update(delta, pointer_override)
 
 func restore_from_widget() -> void:
 	leave_desktop_mode()
@@ -1742,23 +1112,8 @@ func leave_desktop_mode() -> void:
 	if not desktop_mode:
 		return
 	desktop_mode = false
-	if is_instance_valid(avatar):
-		avatar.set_desktop_idle_enabled(false)
-	set_widget_following(false)
-	_destroy_pet_window()
-	_destroy_station_window()
-	if DisplayServer.get_name() != "headless":
-		get_window().show()
-		get_window().transparent = false
-		get_viewport().transparent_bg = false
-		get_viewport().gui_embed_subwindows = true
-		get_window().borderless = false
-		get_window().always_on_top = false
-		get_window().unresizable = normal_window_unresizable
-		get_window().min_size = normal_window_min_size
-		get_window().content_scale_size = normal_content_scale_size
-		get_window().size = normal_window_size
-		get_window().position = normal_window_position
+	desktop_controller.stop()
+	avatar = null
 
 
 func quit_from_widget() -> void:
