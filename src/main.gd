@@ -14,8 +14,9 @@ const AquariumLoadingScreenScript = preload("res://src/aquarium_loading_screen.g
 const StoreScreenScript = preload("res://src/store_screen.gd")
 const FishBookScreenScript = preload("res://src/fish_book_screen.gd")
 const GameFontStylesScript = preload("res://src/game_font_styles.gd")
-const FishCatalogScript = preload("res://src/fish_catalog.gd")
 const SaveGameRepositoryScript = preload("res://src/persistence/save_game_repository.gd")
+const PlayerProgressScript = preload("res://src/progression/player_progress.gd")
+const GameStateStoreScript = preload("res://src/progression/game_state_store.gd")
 const PetCatalogScript = preload("res://src/pets/pet_catalog.gd")
 const DesktopCompanionControllerScript = preload(
 	"res://src/desktop/desktop_companion_controller.gd"
@@ -69,6 +70,7 @@ var desktop_controller: DesktopCompanionController = DesktopCompanionControllerS
 var save_enabled := true
 var save_read_only := false
 var save_repository
+var game_state_store = GameStateStoreScript.new()
 var launch_directly_to_widget := false
 
 var palette := {
@@ -87,6 +89,7 @@ var palette := {
 
 func _ready() -> void:
 	theme = GameFontStylesScript.make_game_theme()
+	game_state_store.progress_changed.connect(_on_game_state_progress_changed)
 	get_window().min_size = Vector2i(960, 540)
 	desktop_controller.name = "DesktopCompanionController"
 	add_child(desktop_controller)
@@ -612,64 +615,32 @@ func get_progress_stats() -> Dictionary:
 		PROGRESS_SAVE_KEY,
 		save_data.get(LEGACY_PROGRESS_SAVE_KEY, {})
 	)
-	return _normalize_progress_stats(raw_stats)
+	var normalized := _normalize_progress_stats(raw_stats)
+	# Keep the compatibility save Dictionary and the runtime model synchronized.
+	# Production code mutates the store; this silent refresh also protects debug
+	# tools and older tests that still replace save_data directly.
+	game_state_store.replace(normalized, false)
+	return game_state_store.snapshot()
 
 
 func _normalize_progress_stats(value: Variant) -> Dictionary:
-	var stats: Dictionary = value if value is Dictionary else {}
-	# Keep fields added by current or future minigames. Normalization should fill
-	# and sanitize shared fields, not silently erase unrelated progression.
-	var normalized_stats := stats.duplicate(true)
-	# These counters belonged exclusively to the removed relay minigame.
-	normalized_stats.erase("successful_returns")
-	normalized_stats.erase("best_combo")
-	var unlocked_fish_ids: Array[String] = []
-	for starter_fish_id in FishingGameScript.STARTER_FISH_IDS:
-		unlocked_fish_ids.append(starter_fish_id)
-	var raw_unlocked_fish_ids: Variant = stats.get("unlocked_fish_ids", [])
-	if raw_unlocked_fish_ids is Array:
-		for fish_id_value in raw_unlocked_fish_ids:
-			var fish_id := str(fish_id_value)
-			if fish_id != "" and not unlocked_fish_ids.has(fish_id):
-				unlocked_fish_ids.append(fish_id)
-	var aquarium_fish_ids := FishCatalogScript.normalize_aquarium_fish_ids(
-		stats.get(
-			"aquarium_fish_ids",
-			FishCatalogScript.DEFAULT_AQUARIUM_FISH_IDS
-		),
-		unlocked_fish_ids
-	)
-	normalized_stats["experience"] = maxi(0, int(stats.get("experience", 0)))
-	normalized_stats["hearts"] = clampi(int(stats.get("hearts", 5)), 0, 5)
-	normalized_stats["next_heart_restore_unix"] = maxi(
-		0,
-		int(stats.get("next_heart_restore_unix", 0))
-	)
-	normalized_stats["fishing_level"] = maxi(1, int(stats.get("fishing_level", 1)))
-	normalized_stats["fishing_retry_level"] = maxi(
-		0,
-		int(stats.get("fishing_retry_level", 0))
-	)
-	normalized_stats["fishing_retry_count"] = maxi(
-		0,
-		int(stats.get("fishing_retry_count", 0))
-	)
-	normalized_stats["unlocked_fish_ids"] = unlocked_fish_ids
-	normalized_stats["aquarium_fish_ids"] = aquarium_fish_ids
-	return normalized_stats
+	var progress = PlayerProgressScript.new()
+	progress.load_dictionary(value)
+	return progress.to_dictionary()
+
+
+func _on_game_state_progress_changed(snapshot: Dictionary) -> void:
+	save_data[PROGRESS_SAVE_KEY] = snapshot.duplicate(true)
 
 
 func _on_progress_stats_changed(stats: Dictionary) -> void:
-	var merged_stats := get_progress_stats()
-	for key in stats:
-		merged_stats[key] = stats[key]
-	save_data[PROGRESS_SAVE_KEY] = _normalize_progress_stats(merged_stats)
+	get_progress_stats()
+	game_state_store.merge(stats)
 
 
 func _on_store_cat_purchased(cat_id: String, remaining_experience: int) -> void:
-	var stats := get_progress_stats()
-	stats["experience"] = maxi(0, remaining_experience)
-	save_data[PROGRESS_SAVE_KEY] = _normalize_progress_stats(stats)
+	get_progress_stats()
+	game_state_store.set_experience(remaining_experience)
 	var owned_cat_ids := get_owned_cat_ids()
 	if not owned_cat_ids.has(cat_id):
 		owned_cat_ids.append(cat_id)
@@ -714,12 +685,8 @@ func _ensure_online_cat_in_pet_pool(cat_id: String) -> String:
 
 
 func _on_aquarium_fish_ids_changed(fish_ids: Array[String]) -> void:
-	var stats := get_progress_stats()
-	stats["aquarium_fish_ids"] = FishCatalogScript.normalize_aquarium_fish_ids(
-		fish_ids,
-		stats.unlocked_fish_ids
-	)
-	save_data[PROGRESS_SAVE_KEY] = _normalize_progress_stats(stats)
+	get_progress_stats()
+	game_state_store.replace_aquarium_fish_ids(fish_ids)
 	_discard_cached_aquarium()
 	save_game()
 
