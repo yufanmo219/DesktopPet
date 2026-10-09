@@ -216,6 +216,9 @@ const HEART_TEXTURE: Texture2D = preload(
 const GameFontStylesScript = preload("res://src/game_font_styles.gd")
 const FishCatalogScript = preload("res://src/fish_catalog.gd")
 const FishingLevelCatalogScript = preload("res://src/fishing_level_catalog.gd")
+const FishingSessionScript = preload("res://src/fishing/fishing_session.gd")
+const GameStateStoreScript = preload("res://src/progression/game_state_store.gd")
+const HeartServiceScript = preload("res://src/progression/heart_service.gd")
 
 static var FISH_TYPES: Array[Dictionary] = FishCatalogScript.FISH_TYPES
 const STARTER_FISH_IDS: Array[String] = FishCatalogScript.STARTER_FISH_IDS
@@ -335,17 +338,19 @@ const NEW_FISH_FOOTER_SIZE := Vector2(490, 42)
 const NEW_FISH_FOOTER_FONT_SIZE := 19
 const CELEBRATION_REGULAR_TEXT_COLOR := Color("#58352b")
 
-const CATCH_SUCCESS_CHANCE := 0.98
-const RETRY_ESCAPE_REDUCTION := 0.03
-const FIRST_FISH_SPAWN_TIME_SECONDS := 0.25
-const FINAL_FISH_SPAWN_TIME_FRACTION := 0.90
-const FINAL_FISH_SPAWN_MIN_REMAINING_SECONDS := 3.0
+const CATCH_SUCCESS_CHANCE := FishingSessionScript.DEFAULT_CATCH_SUCCESS_CHANCE
+const RETRY_ESCAPE_REDUCTION := FishingSessionScript.RETRY_ESCAPE_REDUCTION
+const FIRST_FISH_SPAWN_TIME_SECONDS := FishingSessionScript.FIRST_FISH_SPAWN_TIME_SECONDS
+const FINAL_FISH_SPAWN_TIME_FRACTION := FishingSessionScript.FINAL_FISH_SPAWN_TIME_FRACTION
+const FINAL_FISH_SPAWN_MIN_REMAINING_SECONDS := (
+	FishingSessionScript.FINAL_FISH_SPAWN_MIN_REMAINING_SECONDS
+)
 # One fish is assigned to each equal time slot. Picking a point inside the
 # middle 70% of every slot keeps the stream random without allowing clumps.
-const SPAWN_SLOT_RANDOM_MIN := 0.15
-const SPAWN_SLOT_RANDOM_MAX := 0.85
-const MAX_HEARTS := 5
-const HEART_RESTORE_SECONDS := 15
+const SPAWN_SLOT_RANDOM_MIN := FishingSessionScript.SPAWN_SLOT_RANDOM_MIN
+const SPAWN_SLOT_RANDOM_MAX := FishingSessionScript.SPAWN_SLOT_RANDOM_MAX
+const MAX_HEARTS := HeartServiceScript.MAX_HEARTS
+const HEART_RESTORE_SECONDS := HeartServiceScript.DEFAULT_RESTORE_SECONDS
 const FRAME_DURATIONS: Array[float] = [0.13, 0.12, 0.12, 0.13, 0.18, 0.30]
 const CUSTOM_FINAL_REACTION_FRAME_DURATIONS: Array[float] = [0.10, 0.10, 0.10]
 const CAUGHT_FISH_LIFT_OFFSETS: Array[float] = [0.0, -40.0, -70.0, -90.0, -90.0, -90.0]
@@ -448,30 +453,111 @@ enum GameState {
 var state := GameState.WAITING_FOR_FISH
 var pet_id := "default_orange_cat"
 var pet_name := "Companion"
-var current_level := FISHING_LEVEL
-var fish_caught := 0
-var xp_earned := 0
-var round_config: Dictionary = {}
-var round_goals: Array[Dictionary] = []
-var round_spawn_fish_ids: Array[String] = []
-var round_time_limit_seconds := DEFAULT_ROUND_TIME_LIMIT_SECONDS
-var round_difficulty_multiplier := 1.0
-var round_target_pass_rate := 0.95
-var round_catch_success_chance := CATCH_SUCCESS_CHANCE
-var current_level_retry_count := 0
-var round_spawn_total_multiplier := FishingLevelCatalogScript.spawn_total_multiplier(0.95)
-var round_xp_reward := 0
-var round_completion_xp_awarded := false
-var round_completion_pending := false
-var round_time_remaining := float(DEFAULT_ROUND_TIME_LIMIT_SECONDS)
-var round_started := false
-var round_goal_counts: Dictionary = {}
+var fishing_session = FishingSessionScript.new()
+var current_level: int:
+	get:
+		return fishing_session.current_level
+	set(value):
+		fishing_session.current_level = value
+var fish_caught: int:
+	get:
+		return fishing_session.fish_caught
+	set(value):
+		fishing_session.fish_caught = value
+var xp_earned: int:
+	get:
+		return fishing_session.xp_earned
+	set(value):
+		fishing_session.xp_earned = value
+var round_config: Dictionary:
+	get:
+		return fishing_session.round_config
+	set(value):
+		fishing_session.round_config = value
+var round_goals: Array[Dictionary]:
+	get:
+		return fishing_session.round_goals
+	set(value):
+		fishing_session.round_goals = value
+var round_spawn_fish_ids: Array[String]:
+	get:
+		return fishing_session.round_spawn_fish_ids
+	set(value):
+		fishing_session.round_spawn_fish_ids = value
+var round_time_limit_seconds: int:
+	get:
+		return fishing_session.round_time_limit_seconds
+	set(value):
+		fishing_session.round_time_limit_seconds = value
+var round_difficulty_multiplier: float:
+	get:
+		return fishing_session.round_difficulty_multiplier
+	set(value):
+		fishing_session.round_difficulty_multiplier = value
+var round_target_pass_rate: float:
+	get:
+		return fishing_session.round_target_pass_rate
+	set(value):
+		fishing_session.round_target_pass_rate = value
+var round_catch_success_chance: float:
+	get:
+		return fishing_session.round_catch_success_chance
+	set(value):
+		fishing_session.round_catch_success_chance = value
+var current_level_retry_count: int:
+	get:
+		return fishing_session.current_level_retry_count
+	set(value):
+		fishing_session.current_level_retry_count = value
+var round_spawn_total_multiplier: float:
+	get:
+		return fishing_session.round_spawn_total_multiplier
+	set(value):
+		fishing_session.round_spawn_total_multiplier = value
+var round_xp_reward: int:
+	get:
+		return fishing_session.round_xp_reward
+	set(value):
+		fishing_session.round_xp_reward = value
+var round_completion_xp_awarded: bool:
+	get:
+		return fishing_session.round_completion_xp_awarded
+	set(value):
+		fishing_session.round_completion_xp_awarded = value
+var round_completion_pending: bool:
+	get:
+		return fishing_session.round_completion_pending
+	set(value):
+		fishing_session.round_completion_pending = value
+var round_time_remaining: float:
+	get:
+		return fishing_session.round_time_remaining
+	set(value):
+		fishing_session.round_time_remaining = value
+var round_started: bool:
+	get:
+		return fishing_session.round_started
+	set(value):
+		fishing_session.round_started = value
+var round_goal_counts: Dictionary:
+	get:
+		return fishing_session.round_goal_counts
+	set(value):
+		fishing_session.round_goal_counts = value
 var active_fish: Array[Dictionary] = []
-var hearts := MAX_HEARTS
-var next_heart_restore_unix := 0
+var progress_store = GameStateStoreScript.new()
+var heart_service = HeartServiceScript.new(progress_store, HEART_RESTORE_SECONDS)
+var hearts: int:
+	get:
+		return heart_service.heart_count()
+var next_heart_restore_unix: int:
+	get:
+		return heart_service.next_restore_unix()
 var shared_stats: Dictionary = {}
 
-var rng := RandomNumberGenerator.new()
+var rng: RandomNumberGenerator:
+	get:
+		return fishing_session.rng
 var stats_labels: Array[Label] = []
 var stats_panel: Control
 var fish_guide_panel: Control
@@ -507,44 +593,88 @@ var new_fish_popup_view: TextureRect
 var spawn_timer: Timer
 var failure_sound_player: AudioStreamPlayer
 var success_sound_player: AudioStreamPlayer
-var round_spawn_sequence: Array[String] = []
-var round_spawn_times: Array[float] = []
-var round_planned_spawn_counts: Dictionary = {}
-var round_required_fish_total := 0
-var round_total_spawn_count := 0
-var round_retry_target_spawn_bonus_per_goal := 0
-var next_spawn_index := 0
+var round_spawn_sequence: Array[String]:
+	get:
+		return fishing_session.round_spawn_sequence
+	set(value):
+		fishing_session.round_spawn_sequence = value
+var round_spawn_times: Array[float]:
+	get:
+		return fishing_session.round_spawn_times
+	set(value):
+		fishing_session.round_spawn_times = value
+var round_planned_spawn_counts: Dictionary:
+	get:
+		return fishing_session.round_planned_spawn_counts
+	set(value):
+		fishing_session.round_planned_spawn_counts = value
+var round_required_fish_total: int:
+	get:
+		return fishing_session.round_required_fish_total
+	set(value):
+		fishing_session.round_required_fish_total = value
+var round_total_spawn_count: int:
+	get:
+		return fishing_session.round_total_spawn_count
+	set(value):
+		fishing_session.round_total_spawn_count = value
+var round_retry_target_spawn_bonus_per_goal: int:
+	get:
+		return fishing_session.round_retry_target_spawn_bonus_per_goal
+	set(value):
+		fishing_session.round_retry_target_spawn_bonus_per_goal = value
+var next_spawn_index: int:
+	get:
+		return fishing_session.next_spawn_index
+	set(value):
+		fishing_session.next_spawn_index = value
 var animation_frame_index := 0
 var result_is_round_end := false
 var round_failure_retry_pending := false
 var no_hearts_popup_pending := false
 
 
-func configure(pet: Dictionary, saved_stats: Dictionary = {}) -> void:
+func configure(
+	pet: Dictionary,
+	saved_stats: Dictionary = {},
+	configured_progress_store = null
+) -> void:
 	pet_id = str(pet.get("id", "default_orange_cat")).to_lower()
 	pet_name = str(pet.get("name", "Companion"))
-	shared_stats = saved_stats.duplicate(true)
+	if progress_store.progress_changed.is_connected(_on_progress_store_changed):
+		progress_store.progress_changed.disconnect(_on_progress_store_changed)
+	if configured_progress_store == null:
+		progress_store = GameStateStoreScript.new()
+		progress_store.replace(saved_stats, false)
+	else:
+		progress_store = configured_progress_store
+	progress_store.progress_changed.connect(_on_progress_store_changed)
+	heart_service = HeartServiceScript.new(progress_store, HEART_RESTORE_SECONDS)
+	shared_stats = progress_store.snapshot()
 	current_level = maxi(
-		int(saved_stats.get("fishing_level", FISHING_LEVEL)),
+		int(shared_stats.get("fishing_level", FISHING_LEVEL)),
 		FISHING_LEVEL
 	)
 	current_level_retry_count = (
-		maxi(0, int(saved_stats.get("fishing_retry_count", 0)))
-		if int(saved_stats.get("fishing_retry_level", 0)) == current_level
+		maxi(0, int(shared_stats.get("fishing_retry_count", 0)))
+		if int(shared_stats.get("fishing_retry_level", 0)) == current_level
 		else 0
 	)
 	unlocked_fish_ids.clear()
 	for starter_fish_id in STARTER_FISH_IDS:
 		unlocked_fish_ids.append(starter_fish_id)
-	var saved_unlocked_fish_ids: Variant = saved_stats.get("unlocked_fish_ids", [])
+	var saved_unlocked_fish_ids: Variant = shared_stats.get("unlocked_fish_ids", [])
 	if saved_unlocked_fish_ids is Array:
 		for fish_id_value in saved_unlocked_fish_ids:
 			var fish_id := str(fish_id_value)
 			if fish_id != "" and not unlocked_fish_ids.has(fish_id):
 				unlocked_fish_ids.append(fish_id)
-	hearts = clampi(int(saved_stats.get("hearts", MAX_HEARTS)), 0, MAX_HEARTS)
-	next_heart_restore_unix = maxi(0, int(saved_stats.get("next_heart_restore_unix", 0)))
 	_restore_hearts_at(int(Time.get_unix_time_from_system()), false)
+
+
+func _on_progress_store_changed(snapshot: Dictionary) -> void:
+	shared_stats = snapshot.duplicate(true)
+	shared_stats_changed.emit(shared_stats.duplicate(true))
 
 
 func _ready() -> void:
@@ -604,36 +734,7 @@ func _process(delta: float) -> void:
 
 
 func _load_round_configuration() -> void:
-	round_config = FishingLevelCatalogScript.level_config(current_level)
-	round_goals.clear()
-	for goal in round_config.get("goals", []):
-		round_goals.append(Dictionary(goal).duplicate(true))
-	round_spawn_fish_ids.clear()
-	for fish_id in round_config.get("spawn_fish_ids", []):
-		round_spawn_fish_ids.append(str(fish_id))
-	round_time_limit_seconds = clampi(
-		int(round_config.get("time_limit_seconds", DEFAULT_ROUND_TIME_LIMIT_SECONDS)),
-		FishingLevelCatalogScript.MIN_TIME_LIMIT_SECONDS,
-		FishingLevelCatalogScript.MAX_TIME_LIMIT_SECONDS
-	)
-	round_difficulty_multiplier = maxf(
-		0.75,
-		float(round_config.get("difficulty_multiplier", 1.0))
-	)
-	round_target_pass_rate = clampf(float(round_config.get("target_pass_rate", 0.75)), 0.0, 1.0)
-	_update_round_catch_success_chance()
-	round_spawn_total_multiplier = maxf(
-		1.0,
-		float(round_config.get(
-			"spawn_total_multiplier",
-			FishingLevelCatalogScript.spawn_total_multiplier(round_target_pass_rate)
-		))
-	)
-	round_xp_reward = maxi(0, int(round_config.get("xp_reward", 0)))
-	round_completion_xp_awarded = false
-	round_completion_pending = false
-	round_time_remaining = float(round_time_limit_seconds)
-	_build_round_spawn_plan()
+	fishing_session.load_level(current_level, current_level_retry_count)
 
 
 func _build_interface() -> void:
@@ -824,7 +925,7 @@ func _confirm_return_home() -> void:
 	# clicks and an in-flight lift cannot charge again or finish the round.
 	returning_home = true
 	_clear_home_return_confirmation()
-	round_started = false
+	fishing_session.abandon_round()
 	state = GameState.ROUND_ENDED
 	catch_hotspot.disabled = true
 	spawn_timer.stop()
@@ -1221,9 +1322,7 @@ func _start_round_from_goal_popup() -> void:
 	goal_popup_fish_views.clear()
 	goal_popup_count_labels.clear()
 	goal_popup_time_label = null
-	round_time_remaining = float(round_time_limit_seconds)
-	round_started = true
-	next_spawn_index = 0
+	fishing_session.start_round()
 	state = GameState.WAITING_FOR_FISH
 	catch_hotspot.disabled = true
 	_update_stats()
@@ -1231,30 +1330,23 @@ func _start_round_from_goal_popup() -> void:
 
 
 func _reset_round_goal_progress() -> void:
-	round_goal_counts.clear()
-	var visible_goal_count := mini(round_goals.size(), MAX_ROUND_GOAL_TYPES)
-	for index in range(visible_goal_count):
-		var fish_id := str(round_goals[index].get("fish_id", "green"))
-		round_goal_counts[fish_id] = 0
+	fishing_session.reset_goal_progress()
 	_update_goal_tracker()
 
 
 func _record_round_goal_catches(caught_fishes: Array[Dictionary]) -> void:
-	for fish in caught_fishes:
-		var fish_id := str(fish.get("id", ""))
-		if not round_goal_counts.has(fish_id):
-			continue
-		var required_count := _required_goal_count(fish_id)
-		var current_count := int(round_goal_counts.get(fish_id, 0))
-		round_goal_counts[fish_id] = mini(required_count, current_count + 1)
+	# The compatibility wrapper records goal progress only. Total caught fish is
+	# owned by FishingSession and incremented by _finish_attempt().
+	var previous_total := fish_caught
+	var previous_completion_pending := round_completion_pending
+	fishing_session.record_catches(caught_fishes)
+	fish_caught = previous_total
+	round_completion_pending = previous_completion_pending
 	_update_goal_tracker()
 
 
 func _required_goal_count(fish_id: String) -> int:
-	for goal in round_goals:
-		if str(goal.get("fish_id", "")) == fish_id:
-			return maxi(0, int(goal.get("count", 0)))
-	return 0
+	return fishing_session.required_goal_count(fish_id)
 
 
 func _update_goal_tracker() -> void:
@@ -1314,19 +1406,16 @@ func _advance_round_timer(delta: float) -> void:
 	if not _round_timer_is_running():
 		return
 	var previous_second := ceili(round_time_remaining)
-	round_time_remaining = maxf(0.0, round_time_remaining - maxf(0.0, delta))
+	var expired := fishing_session.advance_time(delta)
 	if ceili(round_time_remaining) != previous_second:
 		_update_stats()
-	if round_time_remaining <= 0.0 and state != GameState.LIFTING_NET:
+	if expired and state != GameState.LIFTING_NET:
 		_end_round()
 
 
 func _end_round(preserve_time_remaining := false) -> void:
 	if result_is_round_end and is_instance_valid(result_overlay):
 		return
-	if not preserve_time_remaining:
-		round_time_remaining = 0.0
-	round_completion_pending = false
 	spawn_timer.stop()
 	_remove_swimming_fishes()
 	state = GameState.ROUND_ENDED
@@ -1334,25 +1423,17 @@ func _end_round(preserve_time_remaining := false) -> void:
 	_apply_animation_frame(0)
 	_update_stats()
 	result_is_round_end = true
-	if _round_goals_completed():
+	if fishing_session.finish_round(preserve_time_remaining):
 		round_failure_retry_pending = false
 		_show_round_success()
 	else:
-		_record_failed_level_attempt()
 		_consume_heart_for_failed_round()
 		round_failure_retry_pending = true
 		_show_round_failure()
 
 
 func _round_goals_completed() -> bool:
-	var visible_goal_count := mini(round_goals.size(), MAX_ROUND_GOAL_TYPES)
-	for index in range(visible_goal_count):
-		var goal: Dictionary = round_goals[index]
-		var fish_id := str(goal.get("fish_id", "green"))
-		var required_count := maxi(0, int(goal.get("count", 0)))
-		if int(round_goal_counts.get(fish_id, 0)) < required_count:
-			return false
-	return true
+	return fishing_session.goals_completed()
 
 
 func _spawn_fish() -> void:
@@ -1478,41 +1559,19 @@ func _fish_entry_is_in_catch_zone(entry: Dictionary) -> bool:
 
 
 func catch_succeeds(fish_is_inside_net: bool, roll: float) -> bool:
-	return fish_is_inside_net and roll < round_catch_success_chance
+	return fishing_session.catch_succeeds(fish_is_inside_net, roll)
 
 
 func _update_round_catch_success_chance() -> void:
-	var base_catch_chance := clampf(
-		float(round_config.get("catch_success_chance", CATCH_SUCCESS_CHANCE)),
-		0.0,
-		1.0
-	)
-	var base_escape_chance := 1.0 - base_catch_chance
-	var assisted_escape_chance := maxf(
-		0.0,
-		base_escape_chance - float(current_level_retry_count) * RETRY_ESCAPE_REDUCTION
-	)
-	round_catch_success_chance = 1.0 - assisted_escape_chance
+	fishing_session.update_catch_success_chance()
 
 
 func _record_failed_level_attempt() -> void:
-	current_level_retry_count += 1
-	_update_round_catch_success_chance()
+	fishing_session.record_failed_attempt()
 
 
 func _retry_target_spawn_bonus_per_goal() -> int:
-	var base_catch_chance := clampf(
-		float(round_config.get("catch_success_chance", CATCH_SUCCESS_CHANCE)),
-		0.0,
-		1.0
-	)
-	var base_escape_chance := 1.0 - base_catch_chance
-	# The epsilon prevents exact three-percent steps such as fifteen percent
-	# from rounding up to one extra retry because of floating-point noise.
-	var retries_until_guaranteed := ceili(
-		maxf(0.0, base_escape_chance - 0.000001) / RETRY_ESCAPE_REDUCTION
-	)
-	return maxi(0, current_level_retry_count - retries_until_guaranteed)
+	return fishing_session.retry_target_spawn_bonus_per_goal()
 
 
 func _play_lift_animation(
@@ -1588,9 +1647,8 @@ func _finish_attempt(caught_fishes: Array[Dictionary]) -> void:
 	pending_catch_result_fishes.clear()
 	if not caught_fishes.is_empty():
 		_play_success_sound()
-		fish_caught += caught_fishes.size()
-		_record_round_goal_catches(caught_fishes)
-		round_completion_pending = _round_goals_completed()
+		fishing_session.record_catches(caught_fishes)
+		_update_goal_tracker()
 		if round_completion_pending:
 			spawn_timer.stop()
 			catch_hotspot.disabled = true
@@ -1614,7 +1672,7 @@ func _register_new_fish_unlocks(caught_fishes: Array[Dictionary]) -> Array[Dicti
 			continue
 		unlocked_fish_ids.append(fish_id)
 		newly_unlocked.append(fish.duplicate(true))
-	shared_stats["unlocked_fish_ids"] = unlocked_fish_ids.duplicate()
+	progress_store.replace_unlocked_fish_ids(unlocked_fish_ids)
 	return newly_unlocked
 
 
@@ -1925,13 +1983,14 @@ func _show_failure() -> void:
 func _show_round_success() -> void:
 	_award_round_completion_xp()
 	current_level_retry_count = 0
-	shared_stats["fishing_level"] = maxi(
+	progress_store.advance_fishing_level(maxi(
 		maxi(
 			current_level + 1,
 			int(shared_stats.get("fishing_level", FISHING_LEVEL))
 		),
 		FISHING_LEVEL
-	)
+	))
+	progress_store.clear_retry()
 	_emit_shared_stats_changed()
 
 	result_overlay = Control.new()
@@ -2002,13 +2061,8 @@ func _show_round_success() -> void:
 func _award_round_completion_xp() -> void:
 	if round_completion_xp_awarded:
 		return
-	round_completion_xp_awarded = true
-	xp_earned = round_xp_reward
-	shared_stats["experience"] = (
-		maxi(0, int(shared_stats.get("experience", 0)))
-		+ round_xp_reward
-	)
-	_emit_shared_stats_changed()
+	var awarded_xp := fishing_session.claim_completion_xp()
+	progress_store.add_experience(awarded_xp)
 	catch_completed.emit(true, fish_caught, xp_earned)
 
 
@@ -2047,20 +2101,11 @@ func _make_home_style_popup_button(
 
 
 func _start_next_level_from_success() -> void:
-	current_level = maxi(
-		maxi(
-			current_level + 1,
-			int(shared_stats.get("fishing_level", current_level + 1))
-		),
-		FISHING_LEVEL
+	fishing_session.advance_to_next_level(
+		int(shared_stats.get("fishing_level", current_level + 1))
 	)
 	_clear_result_overlay()
 	result_is_round_end = false
-	fish_caught = 0
-	xp_earned = 0
-	_load_round_configuration()
-	round_started = false
-	_reset_round_goal_progress()
 	_rebuild_fish_guide()
 	_update_stats()
 	_show_goal_popup()
@@ -2073,25 +2118,14 @@ func _return_home_from_round_success() -> void:
 
 
 func _consume_heart_for_failed_round(now_unix := -1) -> void:
-	if hearts <= 0:
-		return
 	var now := now_unix if now_unix >= 0 else int(Time.get_unix_time_from_system())
-	hearts = maxi(0, hearts - 1)
-	if hearts < MAX_HEARTS and next_heart_restore_unix <= 0:
-		next_heart_restore_unix = now + HEART_RESTORE_SECONDS
-	_update_heart_display()
-	_emit_shared_stats_changed()
+	if heart_service.spend(now):
+		_update_heart_display()
+		_emit_shared_stats_changed()
 
 
 func _prepare_current_level_retry() -> void:
-	fish_caught = 0
-	xp_earned = 0
-	round_completion_pending = false
-	round_completion_xp_awarded = false
-	round_time_remaining = float(round_time_limit_seconds)
-	round_started = false
-	_build_round_spawn_plan()
-	_reset_round_goal_progress()
+	fishing_session.prepare_retry()
 	_rebuild_fish_guide()
 	_update_stats()
 	_show_goal_popup()
@@ -2298,103 +2332,19 @@ func _clear_result_overlay() -> void:
 
 
 func _build_round_spawn_plan() -> void:
-	round_spawn_sequence.clear()
-	round_spawn_times.clear()
-	round_planned_spawn_counts.clear()
-	round_required_fish_total = 0
-	round_total_spawn_count = 0
-	round_retry_target_spawn_bonus_per_goal = _retry_target_spawn_bonus_per_goal()
-	next_spawn_index = 0
-
-	var target_spawn_quotas: Dictionary = {}
-	var reserved_target_total := 0
-	for goal in round_goals:
-		var fish_id := str(goal.get("fish_id", "green"))
-		var required_count := maxi(1, int(goal.get("count", 1)))
-		round_required_fish_total += required_count
-		var target_spawn_quota := (
-			FishingLevelCatalogScript.guaranteed_target_spawn_count(required_count)
-			+ round_retry_target_spawn_bonus_per_goal
-		)
-		target_spawn_quotas[fish_id] = target_spawn_quota
-		reserved_target_total += target_spawn_quota
-
-	var retry_target_spawn_bonus_total := (
-		round_retry_target_spawn_bonus_per_goal * round_goals.size()
-	)
-	round_total_spawn_count = maxi(
-		reserved_target_total,
-		ceili(float(round_required_fish_total) * round_spawn_total_multiplier)
-		+ retry_target_spawn_bonus_total
-	)
-	if round_total_spawn_count <= 0:
-		return
-
-	for goal in round_goals:
-		var fish_id := str(goal.get("fish_id", "green"))
-		var spawn_quota := int(target_spawn_quotas.get(fish_id, 0))
-		for copy_index in range(spawn_quota):
-			round_spawn_sequence.append(fish_id)
-
-	while round_spawn_sequence.size() < round_total_spawn_count:
-		round_spawn_sequence.append(_weighted_random_fish_id(round_spawn_fish_ids))
-	_shuffle_fish_ids(round_spawn_sequence)
-	for fish_id in round_spawn_sequence:
-		round_planned_spawn_counts[fish_id] = int(
-			round_planned_spawn_counts.get(fish_id, 0)
-		) + 1
-
-	_build_round_spawn_times(round_spawn_sequence.size())
+	fishing_session.build_spawn_plan()
 
 
 func _weighted_random_fish_id(candidate_ids: Array[String]) -> String:
-	if candidate_ids.is_empty():
-		return "green"
-	var total_weight := 0.0
-	for fish_id in candidate_ids:
-		total_weight += maxf(0.001, float(_fish_definition(fish_id).get("spawn_weight", 1.0)))
-	var roll := rng.randf() * total_weight
-	for fish_id in candidate_ids:
-		roll -= maxf(0.001, float(_fish_definition(fish_id).get("spawn_weight", 1.0)))
-		if roll <= 0.0:
-			return fish_id
-	return candidate_ids.back()
+	return fishing_session.weighted_random_fish_id(candidate_ids)
 
 
 func _shuffle_fish_ids(fish_ids: Array) -> void:
-	for index in range(fish_ids.size() - 1, 0, -1):
-		var swap_index := rng.randi_range(0, index)
-		var held_fish_id = fish_ids[index]
-		fish_ids[index] = fish_ids[swap_index]
-		fish_ids[swap_index] = held_fish_id
+	fishing_session.shuffle_fish_ids(fish_ids)
 
 
 func _build_round_spawn_times(spawn_count: int) -> void:
-	round_spawn_times.clear()
-	if spawn_count <= 0:
-		return
-	var final_spawn_time := minf(
-		float(round_time_limit_seconds) * FINAL_FISH_SPAWN_TIME_FRACTION,
-		float(round_time_limit_seconds) - FINAL_FISH_SPAWN_MIN_REMAINING_SECONDS
-	)
-	final_spawn_time = maxf(FIRST_FISH_SPAWN_TIME_SECONDS, final_spawn_time)
-	if spawn_count == 1:
-		round_spawn_times.append(rng.randf_range(
-			FIRST_FISH_SPAWN_TIME_SECONDS,
-			final_spawn_time
-		))
-		return
-	var spawn_window := final_spawn_time - FIRST_FISH_SPAWN_TIME_SECONDS
-	var slot_duration := spawn_window / float(spawn_count)
-	for spawn_index in range(spawn_count):
-		var slot_start := FIRST_FISH_SPAWN_TIME_SECONDS + slot_duration * float(spawn_index)
-		round_spawn_times.append(
-			slot_start
-			+ slot_duration * rng.randf_range(
-				SPAWN_SLOT_RANDOM_MIN,
-				SPAWN_SLOT_RANDOM_MAX
-			)
-		)
+	fishing_session.build_spawn_times(spawn_count)
 
 
 func _schedule_next_planned_spawn() -> void:
@@ -2582,33 +2532,8 @@ func _stop_fish_motion() -> void:
 			tween.kill()
 
 
-func _restore_hearts_at(now_unix: int, emit_change := true) -> bool:
-	if hearts >= MAX_HEARTS:
-		hearts = MAX_HEARTS
-		next_heart_restore_unix = 0
-		return false
-	if next_heart_restore_unix <= 0:
-		next_heart_restore_unix = now_unix + HEART_RESTORE_SECONDS
-		if emit_change:
-			_emit_shared_stats_changed()
-		return true
-	var latest_valid_deadline := now_unix + HEART_RESTORE_SECONDS
-	if next_heart_restore_unix > latest_valid_deadline:
-		next_heart_restore_unix = latest_valid_deadline
-		if emit_change:
-			_emit_shared_stats_changed()
-		return true
-	if now_unix < next_heart_restore_unix:
-		return false
-	var restored := 1 + int((now_unix - next_heart_restore_unix) / HEART_RESTORE_SECONDS)
-	hearts = mini(MAX_HEARTS, hearts + restored)
-	if hearts >= MAX_HEARTS:
-		next_heart_restore_unix = 0
-	else:
-		next_heart_restore_unix += restored * HEART_RESTORE_SECONDS
-	if emit_change:
-		_emit_shared_stats_changed()
-	return true
+func _restore_hearts_at(now_unix: int, _emit_change := true) -> bool:
+	return heart_service.restore_at(now_unix)
 
 
 func _update_heart_display() -> void:
@@ -2647,10 +2572,8 @@ func _update_no_hearts_countdown() -> void:
 
 
 func seconds_until_next_heart(now_unix := -1) -> int:
-	if hearts >= MAX_HEARTS or next_heart_restore_unix <= 0:
-		return 0
 	var now := now_unix if now_unix >= 0 else int(Time.get_unix_time_from_system())
-	return maxi(0, next_heart_restore_unix - now)
+	return heart_service.seconds_until_next(now)
 
 
 func _format_countdown(total_seconds: int) -> String:
@@ -2658,23 +2581,28 @@ func _format_countdown(total_seconds: int) -> String:
 
 
 func _emit_shared_stats_changed() -> void:
-	shared_stats["hearts"] = hearts
-	shared_stats["next_heart_restore_unix"] = next_heart_restore_unix
-	shared_stats["fishing_level"] = maxi(
-		maxi(
-			current_level,
-			int(shared_stats.get("fishing_level", current_level))
+	var progress_patch := {
+		"hearts": hearts,
+		"next_heart_restore_unix": next_heart_restore_unix,
+		"fishing_level": maxi(
+			maxi(
+				current_level,
+				int(shared_stats.get("fishing_level", current_level))
+			),
+			FISHING_LEVEL
 		),
-		FISHING_LEVEL
-	)
-	shared_stats["unlocked_fish_ids"] = unlocked_fish_ids.duplicate()
+		"unlocked_fish_ids": unlocked_fish_ids.duplicate()
+	}
 	if current_level_retry_count > 0:
-		shared_stats["fishing_retry_level"] = current_level
-		shared_stats["fishing_retry_count"] = current_level_retry_count
+		progress_patch["fishing_retry_level"] = current_level
+		progress_patch["fishing_retry_count"] = current_level_retry_count
 	else:
-		shared_stats.erase("fishing_retry_level")
-		shared_stats.erase("fishing_retry_count")
-	shared_stats_changed.emit(shared_stats.duplicate(true))
+		progress_patch["fishing_retry_level"] = 0
+		progress_patch["fishing_retry_count"] = 0
+	var changed: bool = progress_store.merge(progress_patch)
+	shared_stats = progress_store.snapshot()
+	if not changed:
+		shared_stats_changed.emit(shared_stats.duplicate(true))
 
 
 func _update_stats() -> void:
