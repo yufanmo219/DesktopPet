@@ -546,9 +546,8 @@ func show_fishing() -> void:
 	if music_manager != null:
 		music_manager.play_fishing_music()
 	fishing_game = FishingGameScript.new()
-	fishing_game.configure(pet, get_progress_stats())
+	fishing_game.configure(pet, get_progress_stats(), game_state_store)
 	fishing_game.catch_completed.connect(_on_fishing_catch_completed)
-	fishing_game.shared_stats_changed.connect(_on_progress_stats_changed)
 	fishing_game.back_requested.connect(_on_fishing_back_requested)
 	fishing_game.set_anchors_and_offsets_preset(Control.PRESET_FULL_RECT)
 	content.add_child(fishing_game)
