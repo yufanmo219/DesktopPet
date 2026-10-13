@@ -21,6 +21,7 @@ const GameFontStylesScript = preload("res://src/game_font_styles.gd")
 const SaveGameRepositoryScript = preload("res://src/persistence/save_game_repository.gd")
 const PlayerProgressScript = preload("res://src/progression/player_progress.gd")
 const GameStateStoreScript = preload("res://src/progression/game_state_store.gd")
+const PlayerProfileStoreScript = preload("res://src/profile/player_profile_store.gd")
 const PetCatalogScript = preload("res://src/pets/pet_catalog.gd")
 const DesktopCompanionControllerScript = preload(
 	"res://src/desktop/desktop_companion_controller.gd"
@@ -69,6 +70,7 @@ var save_enabled := true
 var save_read_only := false
 var save_repository
 var game_state_store = GameStateStoreScript.new()
+var player_profile_store = PlayerProfileStoreScript.new()
 var launch_directly_to_widget := false
 
 var palette := {
@@ -467,13 +469,15 @@ func _on_progress_stats_changed(stats: Dictionary) -> void:
 func _on_store_cat_purchased(cat_id: String, remaining_experience: int) -> void:
 	get_progress_stats()
 	game_state_store.set_experience(remaining_experience)
-	var owned_cat_ids := get_owned_cat_ids()
-	if not owned_cat_ids.has(cat_id):
-		owned_cat_ids.append(cat_id)
-	save_data["owned_cat_ids"] = owned_cat_ids
-	var pet_id := _ensure_online_cat_in_pet_pool(cat_id)
+	_refresh_player_profile()
+	player_profile_store.add_owned_cat(cat_id)
+	var pet_id: String = player_profile_store.ensure_catalog_pet(
+		cat_id,
+		Time.get_datetime_string_from_system()
+	)
 	if pet_id != "":
-		save_data["active_pet_id"] = pet_id
+		player_profile_store.select_pet(pet_id)
+	_commit_player_profile()
 	save_game()
 
 
@@ -482,31 +486,29 @@ func _on_store_cat_selected(cat_id: String) -> void:
 	var progress_snapshot: Dictionary = (
 		raw_progress.duplicate(true) if raw_progress is Dictionary else {}
 	)
-	var pet_id := _ensure_online_cat_in_pet_pool(cat_id)
-	if pet_id == "" or get_pet_index(pet_id) < 0:
+	_refresh_player_profile()
+	var pet_id: String = player_profile_store.ensure_catalog_pet(
+		cat_id,
+		Time.get_datetime_string_from_system()
+	)
+	if pet_id == "" or not player_profile_store.select_pet(pet_id):
 		return
 	# Carrying another cat changes identity only. Shared XP, fishing levels,
 	# discovered fish, aquarium contents, hearts, and any future progress fields
 	# are restored byte-for-byte before the single save.
-	save_data["active_pet_id"] = pet_id
+	_commit_player_profile()
 	save_data[PROGRESS_SAVE_KEY] = progress_snapshot
 	save_game()
 	show_home()
 
 
 func _ensure_online_cat_in_pet_pool(cat_id: String) -> String:
-	var normalized_cat_id := cat_id.to_lower()
-	var definition = PetCatalogScript.definition_by_catalog_id(normalized_cat_id)
-	if definition == null:
-		return ""
-	var pet_id := str(definition.pet_id)
-	if get_pet_index(pet_id) >= 0:
-		return pet_id
-	var pet_pool := get_pet_pool()
-	var new_pet: Dictionary = definition.save_profile()
-	new_pet["created_at"] = Time.get_datetime_string_from_system()
-	pet_pool.append(new_pet)
-	save_data["pet_pool"] = pet_pool
+	_refresh_player_profile()
+	var pet_id: String = player_profile_store.ensure_catalog_pet(
+		cat_id,
+		Time.get_datetime_string_from_system()
+	)
+	_commit_player_profile()
 	return pet_id
 
 
@@ -641,9 +643,10 @@ func launch_external_desktop_companion() -> void:
 func _apply_desktop_launch_pet_override(pet_id: String) -> bool:
 	# The Desktop companion runs in a fresh process on macOS. Passing the chosen
 	# pet explicitly prevents that process from falling back to a stale saved cat.
-	if pet_id == "" or get_pet_index(pet_id) < 0:
+	_refresh_player_profile()
+	if pet_id == "" or not player_profile_store.select_pet(pet_id):
 		return false
-	save_data["active_pet_id"] = pet_id
+	_commit_player_profile()
 	return true
 
 
@@ -717,76 +720,59 @@ func quit_from_widget() -> void:
 
 
 func ensure_default_pet() -> void:
-	var pool := get_pet_pool()
-	var changed := false
-	if pool.is_empty():
-		var default_pet: Dictionary = PetCatalogScript.default_definition().save_profile()
-		default_pet["created_at"] = Time.get_datetime_string_from_system()
-		pool = [default_pet]
-		save_data["pet_pool"] = pool
-		save_data["active_pet_id"] = default_pet.id
-		changed = true
-	elif get_active_pet_index() < 0:
-		save_data["active_pet_id"] = str(pool[0].get("id", "default_orange_cat"))
-		changed = true
-	var owned_cat_ids := get_owned_cat_ids()
-	for cat_id in PetCatalogScript.catalog_ids():
-		if not owned_cat_ids.has(cat_id):
-			continue
-		var definition = PetCatalogScript.definition_by_catalog_id(cat_id)
-		if get_pet_index(str(definition.pet_id)) < 0:
-			_ensure_online_cat_in_pet_pool(cat_id)
-			changed = true
-	if not save_data.has("owned_cat_ids") or save_data.get("owned_cat_ids") != owned_cat_ids:
-		save_data["owned_cat_ids"] = owned_cat_ids
-		changed = true
+	_refresh_player_profile()
+	player_profile_store.ensure_default_pet(Time.get_datetime_string_from_system())
+	var normalized_profile := player_profile_store.snapshot()
+	var changed: bool = normalized_profile != save_data
+	save_data = normalized_profile
 	if changed:
 		save_game()
 
 
 func select_pet(pet_id: String) -> bool:
-	if get_pet_index(pet_id) < 0:
+	_refresh_player_profile()
+	if not player_profile_store.select_pet(pet_id):
 		return false
-	save_data["active_pet_id"] = pet_id
+	_commit_player_profile()
 	save_game()
 	return true
 
 
 func get_pet_pool() -> Array:
-	var pool = save_data.get("pet_pool", [])
-	return pool if pool is Array else []
+	_refresh_player_profile()
+	return player_profile_store.pet_pool()
 
 
 func get_owned_cat_ids() -> Array:
-	var raw_ids = save_data.get("owned_cat_ids", ["maple"])
-	var normalized: Array[String] = []
-	if raw_ids is Array:
-		for raw_id in raw_ids:
-			var cat_id := str(raw_id)
-			if cat_id != "" and not normalized.has(cat_id):
-				normalized.append(cat_id)
-	if not normalized.has("maple"):
-		normalized.push_front("maple")
-	return normalized
+	_refresh_player_profile()
+	return player_profile_store.owned_cat_ids()
 
 
 func get_pet_index(pet_id: String) -> int:
-	var pool := get_pet_pool()
-	for index in range(pool.size()):
-		if str(pool[index].get("id", "")) == pet_id:
-			return index
-	return -1
+	_refresh_player_profile()
+	return player_profile_store.pet_index(pet_id)
 
 
 func get_active_pet_index() -> int:
-	return get_pet_index(str(save_data.get("active_pet_id", "")))
+	_refresh_player_profile()
+	return player_profile_store.pet_index(player_profile_store.active_pet_id())
 
 
 func get_active_pet() -> Dictionary:
-	var index := get_active_pet_index()
-	if index < 0:
-		return {}
-	return get_pet_pool()[index]
+	_refresh_player_profile()
+	return player_profile_store.active_pet()
+
+
+func _refresh_player_profile(relock_development_catalog := false) -> void:
+	player_profile_store.replace(
+		save_data,
+		MAX_PETS,
+		relock_development_catalog
+	)
+
+
+func _commit_player_profile() -> void:
+	save_data = player_profile_store.snapshot()
 
 
 func save_game() -> void:
@@ -854,68 +840,10 @@ func normalize_save_data() -> void:
 			if not raw_owned_cat_ids.has(cat_id):
 				relock_development_catalog = false
 				break
-	if relock_development_catalog:
-		# Version 7 temporarily granted every finished cat for QA. Remove that
-		# grant once, while preserving XP, fishing, aquarium, and non-cat pets.
-		save_data["owned_cat_ids"] = ["maple"]
-		save_data["active_pet_id"] = "default_orange_cat"
-
-	var saved_active_pet_id := str(save_data.get("active_pet_id", ""))
-	var normalized_candidates: Array = []
-	var seen_pet_ids: Array[String] = []
-	var raw_pool = save_data.get("pet_pool", [])
-	if raw_pool is Array:
-		for item in raw_pool:
-			if item is Dictionary:
-				var pet: Dictionary = item.duplicate(true)
-				if (
-					relock_development_catalog
-					and str(pet.get("type", "Cat")) == "Cat"
-					and str(pet.get("id", "")) != "default_orange_cat"
-				):
-					continue
-				if str(pet.get("id", "")) == "":
-					pet["id"] = "%d_%d" % [
-						int(Time.get_unix_time_from_system() * 1000.0),
-						normalized_candidates.size()
-					]
-				var pet_id := str(pet.get("id", ""))
-				if seen_pet_ids.has(pet_id):
-					continue
-				pet["name"] = str(pet.get("name", "Mochi"))
-				var definition = PetCatalogScript.definition_by_pet_id(pet_id)
-				if definition != null:
-					pet["name"] = definition.display_name
-				pet["type"] = str(pet.get("type", "Cat"))
-				pet.erase("personality")
-				pet.erase("energy")
-				normalized_candidates.append(pet)
-				seen_pet_ids.append(pet_id)
-
-	var normalized: Array = normalized_candidates.slice(
-		0,
-		mini(MAX_PETS, normalized_candidates.size())
-	)
-	if saved_active_pet_id != "":
-		var active_candidate: Dictionary = {}
-		for candidate_value in normalized_candidates:
-			var candidate: Dictionary = candidate_value
-			if str(candidate.get("id", "")) == saved_active_pet_id:
-				active_candidate = candidate
-				break
-		if not active_candidate.is_empty():
-			var active_is_retained := normalized.any(func(candidate):
-				return str(candidate.get("id", "")) == saved_active_pet_id
-			)
-			if not active_is_retained:
-				if normalized.size() >= MAX_PETS:
-					normalized[MAX_PETS - 1] = active_candidate
-				else:
-					normalized.append(active_candidate)
-	save_data["pet_pool"] = normalized
-	save_data["owned_cat_ids"] = get_owned_cat_ids()
-	if get_active_pet_index() < 0 and not normalized.is_empty():
-		save_data["active_pet_id"] = normalized[0].id
+	# Version 7 temporarily granted every finished cat for QA. When detected,
+	# the profile store removes that grant while retaining non-cat pets and state.
+	_refresh_player_profile(relock_development_catalog)
+	_commit_player_profile()
 	var raw_progress: Variant = save_data.get(
 		PROGRESS_SAVE_KEY,
 		save_data.get(LEGACY_PROGRESS_SAVE_KEY, {})

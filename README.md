@@ -62,6 +62,8 @@ Aquarium 与它的 Loading Screen 分别通过 `src/aquarium/aquarium_screen.tsc
 
 `GameStateStore` 是运行时共享进度的唯一所有者，`PlayerProgress` 负责类型化字段、数据约束和与旧 Dictionary 存档的双向转换。`HeartService` 集中处理扣心、离线恢复和倒计时；`FishingSession` 是不依赖 Node、贴图、音频或 Tween 的纯回合模型，管理关卡目标、倒计时、生成计划、重试补偿和一次性奖励。
 
+`PlayerProfileStore` 独占宠物池、已拥有猫咪和当前伙伴的领域规则，包括去重、容量、旧 QA 解锁回收、目录改名迁移及当前伙伴保留。它在修改 roster 时会原样保留共享进度和未知的新版本字段；`main.gd` 只负责在页面事件与存档 Dictionary 之间同步这个模型。
+
 生产游戏通过 `src/fishing/fishing_game.tscn` 实例化钓鱼界面。主画面、HUD、Timer、音效播放器、暂停层和结果弹窗都定义在 `src/fishing/ui/` 的 `.tscn` 中；`fishing_game.gd` 只绑定节点、渲染动态鱼数据并转发玩家操作。测试和调试工具仍可以使用 `FishingGame.new()`，脚本会自动实例化同一份 `FishingView` 场景，不存在第二套 UI 实现。
 
 ## 原创字体
