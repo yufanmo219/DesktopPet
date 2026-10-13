@@ -40,6 +40,8 @@ Home 生产界面由 `src/home/home_screen.tscn` 实例化。`HomeScreen` 自己
 
 Store 与 Fish Book 是两个独立 feature scene，分别位于 `src/store/store_screen.tscn` 和 `src/fish_book/fish_book_screen.tscn`。两者复用 `src/catalog/book_shell.tscn` 的书本背景、标题、XP 与返回区域，但猫咪购买逻辑和鱼图鉴/Aquarium 选择逻辑不再通过继承互相暴露。
 
+Aquarium 与它的 Loading Screen 分别通过 `src/aquarium/aquarium_screen.tscn` 和 `src/aquarium/aquarium_loading_screen.tscn` 实例化。背景、标题、容量、导航和 Loading 静态布局由可复用 view scene 声明；脚本只保留数据绑定、异步贴图准备、鱼 Actor 生命周期和沙漏旋转。测试工具直接 `new()` 脚本时也会组合相同的 view，不维护第二套 UI。
+
 如果 Godot 使用嵌入式 Game 画面，点击 **Keep as desktop companion** 时，游戏会自动另开一个真正独立的透明挂件进程，并结束编辑器中正在运行的画面。也可以在 Godot 顶部 **Game** 页右上角的菜单中关闭 **Embed Game on Next Play**，让所有试玩都直接使用独立窗口。
 
 桌面模式使用两个可见的透明原生窗口：Station 保持在自己的位置，猫咪可以独立拖到桌面其他位置，因此不会用一个全屏透明层挡住其他应用。

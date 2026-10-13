@@ -10,6 +10,7 @@ signal animations_prepared
 const GameFontStylesScript = preload("res://src/game_font_styles.gd")
 const FishCatalogScript = preload("res://src/fish_catalog.gd")
 const AquariumFishActorScript = preload("res://src/aquarium_fish_actor.gd")
+const AquariumViewScene = preload("res://src/aquarium/aquarium_view.tscn")
 
 const BACKGROUND_TEXTURE: Texture2D = preload(
 	"res://assets/ui/aquarium/aquarium_background_clean_v1.png"
@@ -93,6 +94,7 @@ var aquarium_fish_ids: Array[String] = FishCatalogScript.DEFAULT_AQUARIUM_FISH_I
 var home_button: Button
 var fish_book_button: Button
 var fish_count_label: Label
+var fish_layer: Control
 var extra_fish_actors: Array[Sprite2D] = []
 var animations_ready := false
 var animations_loading := false
@@ -128,8 +130,9 @@ func _fish_capacity_text() -> String:
 
 
 func _ready() -> void:
-	_build_background()
-	_build_live_ui()
+	_ensure_view()
+	_bind_view()
+	_style_view()
 
 
 func prepare_animations_async() -> void:
@@ -185,50 +188,27 @@ func prepare_animations_async() -> void:
 	animations_prepared.emit()
 
 
-func _build_background() -> void:
-	var background := TextureRect.new()
-	background.name = "AquariumBackground"
-	background.texture = BACKGROUND_TEXTURE
-	background.expand_mode = TextureRect.EXPAND_IGNORE_SIZE
-	background.stretch_mode = TextureRect.STRETCH_SCALE
-	background.set_anchors_and_offsets_preset(Control.PRESET_FULL_RECT)
-	background.mouse_filter = Control.MOUSE_FILTER_IGNORE
-	add_child(background)
+func _ensure_view() -> void:
+	if get_node_or_null("AquariumView") == null:
+		add_child(AquariumViewScene.instantiate())
 
 
-func _build_live_ui() -> void:
-	var title := _make_label("MY AQUARIUM", TITLE_FONT_SIZE)
-	title.name = "AquariumTitle"
-	title.position = TITLE_POSITION
-	title.size = TITLE_SIZE
-	title.horizontal_alignment = HORIZONTAL_ALIGNMENT_CENTER
-	title.vertical_alignment = VERTICAL_ALIGNMENT_CENTER
-	add_child(title)
+func _bind_view() -> void:
+	var view := get_node("AquariumView")
+	fish_layer = view.get_node("AquariumFishLayer")
+	fish_count_label = view.get_node("AquariumFishCount")
+	home_button = view.get_node("AquariumHomeButton")
+	fish_book_button = view.get_node("AquariumFishBookButton")
 
-	fish_count_label = _make_label(
-		_fish_capacity_text(),
-		FISH_COUNT_FONT_SIZE
-	)
-	fish_count_label.name = "AquariumFishCount"
-	fish_count_label.position = FISH_COUNT_POSITION
-	fish_count_label.size = FISH_COUNT_SIZE
-	fish_count_label.horizontal_alignment = HORIZONTAL_ALIGNMENT_CENTER
-	fish_count_label.vertical_alignment = VERTICAL_ALIGNMENT_CENTER
-	add_child(fish_count_label)
 
-	home_button = _make_navigation_button("← HOME")
-	home_button.name = "AquariumHomeButton"
-	home_button.position = HOME_BUTTON_POSITION
-	home_button.size = HOME_BUTTON_SIZE
+func _style_view() -> void:
+	var title: Label = get_node("AquariumView/AquariumTitle")
+	_style_label(title, "MY AQUARIUM", TITLE_FONT_SIZE)
+	_style_label(fish_count_label, _fish_capacity_text(), FISH_COUNT_FONT_SIZE)
+	_style_navigation_button(home_button, "← HOME")
+	_style_navigation_button(fish_book_button, "FISH BOOK")
 	home_button.pressed.connect(func(): back_requested.emit())
-	add_child(home_button)
-
-	fish_book_button = _make_navigation_button("FISH BOOK")
-	fish_book_button.name = "AquariumFishBookButton"
-	fish_book_button.position = FISH_BOOK_BUTTON_POSITION
-	fish_book_button.size = FISH_BOOK_BUTTON_SIZE
 	fish_book_button.pressed.connect(func(): fish_book_requested.emit())
-	add_child(fish_book_button)
 
 
 func _build_aquarium_fish_animations_async(loaded_textures: Dictionary) -> void:
@@ -240,7 +220,7 @@ func _build_aquarium_fish_animations_async(loaded_textures: Dictionary) -> void:
 		actor.name = "AquariumFish_%s" % fish_id
 		actor.z_index = 2 + fish_index % 2
 		actor.material = FishCatalogScript.visual_material(fish_definition)
-		add_child(actor)
+		fish_layer.add_child(actor)
 		await actor.configure_async(
 			fish_id,
 			loaded_textures[asset_paths[0]],
@@ -284,18 +264,15 @@ func _fish_asset_paths(fish_id: String) -> Array[String]:
 	]
 
 
-func _make_label(label_text: String, font_size: int) -> Label:
-	var label := Label.new()
+func _style_label(label: Label, label_text: String, font_size: int) -> void:
 	label.text = GameFontStylesScript.display_text(label_text)
 	GameFontStylesScript.apply_regular(label)
 	label.add_theme_font_size_override("font_size", font_size)
 	label.add_theme_color_override("font_color", TEXT_COLOR)
 	label.mouse_filter = Control.MOUSE_FILTER_IGNORE
-	return label
 
 
-func _make_navigation_button(button_text: String) -> Button:
-	var button := Button.new()
+func _style_navigation_button(button: Button, button_text: String) -> void:
 	button.text = GameFontStylesScript.display_text(button_text)
 	button.focus_mode = Control.FOCUS_NONE
 	GameFontStylesScript.apply_regular(button)
@@ -312,4 +289,3 @@ func _make_navigation_button(button_text: String) -> Button:
 	var pressed: StyleBoxFlat = hover.duplicate()
 	pressed.bg_color = Color(0.55, 0.34, 0.21, 0.12)
 	button.add_theme_stylebox_override("pressed", pressed)
-	return button
