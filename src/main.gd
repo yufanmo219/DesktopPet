@@ -8,6 +8,7 @@ const LEGACY_PROGRESS_SAVE_KEY := "pinball_stats"
 const CURRENT_SAVE_VERSION := 8
 const MAX_PETS := 9
 const PetAvatarScript = preload("res://src/pet_avatar.gd")
+const AppCoordinatorScript = preload("res://src/app/app_coordinator.gd")
 const HomeScreenScene = preload("res://src/home/home_screen.tscn")
 const FishingGameScene = preload("res://src/fishing/fishing_game.tscn")
 const AquariumScreenScript = preload("res://src/aquarium_screen.gd")
@@ -60,6 +61,7 @@ var fetch_status_label: Label
 var fetch_count := 0
 
 var desktop_mode := false
+var app_coordinator: AppCoordinator
 var desktop_controller: DesktopCompanionController = DesktopCompanionControllerScript.new()
 var save_enabled := true
 var save_read_only := false
@@ -85,6 +87,14 @@ func _ready() -> void:
 	theme = GameFontStylesScript.make_game_theme()
 	game_state_store.progress_changed.connect(_on_game_state_progress_changed)
 	get_window().min_size = Vector2i(960, 540)
+	app_coordinator = AppCoordinatorScript.new()
+	app_coordinator.name = "AppCoordinator"
+	add_child(app_coordinator)
+	app_coordinator.configure(
+		$ScreenHost,
+		get_node_or_null("/root/MusicManager")
+	)
+	app_coordinator.screen_changed.connect(_on_app_screen_changed)
 	desktop_controller.name = "DesktopCompanionController"
 	add_child(desktop_controller)
 	desktop_controller.configure(
@@ -153,37 +163,17 @@ func _notification(what: int) -> void:
 		get_tree().quit()
 
 
-func _exit_tree() -> void:
+func clear_screen(next_screen: StringName = ScreenId.NONE) -> void:
 	if (
-		is_instance_valid(cached_aquarium_screen)
-		and cached_aquarium_screen.get_parent() == null
+		current_screen == String(ScreenId.AQUARIUM)
+		and is_instance_valid(aquarium_screen)
 	):
-		cached_aquarium_screen.free()
-	cached_aquarium_screen = null
-
-
-func clear_screen() -> void:
-	if current_screen in ["home", "fishing", "aquarium", "aquarium_loading", "store", "fish_book"]:
-		var music_manager := get_node_or_null("/root/MusicManager")
-		if music_manager != null:
-			if current_screen == "aquarium" or current_screen == "aquarium_loading":
-				music_manager.stop_aquarium_music()
-			else:
-				music_manager.stop_music()
-	if (
-		current_screen == "aquarium"
-		and
-		is_instance_valid(aquarium_screen)
-		and aquarium_screen.get_parent() == content
-	):
-		content.remove_child(aquarium_screen)
 		cached_aquarium_screen = aquarium_screen
-	if is_instance_valid(content):
-		remove_child(content)
-		content.queue_free()
-	content = Control.new()
-	content.set_anchors_and_offsets_preset(Control.PRESET_FULL_RECT)
-	add_child(content)
+	content = app_coordinator.open_screen(next_screen)
+	_reset_active_screen_handles()
+
+
+func _reset_active_screen_handles() -> void:
 	home_screen = null
 	avatar = null
 	fishing_game = null
@@ -191,6 +181,10 @@ func clear_screen() -> void:
 	aquarium_loading_screen = null
 	store_screen = null
 	fish_book_screen = null
+
+
+func _on_app_screen_changed(screen_name: String) -> void:
+	current_screen = screen_name
 
 
 func add_background(color: Color, with_texture := true) -> void:
@@ -276,8 +270,7 @@ func add_page_title(title_text: String, subtitle_text: String = "") -> void:
 
 func show_pet_pool() -> void:
 	leave_desktop_mode()
-	clear_screen()
-	current_screen = "pool"
+	clear_screen(ScreenId.PET_POOL)
 	add_background(Color("#e7d8c8"))
 	add_page_title("Your pet pool", "Choose one companion to carry with you. You can keep up to five pets.")
 
@@ -325,11 +318,7 @@ func show_home() -> void:
 	leave_desktop_mode()
 	ensure_default_pet()
 	var pet := get_active_pet()
-	clear_screen()
-	current_screen = "home"
-	var music_manager := get_node_or_null("/root/MusicManager")
-	if music_manager != null:
-		music_manager.play_home_music()
+	clear_screen(ScreenId.HOME)
 	home_screen = HomeScreenScene.instantiate()
 	home_screen.configure(
 		pet,
@@ -347,11 +336,7 @@ func show_home() -> void:
 func show_store() -> void:
 	leave_desktop_mode()
 	ensure_default_pet()
-	clear_screen()
-	current_screen = "store"
-	var music_manager := get_node_or_null("/root/MusicManager")
-	if music_manager != null:
-		music_manager.play_shop_music()
+	clear_screen(ScreenId.STORE)
 	store_screen = StoreScreenScript.new()
 	store_screen.configure(get_progress_stats(), get_owned_cat_ids(), "cats")
 	store_screen.back_requested.connect(show_home)
@@ -364,11 +349,7 @@ func show_store() -> void:
 func show_fish_book() -> void:
 	leave_desktop_mode()
 	ensure_default_pet()
-	clear_screen()
-	current_screen = "fish_book"
-	var music_manager := get_node_or_null("/root/MusicManager")
-	if music_manager != null:
-		music_manager.play_shop_music()
+	clear_screen(ScreenId.FISH_BOOK)
 	fish_book_screen = FishBookScreenScript.new()
 	fish_book_screen.configure_book(get_progress_stats())
 	fish_book_screen.back_requested.connect(show_aquarium)
@@ -388,11 +369,7 @@ func show_fishing() -> void:
 	leave_desktop_mode()
 	ensure_default_pet()
 	var pet := get_active_pet()
-	clear_screen()
-	current_screen = "fishing"
-	var music_manager := get_node_or_null("/root/MusicManager")
-	if music_manager != null:
-		music_manager.play_fishing_music()
+	clear_screen(ScreenId.FISHING)
 	fishing_game = FishingGameScene.instantiate()
 	fishing_game.configure(pet, get_progress_stats(), game_state_store)
 	fishing_game.catch_completed.connect(_on_fishing_catch_completed)
@@ -415,19 +392,17 @@ func _on_fishing_back_requested() -> void:
 func show_aquarium() -> void:
 	leave_desktop_mode()
 	ensure_default_pet()
-	clear_screen()
-	var music_manager := get_node_or_null("/root/MusicManager")
-	if music_manager != null:
-		music_manager.play_aquarium_music()
-	if is_instance_valid(cached_aquarium_screen):
-		current_screen = "aquarium"
+	if (
+		is_instance_valid(cached_aquarium_screen)
+		and app_coordinator.has_cached(ScreenId.AQUARIUM)
+	):
+		content = app_coordinator.restore_screen(ScreenId.AQUARIUM)
+		_reset_active_screen_handles()
 		aquarium_screen = cached_aquarium_screen
 		aquarium_screen.configure(get_progress_stats())
-		aquarium_screen.set_anchors_and_offsets_preset(Control.PRESET_FULL_RECT)
-		content.add_child(aquarium_screen)
 		return
 
-	current_screen = "aquarium_loading"
+	clear_screen(ScreenId.AQUARIUM_LOADING)
 	aquarium_loading_screen = AquariumLoadingScreenScript.new()
 	aquarium_loading_screen.set_anchors_and_offsets_preset(Control.PRESET_FULL_RECT)
 	content.add_child(aquarium_loading_screen)
@@ -444,7 +419,7 @@ func show_aquarium() -> void:
 	await aquarium_screen.prepare_animations_async()
 
 	if (
-		current_screen != "aquarium_loading"
+		current_screen != String(ScreenId.AQUARIUM_LOADING)
 		or not is_instance_valid(aquarium_screen)
 		or aquarium_screen.get_parent() != content
 	):
@@ -454,7 +429,7 @@ func show_aquarium() -> void:
 	if is_instance_valid(aquarium_loading_screen):
 		aquarium_loading_screen.queue_free()
 	aquarium_loading_screen = null
-	current_screen = "aquarium"
+	app_coordinator.relabel_current(ScreenId.AQUARIUM)
 
 
 func get_progress_stats() -> Dictionary:
@@ -541,10 +516,7 @@ func _on_aquarium_fish_ids_changed(fish_ids: Array[String]) -> void:
 
 
 func _discard_cached_aquarium() -> void:
-	if is_instance_valid(cached_aquarium_screen):
-		if cached_aquarium_screen.get_parent() != null:
-			cached_aquarium_screen.get_parent().remove_child(cached_aquarium_screen)
-		cached_aquarium_screen.free()
+	app_coordinator.discard_cached(ScreenId.AQUARIUM)
 	cached_aquarium_screen = null
 
 
@@ -552,8 +524,7 @@ func show_reverse_fetch() -> void:
 	leave_desktop_mode()
 	ensure_default_pet()
 	var pet := get_active_pet()
-	clear_screen()
-	current_screen = "fetch"
+	clear_screen(ScreenId.REVERSE_FETCH)
 	add_background(Color("#d7d9ad"))
 	add_page_title("Reverse fetch", "%s throws the ball. Your job is to retrieve it!" % pet.get("name", "Your pet"))
 	fetch_count = 0
@@ -688,12 +659,7 @@ func show_desktop_launch_error() -> void:
 
 
 func show_widget_preview() -> void:
-	clear_screen()
-	current_screen = "widget"
-	# Desktop Companion is always music-free, including during pending fades.
-	var music_manager := get_node_or_null("/root/MusicManager")
-	if music_manager != null:
-		music_manager.stop_music(0.0)
+	clear_screen(ScreenId.DESKTOP_WIDGET)
 	var pet := get_active_pet()
 	if pet.is_empty():
 		return

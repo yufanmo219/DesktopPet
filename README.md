@@ -50,6 +50,10 @@ Home 生产界面由 `src/home/home_screen.tscn` 实例化。`HomeScreen` 自己
 
 `main.gd` 只负责进入/退出 Desktop 模式和页面导航。`DesktopCompanionController` 把鼠标输入、状态决策、窗口移动与 `PetAvatar` 动画组合起来；`DesktopCompanionStateMachine` 是不依赖 Godot 窗口的纯行为模型；`DesktopWindowHost` 则集中处理透明原生窗口、置顶、多显示器与主窗口恢复。新的行为规则应先加入状态机并通过纯状态测试，不要在 Controller 中增加互相依赖的布尔标记。
 
+## 应用与页面架构
+
+`main.tscn` 提供稳定的 `ScreenHost`。`AppCoordinator` 统一页面音乐和跨页面策略，`ScreenRouter` 独占页面根节点的挂载、释放与 Aquarium 缓存，`ScreenId` 取代散落的页面字符串。`main.gd` 仍是当前 composition root：它创建具体 feature screen、注入玩家数据并响应 screen signals，但不再直接销毁其他页面或决定音乐生命周期。
+
 ## 钓鱼与玩家进度架构
 
 `GameStateStore` 是运行时共享进度的唯一所有者，`PlayerProgress` 负责类型化字段、数据约束和与旧 Dictionary 存档的双向转换。`HeartService` 集中处理扣心、离线恢复和倒计时；`FishingSession` 是不依赖 Node、贴图、音频或 Tween 的纯回合模型，管理关卡目标、倒计时、生成计划、重试补偿和一次性奖励。

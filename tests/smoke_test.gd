@@ -597,7 +597,13 @@ func run_tests() -> void:
 		"Opening the Fish Store should switch the Music bus player to Cozy Cat Boutique"
 	)
 	check(game.current_screen == "fish_book" and game.fish_book_screen != null, "The aquarium Fish Book button should open a dedicated fish encyclopedia screen")
-	check(game.cached_aquarium_screen.get_instance_id() == aquarium_instance_id and game.cached_aquarium_screen.get_parent() == null, "Opening the Fish Book should cache the aquarium without destroying it")
+	check(
+		game.cached_aquarium_screen.get_instance_id() == aquarium_instance_id
+		and game.app_coordinator.has_cached(ScreenId.AQUARIUM)
+		and game.cached_aquarium_screen.get_parent()
+		== game.app_coordinator.cached_root(ScreenId.AQUARIUM),
+		"Opening the Fish Book should cache the prepared aquarium screen tree"
+	)
 	var fish_book = game.fish_book_screen
 	check(fish_book.get_script().resource_path == "res://src/fish_book_screen.gd", "The fish encyclopedia should have its own screen component")
 	check(fish_book.active_catalog_tab == "fish" and fish_book.fish_grid_layer.visible, "The dedicated Fish Book should open directly on the fish encyclopedia")
