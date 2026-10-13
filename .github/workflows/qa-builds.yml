@@ -1,0 +1,95 @@
+name: QA builds
+
+on:
+  workflow_dispatch:
+
+permissions:
+  contents: read
+
+env:
+  GODOT_VERSION: 4.7.1
+  GODOT_RELEASE: 4.7.1-stable
+  GODOT_TEMPLATE_VERSION: 4.7.1.stable
+
+jobs:
+  export:
+    name: Export ${{ matrix.target }}
+    runs-on: ${{ matrix.os }}
+    timeout-minutes: 45
+    strategy:
+      fail-fast: false
+      matrix:
+        include:
+          - target: macos
+            os: macos-14
+            artifact: desktop-pet-macos-qa
+            output: build/macos/Desktop Pet.zip
+          - target: windows
+            os: windows-2022
+            artifact: desktop-pet-windows-qa
+            output: build/windows
+
+    steps:
+      - name: Check out source
+        uses: actions/checkout@v4
+        with:
+          fetch-depth: 1
+
+      - name: Set up Python
+        uses: actions/setup-python@v5
+        with:
+          python-version: "3.13"
+
+      - name: Install Godot and templates on macOS
+        if: runner.os == 'macOS'
+        shell: bash
+        run: |
+          set -euo pipefail
+          godot_archive="$RUNNER_TEMP/godot.zip"
+          template_archive="$RUNNER_TEMP/templates.zip"
+          template_unpack="$RUNNER_TEMP/export-templates"
+          template_home="$HOME/Library/Application Support/Godot/export_templates/$GODOT_TEMPLATE_VERSION"
+          curl --fail --location --retry 3 \
+            "https://github.com/godotengine/godot/releases/download/${GODOT_RELEASE}/Godot_v${GODOT_RELEASE}_macos.universal.zip" \
+            --output "$godot_archive"
+          ditto -x -k "$godot_archive" "$RUNNER_TEMP"
+          curl --fail --location --retry 3 \
+            "https://github.com/godotengine/godot/releases/download/${GODOT_RELEASE}/Godot_v${GODOT_RELEASE}_export_templates.tpz" \
+            --output "$template_archive"
+          mkdir -p "$template_unpack" "$template_home"
+          unzip -q "$template_archive" -d "$template_unpack"
+          cp -R "$template_unpack/templates/." "$template_home/"
+          echo "GODOT_BIN=$RUNNER_TEMP/Godot.app/Contents/MacOS/Godot" >> "$GITHUB_ENV"
+
+      - name: Install Godot and templates on Windows
+        if: runner.os == 'Windows'
+        shell: pwsh
+        run: |
+          $godotArchive = Join-Path $env:RUNNER_TEMP "godot.zip"
+          $godotFolder = Join-Path $env:RUNNER_TEMP "godot"
+          $templateArchive = Join-Path $env:RUNNER_TEMP "templates.zip"
+          $templateUnpack = Join-Path $env:RUNNER_TEMP "export-templates"
+          $templateHome = Join-Path $env:APPDATA "Godot/export_templates/$env:GODOT_TEMPLATE_VERSION"
+          $releaseRoot = "https://github.com/godotengine/godot/releases/download/$env:GODOT_RELEASE"
+          $godotUrl = "$releaseRoot/Godot_v$env:GODOT_RELEASE" + "_win64.exe.zip"
+          $templateUrl = "$releaseRoot/Godot_v$env:GODOT_RELEASE" + "_export_templates.tpz"
+          Invoke-WebRequest -Uri $godotUrl -OutFile $godotArchive
+          Expand-Archive -Path $godotArchive -DestinationPath $godotFolder -Force
+          Invoke-WebRequest -Uri $templateUrl -OutFile $templateArchive
+          Expand-Archive -Path $templateArchive -DestinationPath $templateUnpack -Force
+          New-Item -ItemType Directory -Force -Path $templateHome | Out-Null
+          Copy-Item -Path (Join-Path $templateUnpack "templates/*") -Destination $templateHome -Recurse -Force
+          $executable = Get-ChildItem -Path $godotFolder -Filter "*.exe" | Select-Object -First 1
+          "GODOT_BIN=$($executable.FullName)" | Out-File -FilePath $env:GITHUB_ENV -Encoding utf8 -Append
+
+      - name: Export QA build
+        shell: bash
+        run: python tools/export_builds.py --godot "$GODOT_BIN" --target "${{ matrix.target }}"
+
+      - name: Upload QA artifact
+        uses: actions/upload-artifact@v4
+        with:
+          name: ${{ matrix.artifact }}
+          path: ${{ matrix.output }}
+          if-no-files-found: error
+          retention-days: 14
