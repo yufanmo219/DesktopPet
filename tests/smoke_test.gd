@@ -443,9 +443,12 @@ func run_tests() -> void:
 		"The Home welcome sign should keep its dedicated warm cream-yellow fill after applying the accent font style"
 	)
 	check(not home_labels.any(func(label): return label.text == "ENERGY"), "Home should not show the removed Energy label")
-	check(game.home_xp_label != null and game.home_xp_label.text == "0", "Home should show the current XP value")
 	check(
-		game.home_xp_label.get_theme_font("font") == GameFontStylesScript.ACCENT_FONT,
+		game.home_screen.xp_value_label.text == "0",
+		"Home should show the current XP value"
+	)
+	check(
+		game.home_screen.xp_value_label.get_theme_font("font") == GameFontStylesScript.ACCENT_FONT,
 		"Home XP should use the original coral shadow font"
 	)
 	check(
@@ -1962,27 +1965,30 @@ func run_tests() -> void:
 		check(is_equal_approx(grounded_visual_bottom, game.avatar.size.y * game.avatar.SHADOW_CENTER_Y_RATIO), "Home cat mood '%s' should rest directly on its shadow" % grounded_mood)
 	game.avatar.set_mood("sleep")
 	check(not game.avatar.sleep_bubble_sprite.visible and not game.avatar.sleep_bubble_active, "Returning to sleep should schedule an occasional bubble instead of showing one immediately")
-	game.update_home_pointer_state(Vector2(320, 360), true)
+	game.home_screen.update_pointer_state(Vector2(320, 360), true)
 	check(game.avatar.mood == "idle", "Moving the pointer into the left side of Home should wake the cat")
 	check(not game.avatar.sleep_bubble_sprite.visible, "Waking the cat should hide the sleeping bubble immediately")
 	var pet_double_click := InputEventMouseButton.new()
 	pet_double_click.button_index = MOUSE_BUTTON_LEFT
 	pet_double_click.pressed = true
 	pet_double_click.double_click = true
-	check(game.home_pet_interaction_surface != null, "Home should expose a double-click surface over the cat")
-	game._on_home_pet_input(pet_double_click)
+	check(
+		game.home_screen.pet_interaction_surface != null,
+		"Home should expose a double-click surface over the cat"
+	)
+	game.home_screen.handle_pet_input(pet_double_click)
 	check(game.avatar.is_playing_interaction() and game.avatar.cat_sprite.texture == game.avatar.DESKTOP_BELLY_FRAMES[0], "Double-clicking the Home cat should begin the belly-roll animation")
 	game.avatar._process(1.0 / game.avatar.DESKTOP_BELLY_FPS + 0.01)
 	check(game.avatar.interaction_frame == 1, "The Home belly-roll interaction should advance through its animation frames")
 	for home_roll_step in range(game.avatar.DESKTOP_BELLY_FRAMES.size() + 1):
 		game.avatar._process(1.0 / game.avatar.DESKTOP_BELLY_FPS + 0.01)
 	check(not game.avatar.is_playing_interaction(), "The Home belly-roll interaction should finish once instead of looping forever")
-	game.update_home_pointer_state(Vector2(900, 360), true, 9.9)
+	game.home_screen.update_pointer_state(Vector2(900, 360), true, 9.9)
 	check(game.avatar.mood == "idle", "Leaving the Home wake area should keep the cat awake during the ten-second grace period")
-	game.update_home_pointer_state(Vector2(320, 360), true, 0.0)
-	check(game.avatar.mood == "idle" and game.home_pointer_outside_elapsed == 0.0, "Returning to the Home wake area should cancel the pending sleep countdown")
-	game.update_home_pointer_state(Vector2(900, 360), true, 9.9)
-	game.update_home_pointer_state(Vector2(900, 360), true, 0.2)
+	game.home_screen.update_pointer_state(Vector2(320, 360), true, 0.0)
+	check(game.avatar.mood == "idle" and game.home_screen.pointer_outside_elapsed == 0.0, "Returning to the Home wake area should cancel the pending sleep countdown")
+	game.home_screen.update_pointer_state(Vector2(900, 360), true, 9.9)
+	game.home_screen.update_pointer_state(Vector2(900, 360), true, 0.2)
 	check(game.avatar.mood == "sleep", "The Home cat should sleep only after the pointer stays away for ten seconds")
 	game.avatar.set_mood("idle")
 	var movement_tests := [

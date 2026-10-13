@@ -8,6 +8,7 @@ const LEGACY_PROGRESS_SAVE_KEY := "pinball_stats"
 const CURRENT_SAVE_VERSION := 8
 const MAX_PETS := 9
 const PetAvatarScript = preload("res://src/pet_avatar.gd")
+const HomeScreenScene = preload("res://src/home/home_screen.tscn")
 const FishingGameScene = preload("res://src/fishing/fishing_game.tscn")
 const AquariumScreenScript = preload("res://src/aquarium_screen.gd")
 const AquariumLoadingScreenScript = preload("res://src/aquarium_loading_screen.gd")
@@ -24,9 +25,6 @@ const DesktopCompanionControllerScript = preload(
 const HOME_DAY_TEXTURE: Texture2D = preload("res://assets/ui/home/home_day_layout_v3.png")
 const HOME_NIGHT_TEXTURE: Texture2D = preload("res://assets/ui/home/home_night_layout_v3.png")
 
-const HOME_WAKE_AREA := Rect2(0.0, 0.0, 700.0, 720.0)
-const HOME_POINTER_MOVE_THRESHOLD := 2.0
-const HOME_SLEEP_DELAY_SECONDS := 10.0
 const HOME_WELCOME_TEXT_COLOR := Color("#fff3cf")
 var save_data: Dictionary = {
 	"version": CURRENT_SAVE_VERSION,
@@ -49,11 +47,7 @@ var avatar: PetAvatar
 var current_screen := ""
 var autosave_elapsed := 0.0
 
-var home_xp_label: Label
-var home_pet_interaction_surface: Control
-var home_entry_pointer_position := Vector2.ZERO
-var home_pointer_has_moved := false
-var home_pointer_outside_elapsed := 0.0
+var home_screen: HomeScreen
 var fishing_game
 var aquarium_screen
 var cached_aquarium_screen
@@ -149,15 +143,6 @@ func _process(delta: float) -> void:
 			autosave_elapsed = 0.0
 			save_game()
 
-	if current_screen == "home" and is_instance_valid(avatar):
-		var pointer_position := get_local_mouse_position()
-		if not home_pointer_has_moved:
-			home_pointer_has_moved = (
-				pointer_position.distance_to(home_entry_pointer_position)
-				>= HOME_POINTER_MOVE_THRESHOLD
-			)
-		update_home_pointer_state(pointer_position, home_pointer_has_moved, delta)
-
 	if desktop_mode:
 		desktop_controller.update(delta)
 
@@ -199,10 +184,7 @@ func clear_screen() -> void:
 	content = Control.new()
 	content.set_anchors_and_offsets_preset(Control.PRESET_FULL_RECT)
 	add_child(content)
-	home_xp_label = null
-	home_pet_interaction_surface = null
-	home_pointer_has_moved = false
-	home_pointer_outside_elapsed = 0.0
+	home_screen = null
 	avatar = null
 	fishing_game = null
 	aquarium_screen = null
@@ -263,35 +245,6 @@ func make_button(text: String, action: Callable, accent := false, compact := fal
 	hover.bg_color = palette.orange_dark if accent else Color("#ffffff")
 	button.add_theme_stylebox_override("hover", hover)
 	button.add_theme_stylebox_override("pressed", hover)
-	button.pressed.connect(action)
-	return button
-
-
-func make_home_slot_button(text: String, action: Callable, accent := false) -> Button:
-	var button := Button.new()
-	button.text = GameFontStylesScript.display_text(text)
-	if accent:
-		GameFontStylesScript.apply_button(button)
-	else:
-		GameFontStylesScript.apply_regular(button)
-	button.add_theme_font_size_override("font_size", 36)
-	var text_color: Color = Color.WHITE if accent else palette.ink
-	button.add_theme_color_override("font_color", text_color)
-	button.add_theme_color_override("font_hover_color", text_color)
-	button.add_theme_color_override("font_pressed_color", text_color)
-	var normal := StyleBoxFlat.new()
-	normal.bg_color = palette.orange if accent else Color(1.0, 0.975, 0.92, 0.96)
-	normal.set_corner_radius_all(14)
-	normal.set_border_width_all(2)
-	normal.border_color = palette.orange_dark if accent else Color("#ddc7b2")
-	button.add_theme_stylebox_override("normal", normal)
-	button.add_theme_stylebox_override("focus", StyleBoxEmpty.new())
-	var hover: StyleBoxFlat = normal.duplicate()
-	hover.bg_color = palette.orange_dark if accent else Color.WHITE
-	button.add_theme_stylebox_override("hover", hover)
-	var pressed: StyleBoxFlat = hover.duplicate()
-	pressed.bg_color = Color("#a84b3a") if accent else Color("#f1dfc9")
-	button.add_theme_stylebox_override("pressed", pressed)
 	button.pressed.connect(action)
 	return button
 
@@ -377,123 +330,18 @@ func show_home() -> void:
 	var music_manager := get_node_or_null("/root/MusicManager")
 	if music_manager != null:
 		music_manager.play_home_music()
-	var background := TextureRect.new()
-	background.texture = get_home_background_texture()
-	background.expand_mode = TextureRect.EXPAND_IGNORE_SIZE
-	background.stretch_mode = TextureRect.STRETCH_SCALE
-	background.set_anchors_and_offsets_preset(Control.PRESET_FULL_RECT)
-	background.mouse_filter = Control.MOUSE_FILTER_IGNORE
-	content.add_child(background)
-
-	var welcome := make_label("Welcome Home!!", 48, HOME_WELCOME_TEXT_COLOR)
-	GameFontStylesScript.apply_accent(welcome)
-	# apply_accent supplies the font, outline, and shadow, but its shared coral
-	# fill color must not override Home's warm cream welcome sign.
-	welcome.add_theme_color_override("font_color", HOME_WELCOME_TEXT_COLOR)
-	welcome.position = Vector2(213, 80)
-	welcome.size = Vector2(390, 92)
-	welcome.horizontal_alignment = HORIZONTAL_ALIGNMENT_CENTER
-	welcome.vertical_alignment = VERTICAL_ALIGNMENT_CENTER
-	content.add_child(welcome)
-
-	avatar = PetAvatarScript.new()
-	avatar.position = Vector2(170, 205)
-	avatar.size = Vector2(460, 390)
-	avatar.set_pet(pet)
-	avatar.set_home_idle_enabled(true)
-	avatar.set_mood("idle")
-	content.add_child(avatar)
-	home_entry_pointer_position = get_local_mouse_position()
-	home_pointer_has_moved = false
-	home_pointer_outside_elapsed = 0.0
-
-	var xp_row := HBoxContainer.new()
-	xp_row.name = "HomeXPRow"
-	xp_row.position = Vector2(776, 58)
-	xp_row.size = Vector2(390, 70)
-	xp_row.add_theme_constant_override("separation", 18)
-	content.add_child(xp_row)
-	var xp_title := make_label("CURRENT XP", 30, Color("#795446"))
-	xp_title.custom_minimum_size = Vector2(250, 70)
-	xp_title.vertical_alignment = VERTICAL_ALIGNMENT_CENTER
-	xp_row.add_child(xp_title)
-	home_xp_label = make_label("%d" % int(get_progress_stats().experience), 40, Color("#bd553f"))
-	GameFontStylesScript.apply_accent(home_xp_label)
-	home_xp_label.name = "HomeXPValueLabel"
-	home_xp_label.size_flags_horizontal = Control.SIZE_EXPAND_FILL
-	home_xp_label.horizontal_alignment = HORIZONTAL_ALIGNMENT_RIGHT
-	home_xp_label.vertical_alignment = VERTICAL_ALIGNMENT_CENTER
-	xp_row.add_child(home_xp_label)
-
-	var heading := make_label("%s is here!" % pet.get("name", "Companion"), 45, Color("#603d3b"))
-	GameFontStylesScript.apply_accent(heading)
-	heading.position = Vector2(756, 200)
-	heading.size = Vector2(428, 40)
-	heading.horizontal_alignment = HORIZONTAL_ALIGNMENT_CENTER
-	heading.vertical_alignment = VERTICAL_ALIGNMENT_CENTER
-	content.add_child(heading)
-
-	var home_actions := [
-		["Keep as desktop companion", enter_desktop_mode, true],
-		["Go fishing", show_fishing, false],
-		["My aquarium", show_aquarium, false],
-		["Adopt another cat", show_store, false]
-	]
-	var actions_layer := Control.new()
-	actions_layer.name = "HomeActionsLayer"
-	actions_layer.set_anchors_and_offsets_preset(Control.PRESET_FULL_RECT)
-	content.add_child(actions_layer)
-	var button_y_positions := [265.0, 350.0, 435.0, 520.0]
-	for index in range(home_actions.size()):
-		var action_data: Array = home_actions[index]
-		var button := make_home_slot_button(str(action_data[0]), action_data[1], bool(action_data[2]))
-		button.position = Vector2(756, button_y_positions[index])
-		button.size = Vector2(428, 70)
-		actions_layer.add_child(button)
-
-	home_pet_interaction_surface = Control.new()
-	home_pet_interaction_surface.name = "HomePetInteractionSurface"
-	home_pet_interaction_surface.position = avatar.position
-	home_pet_interaction_surface.size = avatar.size
-	home_pet_interaction_surface.mouse_filter = Control.MOUSE_FILTER_STOP
-	home_pet_interaction_surface.gui_input.connect(_on_home_pet_input)
-	content.add_child(home_pet_interaction_surface)
-
-
-func update_home_pointer_state(
-	pointer_position: Vector2,
-	pointer_has_moved := true,
-	delta := 0.0
-) -> void:
-	if current_screen != "home" or not is_instance_valid(avatar):
-		return
-	var pointer_is_in_wake_area := pointer_has_moved and HOME_WAKE_AREA.has_point(pointer_position)
-	if pointer_is_in_wake_area:
-		home_pointer_outside_elapsed = 0.0
-		if avatar.mood != "idle":
-			avatar.set_mood("idle")
-		return
-	if avatar.mood == "sleep":
-		home_pointer_outside_elapsed = 0.0
-		return
-	home_pointer_outside_elapsed = minf(
-		HOME_SLEEP_DELAY_SECONDS,
-		home_pointer_outside_elapsed + maxf(0.0, delta)
+	home_screen = HomeScreenScene.instantiate()
+	home_screen.configure(
+		pet,
+		int(get_progress_stats().experience),
+		get_home_background_texture()
 	)
-	if home_pointer_outside_elapsed >= HOME_SLEEP_DELAY_SECONDS:
-		avatar.set_mood("sleep")
-		home_pointer_outside_elapsed = 0.0
-
-
-func _on_home_pet_input(event: InputEvent) -> void:
-	if (
-		event is InputEventMouseButton
-		and event.button_index == MOUSE_BUTTON_LEFT
-		and event.pressed
-		and event.double_click
-	):
-		avatar.play_belly_roll()
-		home_pet_interaction_surface.accept_event()
+	home_screen.desktop_requested.connect(enter_desktop_mode)
+	home_screen.fishing_requested.connect(show_fishing)
+	home_screen.aquarium_requested.connect(show_aquarium)
+	home_screen.store_requested.connect(show_store)
+	content.add_child(home_screen)
+	avatar = home_screen.avatar
 
 
 func show_store() -> void:
@@ -630,6 +478,8 @@ func _normalize_progress_stats(value: Variant) -> Dictionary:
 
 func _on_game_state_progress_changed(snapshot: Dictionary) -> void:
 	save_data[PROGRESS_SAVE_KEY] = snapshot.duplicate(true)
+	if current_screen == "home" and is_instance_valid(home_screen):
+		home_screen.set_experience(int(snapshot.get("experience", 0)))
 
 
 func _on_progress_stats_changed(stats: Dictionary) -> void:

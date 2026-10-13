@@ -100,7 +100,13 @@ def run_test(godot: str, test: Path, log_directory: Path, timeout: float) -> tup
         )
     except subprocess.TimeoutExpired as error:
         elapsed = time.monotonic() - started
-        output = "".join(part for part in [error.stdout or "", error.stderr or ""])
+        output_parts: list[str] = []
+        for part in [error.stdout, error.stderr]:
+            if isinstance(part, bytes):
+                output_parts.append(part.decode(errors="replace"))
+            elif part:
+                output_parts.append(part)
+        output = "".join(output_parts)
         return False, elapsed, f"Timed out after {timeout:.1f}s.\n{output}"
     elapsed = time.monotonic() - started
     output = "\n".join(
