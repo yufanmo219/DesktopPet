@@ -1,0 +1,78 @@
+[gd_scene load_steps=6 format=3]
+
+[ext_resource type="Texture2D" path="res://assets/ui/fishing/concepts/fishing_environment_background.png" id="1_background"]
+[ext_resource type="Texture2D" path="res://assets/ui/fishing/animations/cooperative_v3/processed/net_hands.png" id="2_net"]
+[ext_resource type="PackedScene" path="res://src/fishing/ui/fishing_hud.tscn" id="3_hud"]
+[ext_resource type="AudioStream" path="res://assets/audio/sfx/fishing/cozy_cat_fishing_failure.wav" id="4_failure"]
+[ext_resource type="AudioStream" path="res://assets/audio/sfx/fishing/tiny_splash_success.wav" id="5_success"]
+
+[node name="FishingView" type="Control"]
+layout_mode = 3
+anchors_preset = 15
+anchor_right = 1.0
+anchor_bottom = 1.0
+grow_horizontal = 2
+grow_vertical = 2
+mouse_filter = 2
+
+[node name="FishingBackground" type="TextureRect" parent="."]
+layout_mode = 1
+anchors_preset = 15
+anchor_right = 1.0
+anchor_bottom = 1.0
+grow_horizontal = 2
+grow_vertical = 2
+mouse_filter = 2
+texture = ExtResource("1_background")
+expand_mode = 1
+stretch_mode = 0
+
+[node name="FishingPauseClickArea" type="Button" parent="."]
+layout_mode = 1
+anchors_preset = 15
+anchor_right = 1.0
+anchor_bottom = 1.0
+grow_horizontal = 2
+grow_vertical = 2
+mouse_default_cursor_shape = 2
+focus_mode = 0
+flat = true
+
+[node name="FishingPetView" type="TextureRect" parent="."]
+layout_mode = 0
+mouse_filter = 2
+expand_mode = 1
+stretch_mode = 5
+
+[node name="FishingNetView" type="TextureRect" parent="."]
+layout_mode = 0
+mouse_filter = 2
+texture = ExtResource("2_net")
+expand_mode = 1
+stretch_mode = 0
+
+[node name="FishingFishLayer" type="Control" parent="."]
+layout_mode = 1
+anchors_preset = 15
+anchor_right = 1.0
+anchor_bottom = 1.0
+grow_horizontal = 2
+grow_vertical = 2
+mouse_filter = 2
+
+[node name="FishingHUD" parent="." instance=ExtResource("3_hud")]
+
+[node name="FishingSpawnTimer" type="Timer" parent="."]
+one_shot = true
+
+[node name="FishingFailureSoundPlayer" type="AudioStreamPlayer" parent="."]
+stream = ExtResource("4_failure")
+volume_db = -4.0
+max_polyphony = 1
+bus = &"SFX"
+
+[node name="FishingSuccessSoundPlayer" type="AudioStreamPlayer" parent="."]
+stream = ExtResource("5_success")
+volume_db = -4.0
+max_polyphony = 1
+bus = &"SFX"

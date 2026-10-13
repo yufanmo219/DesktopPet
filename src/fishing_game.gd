@@ -219,6 +219,24 @@ const FishingLevelCatalogScript = preload("res://src/fishing_level_catalog.gd")
 const FishingSessionScript = preload("res://src/fishing/fishing_session.gd")
 const GameStateStoreScript = preload("res://src/progression/game_state_store.gd")
 const HeartServiceScript = preload("res://src/progression/heart_service.gd")
+const FishingViewScene = preload("res://src/fishing/ui/fishing_view.tscn")
+const GoalPopupScene = preload("res://src/fishing/ui/popups/goal_popup.tscn")
+const CatchPopupScene = preload("res://src/fishing/ui/popups/catch_popup.tscn")
+const HomeConfirmationPopupScene = preload(
+	"res://src/fishing/ui/popups/home_confirmation_popup.tscn"
+)
+const NewFishPopupScene = preload("res://src/fishing/ui/popups/new_fish_popup.tscn")
+const LevelCompletePopupScene = preload(
+	"res://src/fishing/ui/popups/level_complete_popup.tscn"
+)
+const RoundFailurePopupScene = preload(
+	"res://src/fishing/ui/popups/round_failure_popup.tscn"
+)
+const NoHeartsPopupScene = preload("res://src/fishing/ui/popups/no_hearts_popup.tscn")
+const CatchFailurePopupScene = preload(
+	"res://src/fishing/ui/popups/catch_failure_popup.tscn"
+)
+const PauseOverlayScene = preload("res://src/fishing/ui/popups/pause_overlay.tscn")
 
 static var FISH_TYPES: Array[Dictionary] = FishCatalogScript.FISH_TYPES
 const STARTER_FISH_IDS: Array[String] = FishCatalogScript.STARTER_FISH_IDS
@@ -680,10 +698,10 @@ func _on_progress_store_changed(snapshot: Dictionary) -> void:
 func _ready() -> void:
 	set_anchors_and_offsets_preset(Control.PRESET_FULL_RECT)
 	rng.randomize()
-	_build_audio_players()
 	_load_round_configuration()
 	_reset_round_goal_progress()
 	_build_interface()
+	_build_audio_players()
 	_update_stats()
 	_update_heart_display()
 	_emit_shared_stats_changed()
@@ -694,20 +712,8 @@ func _ready() -> void:
 
 
 func _build_audio_players() -> void:
-	failure_sound_player = AudioStreamPlayer.new()
-	failure_sound_player.name = "FishingFailureSoundPlayer"
-	failure_sound_player.stream = FISHING_FAILURE_SOUND
-	failure_sound_player.bus = &"SFX"
-	failure_sound_player.volume_db = -4.0
-	failure_sound_player.max_polyphony = 1
-	add_child(failure_sound_player)
-	success_sound_player = AudioStreamPlayer.new()
-	success_sound_player.name = "FishingSuccessSoundPlayer"
-	success_sound_player.stream = FISHING_SUCCESS_SOUND
-	success_sound_player.bus = &"SFX"
-	success_sound_player.volume_db = -4.0
-	success_sound_player.max_polyphony = 1
-	add_child(success_sound_player)
+	failure_sound_player = get_node("FishingView/FishingFailureSoundPlayer")
+	success_sound_player = get_node("FishingView/FishingSuccessSoundPlayer")
 
 
 func _play_failure_sound() -> void:
@@ -738,99 +744,77 @@ func _load_round_configuration() -> void:
 
 
 func _build_interface() -> void:
-	main_background_view = _full_screen_texture(MAIN_SCREEN_TEXTURE)
-	add_child(main_background_view)
-	_build_pause_click_area()
+	var fishing_view := get_node_or_null("FishingView") as Control
+	if fishing_view == null:
+		fishing_view = FishingViewScene.instantiate()
+		add_child(fishing_view)
 
-	# The pet is a replaceable layer behind the shared net-and-human-hands art.
-	# Maple uses six lifting poses. Mochi reacts with her own animation, while
-	# Biscuit keeps the approved front-facing pose behind the shared net.
-	pet_view = TextureRect.new()
-	pet_view.expand_mode = TextureRect.EXPAND_IGNORE_SIZE
-	pet_view.stretch_mode = TextureRect.STRETCH_KEEP_ASPECT_CENTERED
-	pet_view.mouse_filter = Control.MOUSE_FILTER_IGNORE
-	add_child(pet_view)
+	main_background_view = fishing_view.get_node("FishingBackground")
+	pause_click_area = fishing_view.get_node("FishingPauseClickArea")
+	pet_view = fishing_view.get_node("FishingPetView")
+	net_view = fishing_view.get_node("FishingNetView")
+	fish_layer = fishing_view.get_node("FishingFishLayer")
+	var hud: Control = fishing_view.get_node("FishingHUD")
+	stats_panel = hud.get_node("FishingStatsPanel")
+	stats_labels.clear()
+	stats_labels.append(stats_panel.get_node("FishingLevelTimeLabel"))
+	heart_panel = hud.get_node("FishingHeartPanel")
+	heart_timer_label = heart_panel.get_node("HeartTimerLabel")
+	heart_views.clear()
+	for index in range(MAX_HEARTS):
+		heart_views.append(heart_panel.get_node("FishingHeart%d" % (index + 1)))
+	catch_hotspot = hud.get_node("FishingCatchButton")
+	var home_button: Button = hud.get_node("FishingHomeButton")
+	spawn_timer = fishing_view.get_node("FishingSpawnTimer")
 
-	net_view = TextureRect.new()
-	net_view.expand_mode = TextureRect.EXPAND_IGNORE_SIZE
-	net_view.stretch_mode = TextureRect.STRETCH_SCALE
-	net_view.mouse_filter = Control.MOUSE_FILTER_IGNORE
-	net_view.texture = NET_HANDS_TEXTURE
-	net_view.visible = true
-	add_child(net_view)
+	if not pause_click_area.pressed.is_connected(_pause_game):
+		pause_click_area.pressed.connect(_pause_game)
+	if not home_button.pressed.is_connected(_request_return_home):
+		home_button.pressed.connect(_request_return_home)
+	if not catch_hotspot.pressed.is_connected(request_catch):
+		catch_hotspot.pressed.connect(request_catch)
+	if not spawn_timer.timeout.is_connected(_spawn_fish):
+		spawn_timer.timeout.connect(_spawn_fish)
+	_style_home_button(home_button)
+	_style_catch_button(catch_hotspot)
 	_apply_animation_frame(0)
-
-	# Swimming fish are intentionally drawn after the net. When they cross the
-	# catch zone they sit visibly over the net mesh, creating the "fish in net"
-	# effect instead of disappearing behind the animation artwork.
-	fish_layer = Control.new()
-	fish_layer.set_anchors_and_offsets_preset(Control.PRESET_FULL_RECT)
-	fish_layer.mouse_filter = Control.MOUSE_FILTER_IGNORE
-	add_child(fish_layer)
-
-	stats_panel = _build_stats_panel()
-	add_child(stats_panel)
 	_build_fish_guide()
-	_build_heart_display()
-	_build_back_button()
-	_build_catch_hotspot()
-
-	spawn_timer = Timer.new()
-	spawn_timer.one_shot = true
-	spawn_timer.timeout.connect(_spawn_fish)
-	add_child(spawn_timer)
 
 
-func _build_pause_click_area() -> void:
-	pause_click_area = Button.new()
-	pause_click_area.name = "FishingPauseClickArea"
-	pause_click_area.set_anchors_and_offsets_preset(Control.PRESET_FULL_RECT)
-	pause_click_area.flat = true
-	pause_click_area.focus_mode = Control.FOCUS_NONE
-	pause_click_area.mouse_default_cursor_shape = Control.CURSOR_POINTING_HAND
-	pause_click_area.pressed.connect(_pause_game)
-	add_child(pause_click_area)
-
-
-func _build_stats_panel() -> Control:
-	var panel := Control.new()
-	panel.name = "FishingStatsPanel"
-	panel.position = STATS_PANEL_POSITION
-	panel.size = STATS_PANEL_SIZE
-	panel.mouse_filter = Control.MOUSE_FILTER_IGNORE
-	panel.add_child(_make_panel_frame("StatsPanelFrame", STATS_PANEL_TEXTURE))
-	var label := Label.new()
-	label.name = "FishingLevelTimeLabel"
-	GameFontStylesScript.apply_regular(label)
-	label.position = STATS_LABEL_POSITION
-	label.size = STATS_LABEL_SIZE
-	label.add_theme_font_size_override("font_size", STATS_LABEL_FONT_SIZE)
-	label.add_theme_color_override("font_color", Color("#54362b"))
-	label.vertical_alignment = VERTICAL_ALIGNMENT_CENTER
-	label.mouse_filter = Control.MOUSE_FILTER_IGNORE
-	panel.add_child(label)
-	stats_labels.append(label)
-	return panel
-
-
-func _build_back_button() -> void:
-	var button := Button.new()
-	button.name = "FishingHomeButton"
-	button.text = "← HOME"
+func _style_home_button(button: Button) -> void:
 	GameFontStylesScript.apply_regular(button)
-	button.position = HOME_BUTTON_POSITION
-	button.size = Vector2(154, 44)
-	button.add_theme_font_size_override("font_size", 28)
-	button.add_theme_color_override("font_color", Color("#5a3b31"))
-	button.add_theme_color_override("font_hover_color", Color("#5a3b31"))
 	var normal := _panel_style(Color(1.0, 0.93, 0.75, 0.92), 16)
 	button.add_theme_stylebox_override("normal", normal)
 	var hover: StyleBoxFlat = normal.duplicate()
 	hover.bg_color = Color("#fff0c9")
 	button.add_theme_stylebox_override("hover", hover)
 	button.add_theme_stylebox_override("pressed", hover)
-	button.pressed.connect(_request_return_home)
-	add_child(button)
+
+
+func _style_catch_button(button: Button) -> void:
+	GameFontStylesScript.apply_button(button)
+	var normal := StyleBoxFlat.new()
+	normal.bg_color = Color("#e97852")
+	normal.border_color = Color("#a94f39")
+	normal.set_border_width_all(4)
+	normal.set_corner_radius_all(31)
+	normal.shadow_color = Color(0.20, 0.08, 0.05, 0.27)
+	normal.shadow_size = 7
+	normal.shadow_offset = Vector2(0, 4)
+	button.add_theme_stylebox_override("normal", normal)
+	var hover: StyleBoxFlat = normal.duplicate()
+	hover.bg_color = Color("#f1855d")
+	button.add_theme_stylebox_override("hover", hover)
+	var pressed: StyleBoxFlat = normal.duplicate()
+	pressed.bg_color = Color("#ca5e43")
+	pressed.shadow_size = 2
+	button.add_theme_stylebox_override("pressed", pressed)
+	var disabled: StyleBoxFlat = normal.duplicate()
+	disabled.bg_color = Color("#d96d4d")
+	disabled.border_color = Color("#984936")
+	disabled.shadow_size = 4
+	disabled.shadow_color = Color(0.20, 0.08, 0.05, 0.20)
+	button.add_theme_stylebox_override("disabled", disabled)
 
 
 func _request_return_home() -> void:
@@ -853,59 +837,17 @@ func _request_return_home() -> void:
 
 
 func _show_home_return_confirmation() -> void:
-	home_return_overlay = Control.new()
-	home_return_overlay.name = "FishingHomeReturnConfirmation"
-	home_return_overlay.set_anchors_and_offsets_preset(Control.PRESET_FULL_RECT)
-	home_return_overlay.mouse_filter = Control.MOUSE_FILTER_STOP
+	home_return_overlay = HomeConfirmationPopupScene.instantiate()
 	add_child(home_return_overlay)
-
-	var dimmer := ColorRect.new()
-	dimmer.color = CATCH_POPUP_DIMMER_COLOR
-	dimmer.set_anchors_and_offsets_preset(Control.PRESET_FULL_RECT)
-	dimmer.mouse_filter = Control.MOUSE_FILTER_IGNORE
-	home_return_overlay.add_child(dimmer)
-
-	var panel := Control.new()
-	panel.name = "FishingHomeReturnPanel"
-	panel.position = HOME_RETURN_PANEL_POSITION
-	panel.size = HOME_RETURN_PANEL_SIZE
-	panel.mouse_filter = Control.MOUSE_FILTER_PASS
-	home_return_overlay.add_child(panel)
-
-	var background := TextureRect.new()
-	background.texture = HOME_RETURN_POPUP_TEXTURE
-	background.expand_mode = TextureRect.EXPAND_IGNORE_SIZE
-	background.stretch_mode = TextureRect.STRETCH_SCALE
-	background.set_anchors_and_offsets_preset(Control.PRESET_FULL_RECT)
-	background.mouse_filter = Control.MOUSE_FILTER_IGNORE
-	panel.add_child(background)
-
-	var title := _make_popup_label(
-		"GO HOME?", Vector2(60, 30), Vector2(500, 65), 36, true
-	)
-	panel.add_child(title)
-	var warning := _make_popup_label(
-		"YOU WILL LOSE 1 HEART IF YOU LEAVE NOW.",
-		Vector2(40, 96), Vector2(540, 86), 27, false
-	)
-	warning.name = "FishingHomeReturnWarning"
-	panel.add_child(warning)
-
-	var cancel_button := _make_home_style_popup_button(
-		"KEEP PLAYING", _cancel_return_home, false, 26
-	)
-	cancel_button.name = "FishingHomeReturnCancelButton"
-	cancel_button.position = Vector2(60, 210)
-	cancel_button.size = HOME_RETURN_BUTTON_SIZE
-	panel.add_child(cancel_button)
-
-	var confirm_button := _make_home_style_popup_button(
-		"GO HOME", _confirm_return_home, true, 26
-	)
-	confirm_button.name = "FishingHomeReturnConfirmButton"
-	confirm_button.position = Vector2(335, 210)
-	confirm_button.size = HOME_RETURN_BUTTON_SIZE
-	panel.add_child(confirm_button)
+	var panel: Control = home_return_overlay.get_node("FishingHomeReturnPanel")
+	_style_popup_label(panel.get_node("Title"), true)
+	_style_popup_label(panel.get_node("FishingHomeReturnWarning"), false)
+	var cancel_button: Button = panel.get_node("FishingHomeReturnCancelButton")
+	var confirm_button: Button = panel.get_node("FishingHomeReturnConfirmButton")
+	_style_home_popup_button(cancel_button, false, 26)
+	_style_home_popup_button(confirm_button, true, 26)
+	cancel_button.pressed.connect(_cancel_return_home)
+	confirm_button.pressed.connect(_confirm_return_home)
 
 
 func _cancel_return_home() -> void:
@@ -944,27 +886,12 @@ func _clear_home_return_confirmation() -> void:
 
 
 func _build_fish_guide() -> void:
-	fish_guide_panel = Control.new()
-	fish_guide_panel.name = "FishingFishTypesPanel"
-	fish_guide_panel.position = FISH_TYPES_PANEL_POSITION
-	fish_guide_panel.size = FISH_TYPES_PANEL_SIZE
-	fish_guide_panel.mouse_filter = Control.MOUSE_FILTER_IGNORE
-	fish_guide_panel.add_child(_make_panel_frame("FishTypesPanelFrame", FISH_TYPES_PANEL_TEXTURE))
-	add_child(fish_guide_panel)
-
-	var title := Label.new()
-	title.name = "FishingGoalTrackerTitle"
-	title.text = "GOALS"
-	GameFontStylesScript.apply_accent(title)
-	title.position = GOAL_TRACKER_TITLE_POSITION
-	title.size = GOAL_TRACKER_TITLE_SIZE
-	title.horizontal_alignment = HORIZONTAL_ALIGNMENT_CENTER
-	title.vertical_alignment = VERTICAL_ALIGNMENT_CENTER
-	title.add_theme_font_size_override("font_size", GOAL_TRACKER_TITLE_FONT_SIZE)
-	title.add_theme_color_override("font_color", Color("#52352c"))
-	title.mouse_filter = Control.MOUSE_FILTER_IGNORE
-	fish_guide_panel.add_child(title)
-
+	if not is_instance_valid(fish_guide_panel):
+		fish_guide_panel = get_node("FishingView/FishingHUD/FishingFishTypesPanel")
+	var dynamic_goals: Control = fish_guide_panel.get_node("DynamicGoals")
+	for child in dynamic_goals.get_children():
+		dynamic_goals.remove_child(child)
+		child.queue_free()
 	goal_progress_labels.clear()
 	var visible_goal_count := mini(round_goals.size(), MAX_ROUND_GOAL_TYPES)
 	for index in range(visible_goal_count):
@@ -977,7 +904,7 @@ func _build_fish_guide() -> void:
 		)
 		icon.name = "FishingGoalTrackerFish%d" % (index + 1)
 		icon.position = GOAL_TRACKER_FISH_POSITIONS[index]
-		fish_guide_panel.add_child(icon)
+		dynamic_goals.add_child(icon)
 
 		var progress := RichTextLabel.new()
 		progress.name = "FishingGoalTrackerProgress%d" % (index + 1)
@@ -996,91 +923,13 @@ func _build_fish_guide() -> void:
 		progress.add_theme_color_override("font_outline_color", GOAL_PROGRESS_OUTLINE_COLOR)
 		progress.add_theme_constant_override("outline_size", 1)
 		progress.mouse_filter = Control.MOUSE_FILTER_IGNORE
-		fish_guide_panel.add_child(progress)
+		dynamic_goals.add_child(progress)
 		goal_progress_labels.append(progress)
 	_update_goal_tracker()
 
 
 func _rebuild_fish_guide() -> void:
-	if is_instance_valid(fish_guide_panel):
-		var previous_panel := fish_guide_panel
-		fish_guide_panel = null
-		if previous_panel.get_parent() != null:
-			previous_panel.get_parent().remove_child(previous_panel)
-		previous_panel.queue_free()
-	goal_progress_labels.clear()
 	_build_fish_guide()
-
-
-func _build_heart_display() -> void:
-	heart_panel = Control.new()
-	heart_panel.name = "FishingHeartPanel"
-	heart_panel.position = HEART_PANEL_POSITION
-	heart_panel.size = HEART_PANEL_SIZE
-	heart_panel.mouse_filter = Control.MOUSE_FILTER_IGNORE
-	heart_panel.add_child(_make_panel_frame("HeartPanelFrame", HEART_PANEL_TEXTURE))
-	add_child(heart_panel)
-
-	heart_views.clear()
-	for index in range(MAX_HEARTS):
-		var heart := TextureRect.new()
-		heart.name = "FishingHeart%d" % (index + 1)
-		heart.texture = HEART_TEXTURE
-		heart.expand_mode = TextureRect.EXPAND_IGNORE_SIZE
-		heart.stretch_mode = TextureRect.STRETCH_KEEP_ASPECT_CENTERED
-		heart.size = Vector2(34, 34)
-		heart.mouse_filter = Control.MOUSE_FILTER_IGNORE
-		heart_panel.add_child(heart)
-		heart_views.append(heart)
-	heart_timer_label = Label.new()
-	GameFontStylesScript.apply_regular(heart_timer_label)
-	heart_timer_label.position = Vector2(14, 18)
-	heart_timer_label.size = Vector2(282, 44)
-	heart_timer_label.horizontal_alignment = HORIZONTAL_ALIGNMENT_CENTER
-	heart_timer_label.vertical_alignment = VERTICAL_ALIGNMENT_CENTER
-	heart_timer_label.add_theme_font_size_override("font_size", 24)
-	heart_timer_label.add_theme_color_override("font_color", Color("#543a32"))
-	heart_timer_label.mouse_filter = Control.MOUSE_FILTER_IGNORE
-	heart_panel.add_child(heart_timer_label)
-
-
-func _build_catch_hotspot() -> void:
-	# The background no longer contains a baked button, so this is a fully movable
-	# independent control.
-	catch_hotspot = Button.new()
-	catch_hotspot.position = CATCH_BUTTON_POSITION
-	catch_hotspot.size = Vector2(272, 118)
-	catch_hotspot.text = "CATCH!"
-	catch_hotspot.focus_mode = Control.FOCUS_NONE
-	catch_hotspot.add_theme_font_size_override("font_size", 50)
-	catch_hotspot.add_theme_color_override("font_color", Color.WHITE)
-	catch_hotspot.add_theme_color_override("font_hover_color", Color.WHITE)
-	catch_hotspot.add_theme_color_override("font_disabled_color", Color("#fff4e6"))
-	GameFontStylesScript.apply_button(catch_hotspot)
-	var normal := StyleBoxFlat.new()
-	normal.bg_color = Color("#e97852")
-	normal.border_color = Color("#a94f39")
-	normal.set_border_width_all(4)
-	normal.set_corner_radius_all(31)
-	normal.shadow_color = Color(0.20, 0.08, 0.05, 0.27)
-	normal.shadow_size = 7
-	normal.shadow_offset = Vector2(0, 4)
-	catch_hotspot.add_theme_stylebox_override("normal", normal)
-	var hover: StyleBoxFlat = normal.duplicate()
-	hover.bg_color = Color("#f1855d")
-	catch_hotspot.add_theme_stylebox_override("hover", hover)
-	var pressed: StyleBoxFlat = normal.duplicate()
-	pressed.bg_color = Color("#ca5e43")
-	pressed.shadow_size = 2
-	catch_hotspot.add_theme_stylebox_override("pressed", pressed)
-	var disabled: StyleBoxFlat = normal.duplicate()
-	disabled.bg_color = Color("#d96d4d")
-	disabled.border_color = Color("#984936")
-	disabled.shadow_size = 4
-	disabled.shadow_color = Color(0.20, 0.08, 0.05, 0.20)
-	catch_hotspot.add_theme_stylebox_override("disabled", disabled)
-	catch_hotspot.pressed.connect(request_catch)
-	add_child(catch_hotspot)
 
 
 func _pause_game() -> void:
@@ -1101,61 +950,9 @@ func _pause_game() -> void:
 	spawn_timer.paused = true
 	_set_active_fish_tweens_paused(true)
 
-	pause_overlay = Button.new()
-	pause_overlay.name = "PauseOverlay"
-	pause_overlay.set_anchors_and_offsets_preset(Control.PRESET_FULL_RECT)
-	pause_overlay.flat = true
-	pause_overlay.focus_mode = Control.FOCUS_NONE
+	pause_overlay = PauseOverlayScene.instantiate()
 	pause_overlay.pressed.connect(_resume_from_pause)
 	add_child(pause_overlay)
-
-	var soft_dimmer := ColorRect.new()
-	soft_dimmer.name = "PauseDimmer"
-	soft_dimmer.color = PAUSE_DIMMER_COLOR
-	soft_dimmer.set_anchors_and_offsets_preset(Control.PRESET_FULL_RECT)
-	soft_dimmer.mouse_filter = Control.MOUSE_FILTER_IGNORE
-	pause_overlay.add_child(soft_dimmer)
-
-	var pause_circle := Panel.new()
-	pause_circle.name = "PauseCircle"
-	pause_circle.position = PAUSE_CIRCLE_POSITION
-	pause_circle.size = PAUSE_CIRCLE_SIZE
-	pause_circle.modulate = Color(1.0, 1.0, 1.0, 0.72)
-	pause_circle.mouse_filter = Control.MOUSE_FILTER_IGNORE
-	var circle_style := StyleBoxFlat.new()
-	circle_style.bg_color = Color("#e97857")
-	circle_style.border_color = Color("#8f493b")
-	circle_style.set_border_width_all(5)
-	circle_style.set_corner_radius_all(120)
-	circle_style.shadow_color = Color(0.33, 0.16, 0.12, 0.22)
-	circle_style.shadow_size = 9
-	circle_style.shadow_offset = Vector2(0, 5)
-	pause_circle.add_theme_stylebox_override("panel", circle_style)
-	pause_overlay.add_child(pause_circle)
-
-	pause_circle.add_child(_make_pause_bar(
-		"PauseBarLeft",
-		PAUSE_BAR_LEFT_POSITION
-	))
-	pause_circle.add_child(_make_pause_bar(
-		"PauseBarRight",
-		PAUSE_BAR_RIGHT_POSITION
-	))
-
-
-func _make_pause_bar(node_name: String, position_value: Vector2) -> Panel:
-	var bar := Panel.new()
-	bar.name = node_name
-	bar.position = position_value
-	bar.size = PAUSE_BAR_SIZE
-	bar.mouse_filter = Control.MOUSE_FILTER_IGNORE
-	var style := StyleBoxFlat.new()
-	style.bg_color = Color("#fff0c8")
-	style.border_color = Color("#7d4036")
-	style.set_border_width_all(4)
-	style.set_corner_radius_all(10)
-	bar.add_theme_stylebox_override("panel", style)
-	return bar
 
 
 func _resume_from_pause() -> void:
@@ -1187,125 +984,51 @@ func _show_goal_popup() -> void:
 	catch_hotspot.disabled = true
 	spawn_timer.stop()
 
-	goal_popup_overlay = Button.new()
-	goal_popup_overlay.name = "FishingGoalPopupOverlay"
-	goal_popup_overlay.set_anchors_and_offsets_preset(Control.PRESET_FULL_RECT)
-	goal_popup_overlay.flat = true
-	goal_popup_overlay.focus_mode = Control.FOCUS_NONE
+	goal_popup_overlay = GoalPopupScene.instantiate()
 	goal_popup_overlay.pressed.connect(_start_round_from_goal_popup)
 	add_child(goal_popup_overlay)
-
-	var dimmer := ColorRect.new()
-	dimmer.name = "FishingGoalPopupDimmer"
-	dimmer.color = GOAL_POPUP_DIMMER_COLOR
-	dimmer.set_anchors_and_offsets_preset(Control.PRESET_FULL_RECT)
-	dimmer.mouse_filter = Control.MOUSE_FILTER_IGNORE
-	goal_popup_overlay.add_child(dimmer)
-
-	goal_popup_panel = Control.new()
-	goal_popup_panel.name = "FishingGoalPopupPanel"
-	goal_popup_panel.position = GOAL_POPUP_PANEL_POSITION
-	goal_popup_panel.size = GOAL_POPUP_PANEL_SIZE
-	goal_popup_panel.mouse_filter = Control.MOUSE_FILTER_IGNORE
-	goal_popup_overlay.add_child(goal_popup_panel)
-
-	var background := TextureRect.new()
-	background.name = "FishingGoalPopupBackground"
-	background.texture = GOAL_POPUP_TEXTURE
-	background.set_anchors_and_offsets_preset(Control.PRESET_FULL_RECT)
-	background.expand_mode = TextureRect.EXPAND_IGNORE_SIZE
-	background.stretch_mode = TextureRect.STRETCH_SCALE
-	background.mouse_filter = Control.MOUSE_FILTER_IGNORE
-	goal_popup_panel.add_child(background)
-
-	var title := _make_popup_label(
-		"YOU NEED TO CATCH!",
-		GOAL_POPUP_TITLE_POSITION,
-		GOAL_POPUP_TITLE_SIZE,
-		GOAL_POPUP_TITLE_FONT_SIZE,
-		true
-	)
-	title.name = "FishingGoalPopupTitle"
-	goal_popup_panel.add_child(title)
+	goal_popup_panel = goal_popup_overlay.get_node("FishingGoalPopupPanel")
+	_style_popup_label(goal_popup_panel.get_node("FishingGoalPopupTitle"), true)
+	_style_popup_label(goal_popup_panel.get_node("FishingGoalPopupTimeTitle"), false)
+	_style_popup_label(goal_popup_panel.get_node("FishingGoalPopupTimer"), true)
+	_style_popup_label(goal_popup_panel.get_node("FishingGoalPopupFooter"), false)
 
 	goal_popup_fish_views.clear()
 	goal_popup_count_labels.clear()
 	var visible_goal_count := mini(round_goals.size(), MAX_ROUND_GOAL_TYPES)
-	for index in range(visible_goal_count):
+	for index in range(MAX_ROUND_GOAL_TYPES):
+		var fish_view: TextureRect = goal_popup_panel.get_node(
+			"FishingGoalPopupFish%d" % (index + 1)
+		)
+		var count_label: Label = goal_popup_panel.get_node(
+			"FishingGoalPopupCount%d" % (index + 1)
+		)
+		var is_visible := index < visible_goal_count
+		fish_view.visible = is_visible
+		count_label.visible = is_visible
+		if not is_visible:
+			continue
 		var goal: Dictionary = round_goals[index]
 		var fish := _fish_definition(str(goal.get("fish_id", "green")))
-		var fish_view := _make_fish_visual(
-			fish,
-			GOAL_POPUP_FISH_SIZES[index],
-			"goal_texture_region"
-		)
-		fish_view.name = "FishingGoalPopupFish%d" % (index + 1)
-		fish_view.position = GOAL_POPUP_FISH_POSITIONS[index]
-		goal_popup_panel.add_child(fish_view)
+		_configure_fish_visual(fish_view, fish, GOAL_POPUP_FISH_SIZES[index], "goal_texture_region")
+		count_label.text = "X %d" % int(goal.get("count", 0))
+		_style_popup_label(count_label, false)
 		goal_popup_fish_views.append(fish_view)
-
-		var count_label := _make_popup_label(
-			"X %d" % int(goal.get("count", 0)),
-			GOAL_POPUP_COUNT_POSITIONS[index],
-			GOAL_POPUP_COUNT_SIZE,
-			GOAL_POPUP_COUNT_FONT_SIZE
-		)
-		count_label.name = "FishingGoalPopupCount%d" % (index + 1)
-		goal_popup_panel.add_child(count_label)
 		goal_popup_count_labels.append(count_label)
-
-	var time_title := _make_popup_label(
-		"TIME LIMIT",
-		GOAL_POPUP_TIME_TITLE_POSITION,
-		GOAL_POPUP_TIME_TITLE_SIZE,
-		GOAL_POPUP_TIME_TITLE_FONT_SIZE
-	)
-	time_title.name = "FishingGoalPopupTimeTitle"
-	goal_popup_panel.add_child(time_title)
-
-	goal_popup_time_label = _make_popup_label(
-		_format_countdown(round_time_limit_seconds),
-		GOAL_POPUP_TIMER_POSITION,
-		GOAL_POPUP_TIMER_SIZE,
-		GOAL_POPUP_TIMER_FONT_SIZE,
-		true
-	)
-	goal_popup_time_label.name = "FishingGoalPopupTimer"
-	goal_popup_panel.add_child(goal_popup_time_label)
-
-	var footer := _make_popup_label(
-		"CLICK ANYWHERE TO START",
-		GOAL_POPUP_FOOTER_POSITION,
-		GOAL_POPUP_FOOTER_SIZE,
-		GOAL_POPUP_FOOTER_FONT_SIZE
-	)
-	footer.name = "FishingGoalPopupFooter"
-	goal_popup_panel.add_child(footer)
+	goal_popup_time_label = goal_popup_panel.get_node("FishingGoalPopupTimer")
+	goal_popup_time_label.text = _format_countdown(round_time_limit_seconds)
 
 
-func _make_popup_label(
-	text: String,
-	label_position: Vector2,
-	label_size: Vector2,
-	font_size: int,
+func _style_popup_label(
+	label: Label,
 	accent := false,
 	regular_color := GOAL_POPUP_TEXT_COLOR
-) -> Label:
-	var label := Label.new()
-	label.text = GameFontStylesScript.display_text(text)
+) -> void:
 	if accent:
 		GameFontStylesScript.apply_accent(label)
 	else:
 		GameFontStylesScript.apply_regular(label)
-	label.position = label_position
-	label.size = label_size
-	label.horizontal_alignment = HORIZONTAL_ALIGNMENT_CENTER
-	label.vertical_alignment = VERTICAL_ALIGNMENT_CENTER
-	label.add_theme_font_size_override("font_size", font_size)
-	if not accent:
 		label.add_theme_color_override("font_color", regular_color)
-	label.mouse_filter = Control.MOUSE_FILTER_IGNORE
-	return label
 
 
 func _fish_definition(fish_id: String) -> Dictionary:
@@ -1709,79 +1432,25 @@ func resolve_catch_batch_for_test(fish_indices: Array) -> void:
 
 
 func _show_new_fish_unlock(fish: Dictionary) -> void:
-	var overlay := Button.new()
-	overlay.name = "FishingNewFishPopupOverlay"
-	overlay.set_anchors_and_offsets_preset(Control.PRESET_FULL_RECT)
-	overlay.flat = true
-	overlay.focus_mode = Control.FOCUS_NONE
+	var overlay: Button = NewFishPopupScene.instantiate()
 	overlay.pressed.connect(_dismiss_new_fish_unlock)
 	result_overlay = overlay
 	add_child(overlay)
-
-	var panel := _build_celebration_panel(
-		result_overlay,
-		"FishingNewFishPopupPanel",
-		"FishingNewFishPopupBackground"
-	)
-
-	var title := _make_popup_label(
-		"CONGRATULATIONS!",
-		CELEBRATION_TITLE_POSITION,
-		CELEBRATION_TITLE_SIZE,
-		CELEBRATION_TITLE_FONT_SIZE,
-		true
-	)
-	title.name = "FishingNewFishPopupTitle"
-	panel.add_child(title)
-
-	var subtitle := _make_popup_label(
-		"YOU UNLOCKED:",
-		NEW_FISH_SUBTITLE_POSITION,
-		NEW_FISH_SUBTITLE_SIZE,
-		NEW_FISH_SUBTITLE_FONT_SIZE,
-		false,
-		CELEBRATION_REGULAR_TEXT_COLOR
-	)
-	subtitle.name = "FishingNewFishPopupSubtitle"
-	panel.add_child(subtitle)
-
-	new_fish_popup_view = _make_fish_visual(fish, NEW_FISH_ICON_SIZE)
-	new_fish_popup_view.name = "FishingNewFishPopupFish"
-	new_fish_popup_view.position = NEW_FISH_ICON_POSITION
-	panel.add_child(new_fish_popup_view)
-
-	var info_line_one := _make_popup_label(
-		"FIND OUT MORE IN THE FISH",
-		NEW_FISH_INFO_LINE_ONE_POSITION,
-		NEW_FISH_INFO_LINE_ONE_SIZE,
-		NEW_FISH_INFO_FONT_SIZE,
-		false,
-		CELEBRATION_REGULAR_TEXT_COLOR
-	)
-	info_line_one.name = "FishingNewFishPopupInfoLineOne"
-	panel.add_child(info_line_one)
-
-	var info_line_two := _make_popup_label(
-		"ENCYCLOPEDIA",
-		NEW_FISH_INFO_LINE_TWO_POSITION,
-		NEW_FISH_INFO_LINE_TWO_SIZE,
-		NEW_FISH_INFO_FONT_SIZE,
-		false,
-		CELEBRATION_REGULAR_TEXT_COLOR
-	)
-	info_line_two.name = "FishingNewFishPopupInfoLineTwo"
-	panel.add_child(info_line_two)
-
-	var footer := _make_popup_label(
-		"CLICK ANYWHERE TO CONTINUE",
-		NEW_FISH_FOOTER_POSITION,
-		NEW_FISH_FOOTER_SIZE,
-		NEW_FISH_FOOTER_FONT_SIZE,
-		false,
-		CELEBRATION_REGULAR_TEXT_COLOR
-	)
-	footer.name = "FishingNewFishPopupFooter"
-	panel.add_child(footer)
+	var panel: Control = overlay.get_node("FishingNewFishPopupPanel")
+	_style_popup_label(panel.get_node("FishingNewFishPopupTitle"), true)
+	for label_name in [
+		"FishingNewFishPopupSubtitle",
+		"FishingNewFishPopupInfoLineOne",
+		"FishingNewFishPopupInfoLineTwo",
+		"FishingNewFishPopupFooter"
+	]:
+		_style_popup_label(
+			panel.get_node(label_name),
+			false,
+			CELEBRATION_REGULAR_TEXT_COLOR
+		)
+	new_fish_popup_view = panel.get_node("FishingNewFishPopupFish")
+	_configure_fish_visual(new_fish_popup_view, fish, NEW_FISH_ICON_SIZE)
 
 
 func _dismiss_new_fish_unlock() -> void:
@@ -1799,50 +1468,18 @@ func _show_catch_result_page(caught_rows: Array[Dictionary], page_index: int) ->
 	var last_row_index := mini(first_row_index + MAX_CATCH_POPUP_FISH_TYPES, caught_rows.size())
 	var page_rows := caught_rows.slice(first_row_index, last_row_index)
 	var use_two_columns := page_rows.size() > CATCH_POPUP_ROWS_PER_COLUMN
-	var overlay := Button.new()
-	overlay.name = "FishingCatchPopupOverlay"
-	overlay.set_anchors_and_offsets_preset(Control.PRESET_FULL_RECT)
-	overlay.flat = true
-	overlay.focus_mode = Control.FOCUS_NONE
+	var overlay: Button = CatchPopupScene.instantiate()
 	overlay.pressed.connect(_advance_catch_result_page.bind(caught_rows, page_index))
 	result_overlay = overlay
 	add_child(overlay)
-
-	var dimmer := ColorRect.new()
-	dimmer.name = "FishingCatchPopupDimmer"
-	dimmer.color = CATCH_POPUP_DIMMER_COLOR
-	dimmer.set_anchors_and_offsets_preset(Control.PRESET_FULL_RECT)
-	dimmer.mouse_filter = Control.MOUSE_FILTER_IGNORE
-	result_overlay.add_child(dimmer)
-
-	var panel := Control.new()
-	panel.name = "FishingCatchPopupPanel"
-	panel.position = CATCH_POPUP_PANEL_POSITION
-	panel.size = CATCH_POPUP_PANEL_SIZE
-	panel.mouse_filter = Control.MOUSE_FILTER_IGNORE
-	result_overlay.add_child(panel)
-
-	var background := TextureRect.new()
-	background.name = "FishingCatchPopupBackground"
-	background.texture = CATCH_POPUP_TEXTURE
-	background.set_anchors_and_offsets_preset(Control.PRESET_FULL_RECT)
-	background.expand_mode = TextureRect.EXPAND_IGNORE_SIZE
-	background.stretch_mode = TextureRect.STRETCH_SCALE
-	background.mouse_filter = Control.MOUSE_FILTER_IGNORE
-	panel.add_child(background)
-
-	var title := _make_popup_label(
-		"YOU CAUGHT:",
-		CATCH_POPUP_TITLE_POSITION,
-		CATCH_POPUP_TITLE_SIZE,
-		CATCH_POPUP_TITLE_FONT_SIZE,
-		true
-	)
-	title.name = "FishingCatchPopupTitle"
-	panel.add_child(title)
+	var panel: Control = overlay.get_node("FishingCatchPopupPanel")
+	_style_popup_label(panel.get_node("FishingCatchPopupTitle"), true)
 
 	catch_popup_fish_views.clear()
 	catch_popup_count_labels.clear()
+	for slot_index in range(MAX_CATCH_POPUP_FISH_TYPES):
+		panel.get_node("FishingCatchPopupFish%d" % (slot_index + 1)).visible = false
+		panel.get_node("FishingCatchPopupCount%d" % (slot_index + 1)).visible = false
 	for index in range(page_rows.size()):
 		var row: Dictionary = page_rows[index]
 		var fish: Dictionary = row.get("fish", {})
@@ -1860,39 +1497,35 @@ func _show_catch_result_page(caught_rows: Array[Dictionary], page_index: int) ->
 			count_size = CATCH_POPUP_TWO_COLUMN_COUNT_SIZE
 			count_font_size = CATCH_POPUP_TWO_COLUMN_COUNT_FONT_SIZE
 		var fish_size := _catch_popup_fish_size(fish, fish_slot_size)
-		var fish_view := _make_fish_visual(fish, fish_size)
-		fish_view.name = "FishingCatchPopupFish%d" % (index + 1)
+		var fish_view: TextureRect = panel.get_node(
+			"FishingCatchPopupFish%d" % (index + 1)
+		)
+		fish_view.visible = true
+		_configure_fish_visual(fish_view, fish, fish_size)
 		fish_view.set_meta("fish_id", str(fish.get("id", "green")))
 		fish_view.position = (
 			fish_slot_position + (fish_slot_size - fish_size) * 0.5
 		)
-		panel.add_child(fish_view)
 		catch_popup_fish_views.append(fish_view)
 
-		var count_label := _make_popup_label(
-			"X %d" % int(row.get("count", 0)),
-			count_position,
-			count_size,
-			count_font_size,
-			false,
-			CATCH_POPUP_TEXT_COLOR
+		var count_label: Label = panel.get_node(
+			"FishingCatchPopupCount%d" % (index + 1)
 		)
-		count_label.name = "FishingCatchPopupCount%d" % (index + 1)
-		panel.add_child(count_label)
+		count_label.visible = true
+		count_label.text = "X %d" % int(row.get("count", 0))
+		count_label.position = count_position
+		count_label.size = count_size
+		count_label.add_theme_font_size_override("font_size", count_font_size)
+		_style_popup_label(count_label, false, CATCH_POPUP_TEXT_COLOR)
 		catch_popup_count_labels.append(count_label)
 
-	var footer := _make_popup_label(
+	var footer: Label = panel.get_node("FishingCatchPopupFooter")
+	footer.text = (
 		"CLICK ANYWHERE TO SEE MORE"
-			if last_row_index < caught_rows.size()
-			else "CLICK ANYWHERE TO CONTINUE",
-		CATCH_POPUP_FOOTER_POSITION,
-		CATCH_POPUP_FOOTER_SIZE,
-		CATCH_POPUP_FOOTER_FONT_SIZE,
-		false,
-		CATCH_POPUP_TEXT_COLOR
+		if last_row_index < caught_rows.size()
+		else "CLICK ANYWHERE TO CONTINUE"
 	)
-	footer.name = "FishingCatchPopupFooter"
-	panel.add_child(footer)
+	_style_popup_label(footer, false, CATCH_POPUP_TEXT_COLOR)
 
 
 func _advance_catch_result_page(caught_rows: Array[Dictionary], page_index: int) -> void:
@@ -1910,36 +1543,6 @@ func _catch_popup_fish_size(
 ) -> Vector2:
 	var popup_scale := maxf(float(fish.get("catch_popup_scale", 1.0)), 0.01)
 	return slot_size * popup_scale
-
-
-func _build_celebration_panel(
-	overlay: Control,
-	panel_name: String,
-	background_name: String
-) -> Control:
-	var dimmer := ColorRect.new()
-	dimmer.name = "FishingCelebrationPopupDimmer"
-	dimmer.color = CELEBRATION_POPUP_DIMMER_COLOR
-	dimmer.set_anchors_and_offsets_preset(Control.PRESET_FULL_RECT)
-	dimmer.mouse_filter = Control.MOUSE_FILTER_IGNORE
-	overlay.add_child(dimmer)
-
-	var panel := Control.new()
-	panel.name = panel_name
-	panel.position = CELEBRATION_POPUP_PANEL_POSITION
-	panel.size = CELEBRATION_POPUP_PANEL_SIZE
-	panel.mouse_filter = Control.MOUSE_FILTER_IGNORE
-	overlay.add_child(panel)
-
-	var background := TextureRect.new()
-	background.name = background_name
-	background.texture = SUCCESS_POPUP_TEXTURE
-	background.set_anchors_and_offsets_preset(Control.PRESET_FULL_RECT)
-	background.expand_mode = TextureRect.EXPAND_IGNORE_SIZE
-	background.stretch_mode = TextureRect.STRETCH_SCALE
-	background.mouse_filter = Control.MOUSE_FILTER_IGNORE
-	panel.add_child(background)
-	return panel
 
 
 func _aggregate_caught_fishes(caught_fishes: Array[Dictionary]) -> Array[Dictionary]:
@@ -1965,19 +1568,15 @@ func _aggregate_caught_fishes(caught_fishes: Array[Dictionary]) -> Array[Diction
 
 func _show_failure() -> void:
 	_play_failure_sound()
-	var box := _build_result_overlay(FAILURE_POPUP_TEXTURE)
-	var cat := TextureRect.new()
+	var overlay: Button = CatchFailurePopupScene.instantiate()
+	overlay.pressed.connect(_dismiss_result)
+	result_overlay = overlay
+	add_child(overlay)
+	var content: VBoxContainer = overlay.get_node("Panel/Content")
+	var cat: TextureRect = content.get_node("Cat")
 	cat.texture = _failure_cat_texture()
-	cat.custom_minimum_size = Vector2(300, 300)
-	cat.expand_mode = TextureRect.EXPAND_IGNORE_SIZE
-	cat.stretch_mode = TextureRect.STRETCH_KEEP_ASPECT_CENTERED
-	cat.mouse_filter = Control.MOUSE_FILTER_IGNORE
-	box.add_child(cat)
-	var title := _result_label("Better luck next time!", 34)
-	GameFontStylesScript.apply_accent(title)
-	box.add_child(title)
-	box.add_child(_result_spacer(30.0))
-	box.add_child(_result_label("Click anywhere to return", 18, Color("#786359")))
+	_style_popup_label(content.get_node("Title"), true)
+	_style_popup_label(content.get_node("Footer"), false, Color("#786359"))
 
 
 func _show_round_success() -> void:
@@ -1993,69 +1592,24 @@ func _show_round_success() -> void:
 	progress_store.clear_retry()
 	_emit_shared_stats_changed()
 
-	result_overlay = Control.new()
-	result_overlay.name = "FishingLevelCompletePopupOverlay"
-	result_overlay.set_anchors_and_offsets_preset(Control.PRESET_FULL_RECT)
-	result_overlay.mouse_filter = Control.MOUSE_FILTER_STOP
+	result_overlay = LevelCompletePopupScene.instantiate()
 	add_child(result_overlay)
-
-	var panel := _build_celebration_panel(
-		result_overlay,
-		"FishingLevelCompletePopupPanel",
-		"FishingLevelCompletePopupBackground"
-	)
-
-	var title := _make_popup_label(
-		"CONGRATULATIONS!",
-		CELEBRATION_TITLE_POSITION,
-		CELEBRATION_TITLE_SIZE,
-		CELEBRATION_TITLE_FONT_SIZE,
-		true
-	)
-	title.name = "FishingLevelCompletePopupTitle"
-	panel.add_child(title)
-
-	var message := _make_popup_label(
-		"YOU'VE COMPLETED THIS LEVEL!",
-		LEVEL_COMPLETE_MESSAGE_POSITION,
-		LEVEL_COMPLETE_MESSAGE_SIZE,
-		LEVEL_COMPLETE_MESSAGE_FONT_SIZE,
+	var panel: Control = result_overlay.get_node("FishingLevelCompletePopupPanel")
+	_style_popup_label(panel.get_node("FishingLevelCompletePopupTitle"), true)
+	_style_popup_label(
+		panel.get_node("FishingLevelCompletePopupMessage"),
 		false,
 		CELEBRATION_REGULAR_TEXT_COLOR
 	)
-	message.name = "FishingLevelCompletePopupMessage"
-	panel.add_child(message)
-
-	var xp_reward_label := _make_popup_label(
-		"XP EARNED: %d" % round_xp_reward,
-		LEVEL_COMPLETE_XP_POSITION,
-		LEVEL_COMPLETE_XP_SIZE,
-		LEVEL_COMPLETE_XP_FONT_SIZE,
-		false,
-		CELEBRATION_REGULAR_TEXT_COLOR
-	)
-	xp_reward_label.name = "FishingLevelCompleteXPReward"
-	panel.add_child(xp_reward_label)
-
-	var next_button := _make_home_style_popup_button(
-		"NEXT LEVEL",
-		_start_next_level_from_success,
-		true
-	)
-	next_button.name = "FishingNextLevelButton"
-	next_button.position = LEVEL_COMPLETE_NEXT_BUTTON_POSITION
-	next_button.size = LEVEL_COMPLETE_BUTTON_SIZE
-	panel.add_child(next_button)
-
-	var home_button := _make_home_style_popup_button(
-		"GO HOME",
-		_return_home_from_round_success,
-		false
-	)
-	home_button.name = "FishingLevelCompleteHomeButton"
-	home_button.position = LEVEL_COMPLETE_HOME_BUTTON_POSITION
-	home_button.size = LEVEL_COMPLETE_BUTTON_SIZE
-	panel.add_child(home_button)
+	var xp_reward_label: Label = panel.get_node("FishingLevelCompleteXPReward")
+	xp_reward_label.text = "XP EARNED: %d" % round_xp_reward
+	_style_popup_label(xp_reward_label, false, CELEBRATION_REGULAR_TEXT_COLOR)
+	var next_button: Button = panel.get_node("FishingNextLevelButton")
+	var home_button: Button = panel.get_node("FishingLevelCompleteHomeButton")
+	_style_home_popup_button(next_button, true)
+	_style_home_popup_button(home_button, false)
+	next_button.pressed.connect(_start_next_level_from_success)
+	home_button.pressed.connect(_return_home_from_round_success)
 
 
 func _award_round_completion_xp() -> void:
@@ -2066,14 +1620,11 @@ func _award_round_completion_xp() -> void:
 	catch_completed.emit(true, fish_caught, xp_earned)
 
 
-func _make_home_style_popup_button(
-	text: String,
-	action: Callable,
+func _style_home_popup_button(
+	button: Button,
 	accent: bool,
 	font_size := LEVEL_COMPLETE_BUTTON_FONT_SIZE
-) -> Button:
-	var button := Button.new()
-	button.text = GameFontStylesScript.display_text(text)
+) -> void:
 	GameFontStylesScript.apply_regular(button)
 	button.focus_mode = Control.FOCUS_NONE
 	button.add_theme_font_size_override("font_size", font_size)
@@ -2096,8 +1647,6 @@ func _make_home_style_popup_button(
 	var pressed: StyleBoxFlat = hover.duplicate()
 	pressed.bg_color = Color("#a84b3a") if accent else Color("#f1dfc9")
 	button.add_theme_stylebox_override("pressed", pressed)
-	button.pressed.connect(action)
-	return button
 
 
 func _start_next_level_from_success() -> void:
@@ -2133,47 +1682,19 @@ func _prepare_current_level_retry() -> void:
 
 func _show_round_failure() -> void:
 	_play_failure_sound()
-	var box := _build_result_overlay(FAILURE_POPUP_TEXTURE, false)
-	result_overlay.name = "FishingRoundFailurePopupOverlay"
-	var cat := TextureRect.new()
-	cat.name = "FishingRoundFailureCat"
+	result_overlay = RoundFailurePopupScene.instantiate()
+	add_child(result_overlay)
+	var content: VBoxContainer = result_overlay.get_node("Panel/Content")
+	var cat: TextureRect = content.get_node("FishingRoundFailureCat")
 	cat.texture = _round_failure_cat_texture()
-	cat.custom_minimum_size = Vector2(300, 300)
-	cat.expand_mode = TextureRect.EXPAND_IGNORE_SIZE
-	cat.stretch_mode = TextureRect.STRETCH_KEEP_ASPECT_CENTERED
-	cat.mouse_filter = Control.MOUSE_FILTER_IGNORE
-	box.add_child(cat)
-	var title := _result_label("Better luck next time!", 34)
-	GameFontStylesScript.apply_accent(title)
-	box.add_child(title)
-	box.add_child(_result_spacer(30.0))
-
-	var actions := HBoxContainer.new()
-	actions.name = "FishingRoundFailureActions"
-	actions.alignment = BoxContainer.ALIGNMENT_CENTER
-	actions.custom_minimum_size = Vector2(580, ROUND_FAILURE_BUTTON_SIZE.y)
-	actions.add_theme_constant_override("separation", ROUND_FAILURE_BUTTON_SEPARATION)
-	box.add_child(actions)
-
-	var home_button := _make_home_style_popup_button(
-		"GO HOME",
-		_return_home_from_round_failure,
-		false,
-		ROUND_FAILURE_BUTTON_FONT_SIZE
-	)
-	home_button.name = "FishingRoundFailureHomeButton"
-	home_button.custom_minimum_size = ROUND_FAILURE_BUTTON_SIZE
-	actions.add_child(home_button)
-
-	var retry_button := _make_home_style_popup_button(
-		"TRY AGAIN",
-		_retry_current_level_from_round_failure,
-		true,
-		ROUND_FAILURE_BUTTON_FONT_SIZE
-	)
-	retry_button.name = "FishingRoundFailureRetryButton"
-	retry_button.custom_minimum_size = ROUND_FAILURE_BUTTON_SIZE
-	actions.add_child(retry_button)
+	_style_popup_label(content.get_node("Title"), true)
+	var actions: HBoxContainer = content.get_node("FishingRoundFailureActions")
+	var home_button: Button = actions.get_node("FishingRoundFailureHomeButton")
+	var retry_button: Button = actions.get_node("FishingRoundFailureRetryButton")
+	_style_home_popup_button(home_button, false, ROUND_FAILURE_BUTTON_FONT_SIZE)
+	_style_home_popup_button(retry_button, true, ROUND_FAILURE_BUTTON_FONT_SIZE)
+	home_button.pressed.connect(_return_home_from_round_failure)
+	retry_button.pressed.connect(_retry_current_level_from_round_failure)
 
 
 func _return_home_from_round_failure() -> void:
@@ -2196,86 +1717,18 @@ func _show_no_hearts_popup() -> void:
 	result_is_round_end = false
 	round_failure_retry_pending = false
 	no_hearts_popup_pending = true
-	var box := _build_result_overlay(NO_HEARTS_POPUP_TEXTURE)
-	result_overlay.name = "FishingNoHeartsPopupOverlay"
-	var cat := TextureRect.new()
-	cat.name = "FishingNoHeartsCat"
-	cat.texture = _round_failure_cat_texture()
-	cat.custom_minimum_size = Vector2(270, 270)
-	cat.expand_mode = TextureRect.EXPAND_IGNORE_SIZE
-	cat.stretch_mode = TextureRect.STRETCH_KEEP_ASPECT_CENTERED
-	cat.mouse_filter = Control.MOUSE_FILTER_IGNORE
-	box.add_child(cat)
-	var title := _result_label("No hearts left", 34)
-	GameFontStylesScript.apply_accent(title)
-	box.add_child(title)
-	no_hearts_countdown_label = _result_label("", 25, Color("#58352b"))
-	no_hearts_countdown_label.name = "FishingNoHeartsCountdown"
-	box.add_child(no_hearts_countdown_label)
-	box.add_child(_result_spacer(18.0))
-	box.add_child(_result_label(
-		"Click anywhere to return home",
-		18,
-		Color("#786359")
-	))
-	_update_no_hearts_countdown()
-
-
-func _build_result_overlay(
-	background_texture: Texture2D,
-	dismiss_on_click := true
-) -> VBoxContainer:
-	var overlay: Control
-	if dismiss_on_click:
-		var dismiss_button := Button.new()
-		dismiss_button.flat = true
-		dismiss_button.focus_mode = Control.FOCUS_NONE
-		dismiss_button.pressed.connect(_dismiss_result)
-		overlay = dismiss_button
-	else:
-		overlay = Control.new()
-	overlay.set_anchors_and_offsets_preset(Control.PRESET_FULL_RECT)
-	overlay.mouse_filter = Control.MOUSE_FILTER_STOP
+	var overlay: Button = NoHeartsPopupScene.instantiate()
+	overlay.pressed.connect(_dismiss_result)
 	result_overlay = overlay
-	add_child(overlay)
-
-	var dimmer := ColorRect.new()
-	dimmer.color = Color(0.09, 0.07, 0.06, 0.18)
-	dimmer.set_anchors_and_offsets_preset(Control.PRESET_FULL_RECT)
-	dimmer.mouse_filter = Control.MOUSE_FILTER_IGNORE
-	result_overlay.add_child(dimmer)
-
-	var panel := Control.new()
-	panel.position = Vector2(260, 34)
-	panel.size = Vector2(760, 652)
-	panel.mouse_filter = (
-		Control.MOUSE_FILTER_IGNORE
-		if dismiss_on_click
-		else Control.MOUSE_FILTER_PASS
-	)
-	result_overlay.add_child(panel)
-
-	var background := TextureRect.new()
-	background.name = "FishingResultPopupBackground"
-	background.texture = background_texture
-	background.set_anchors_and_offsets_preset(Control.PRESET_FULL_RECT)
-	background.expand_mode = TextureRect.EXPAND_IGNORE_SIZE
-	background.stretch_mode = TextureRect.STRETCH_SCALE
-	background.mouse_filter = Control.MOUSE_FILTER_IGNORE
-	panel.add_child(background)
-
-	var box := VBoxContainer.new()
-	box.position = Vector2(90, 60)
-	box.size = Vector2(580, 530)
-	box.alignment = BoxContainer.ALIGNMENT_CENTER
-	box.add_theme_constant_override("separation", 10)
-	box.mouse_filter = (
-		Control.MOUSE_FILTER_IGNORE
-		if dismiss_on_click
-		else Control.MOUSE_FILTER_PASS
-	)
-	panel.add_child(box)
-	return box
+	add_child(result_overlay)
+	var content: VBoxContainer = overlay.get_node("Panel/Content")
+	var cat: TextureRect = content.get_node("FishingNoHeartsCat")
+	cat.texture = _round_failure_cat_texture()
+	_style_popup_label(content.get_node("Title"), true)
+	no_hearts_countdown_label = content.get_node("FishingNoHeartsCountdown")
+	_style_popup_label(no_hearts_countdown_label, false, Color("#58352b"))
+	_style_popup_label(content.get_node("Footer"), false, Color("#786359"))
+	_update_no_hearts_countdown()
 
 
 func _dismiss_result() -> void:
@@ -2467,6 +1920,16 @@ func _make_fish_visual(
 	texture_region_key := "texture_region"
 ) -> TextureRect:
 	var texture_view := TextureRect.new()
+	_configure_fish_visual(texture_view, fish, target_size, texture_region_key)
+	return texture_view
+
+
+func _configure_fish_visual(
+	texture_view: TextureRect,
+	fish: Dictionary,
+	target_size: Vector2,
+	texture_region_key := "texture_region"
+) -> void:
 	texture_view.texture = _fish_texture_with_region(fish, texture_region_key)
 	texture_view.expand_mode = TextureRect.EXPAND_IGNORE_SIZE
 	texture_view.stretch_mode = (
@@ -2480,7 +1943,6 @@ func _make_fish_visual(
 	texture_view.custom_minimum_size = target_size
 	texture_view.size = target_size
 	texture_view.mouse_filter = Control.MOUSE_FILTER_IGNORE
-	return texture_view
 
 
 func _fish_texture(fish_id: String) -> Texture2D:
@@ -2612,47 +2074,6 @@ func _update_stats() -> void:
 				current_level,
 				_format_countdown(ceili(round_time_remaining))
 			]
-
-
-func _result_label(text: String, font_size: int, color := Color("#58352b")) -> Label:
-	var label := Label.new()
-	label.text = GameFontStylesScript.display_text(text)
-	GameFontStylesScript.apply_regular(label)
-	label.custom_minimum_size.y = 48
-	label.horizontal_alignment = HORIZONTAL_ALIGNMENT_CENTER
-	label.vertical_alignment = VERTICAL_ALIGNMENT_CENTER
-	label.add_theme_font_size_override("font_size", font_size)
-	label.add_theme_color_override("font_color", color)
-	label.mouse_filter = Control.MOUSE_FILTER_IGNORE
-	return label
-
-
-func _result_spacer(height: float) -> Control:
-	var spacer := Control.new()
-	spacer.custom_minimum_size.y = height
-	spacer.mouse_filter = Control.MOUSE_FILTER_IGNORE
-	return spacer
-
-
-func _full_screen_texture(texture: Texture2D) -> TextureRect:
-	var view := TextureRect.new()
-	view.texture = texture
-	view.set_anchors_and_offsets_preset(Control.PRESET_FULL_RECT)
-	view.expand_mode = TextureRect.EXPAND_IGNORE_SIZE
-	view.stretch_mode = TextureRect.STRETCH_SCALE
-	view.mouse_filter = Control.MOUSE_FILTER_IGNORE
-	return view
-
-
-func _make_panel_frame(frame_name: String, texture: Texture2D) -> TextureRect:
-	var frame := TextureRect.new()
-	frame.name = frame_name
-	frame.texture = texture
-	frame.expand_mode = TextureRect.EXPAND_IGNORE_SIZE
-	frame.stretch_mode = TextureRect.STRETCH_SCALE
-	frame.set_anchors_and_offsets_preset(Control.PRESET_FULL_RECT)
-	frame.mouse_filter = Control.MOUSE_FILTER_IGNORE
-	return frame
 
 
 func _panel_style(color: Color, radius: int) -> StyleBoxFlat:
