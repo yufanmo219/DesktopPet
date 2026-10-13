@@ -11,8 +11,10 @@ const PetAvatarScript = preload("res://src/pet_avatar.gd")
 const AppCoordinatorScript = preload("res://src/app/app_coordinator.gd")
 const HomeScreenScene = preload("res://src/home/home_screen.tscn")
 const FishingGameScene = preload("res://src/fishing/fishing_game.tscn")
-const AquariumScreenScript = preload("res://src/aquarium_screen.gd")
-const AquariumLoadingScreenScript = preload("res://src/aquarium_loading_screen.gd")
+const AquariumScreenScene = preload("res://src/aquarium/aquarium_screen.tscn")
+const AquariumLoadingScreenScene = preload(
+	"res://src/aquarium/aquarium_loading_screen.tscn"
+)
 const StoreScreenScene = preload("res://src/store/store_screen.tscn")
 const FishBookScreenScene = preload("res://src/fish_book/fish_book_screen.tscn")
 const GameFontStylesScript = preload("res://src/game_font_styles.gd")
@@ -403,12 +405,12 @@ func show_aquarium() -> void:
 		return
 
 	clear_screen(ScreenId.AQUARIUM_LOADING)
-	aquarium_loading_screen = AquariumLoadingScreenScript.new()
+	aquarium_loading_screen = AquariumLoadingScreenScene.instantiate()
 	aquarium_loading_screen.set_anchors_and_offsets_preset(Control.PRESET_FULL_RECT)
 	content.add_child(aquarium_loading_screen)
 	await get_tree().process_frame
 
-	aquarium_screen = AquariumScreenScript.new()
+	aquarium_screen = AquariumScreenScene.instantiate()
 	aquarium_screen.configure(get_progress_stats())
 	aquarium_screen.back_requested.connect(show_home)
 	aquarium_screen.fish_book_requested.connect(show_fish_book)
