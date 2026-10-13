@@ -28,8 +28,15 @@ window/size/window_width_override=2560
 window/size/window_height_override=1440
 window/stretch/mode="canvas_items"
 window/per_pixel_transparency/allowed=true
+window/size/transparent=false
+window/size/transparent.windows=true
+window/subwindows/embed_subwindows=false
 
 [rendering]
 
 renderer/rendering_method="gl_compatibility"
 renderer/rendering_method.mobile="gl_compatibility"
+gl_compatibility/driver.windows="opengl3_angle"
+viewport/transparent_background=false
+viewport/transparent_background.windows=true
+textures/vram_compression/import_etc2_astc=true

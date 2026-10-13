@@ -96,3 +96,14 @@ python3 tools/run_tests.py --test smoke
 python3 tools/run_tests.py --test save_game_repository
 python3 tools/run_tests.py --test pet_catalog
 ```
+
+## Windows / macOS QA 导出
+
+两个平台现在共用仓库根目录的 `export_presets.cfg`，不再由平台分支各自维护一份。安装 Godot 4.7.1 export templates 后，可运行：
+
+```bash
+python3 tools/export_builds.py --target windows
+python3 tools/export_builds.py --target macos
+```
+
+GitHub CI 会在 macOS 与 Windows 上运行完整测试；手动触发 `QA builds` 会生成保留 14 天的 QA artifacts。正式签名、notarization、证书密钥边界以及 Git LFS 的协调迁移步骤记录在 `docs/release.md`。
