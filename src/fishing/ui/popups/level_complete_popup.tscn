@@ -1,0 +1,103 @@
+[gd_scene load_steps=3 format=3]
+
+[ext_resource type="Texture2D" path="res://assets/ui/fishing/popups/processed/fishing_success_popup_base.png" id="1_background"]
+[ext_resource type="FontFile" path="res://assets/fonts/original_handwriting/yufan_original_handwriting.ttf" id="2_font"]
+
+[node name="FishingLevelCompletePopupOverlay" type="Control"]
+layout_mode = 3
+anchors_preset = 15
+anchor_right = 1.0
+anchor_bottom = 1.0
+grow_horizontal = 2
+grow_vertical = 2
+mouse_filter = 0
+
+[node name="FishingCelebrationPopupDimmer" type="ColorRect" parent="."]
+layout_mode = 1
+anchors_preset = 15
+anchor_right = 1.0
+anchor_bottom = 1.0
+grow_horizontal = 2
+grow_vertical = 2
+mouse_filter = 2
+color = Color(0.09, 0.07, 0.06, 0.28)
+
+[node name="FishingLevelCompletePopupPanel" type="Control" parent="."]
+layout_mode = 0
+offset_left = 260.0
+offset_top = 34.0
+offset_right = 1020.0
+offset_bottom = 686.0
+mouse_filter = 2
+
+[node name="FishingLevelCompletePopupBackground" type="TextureRect" parent="FishingLevelCompletePopupPanel"]
+layout_mode = 1
+anchors_preset = 15
+anchor_right = 1.0
+anchor_bottom = 1.0
+grow_horizontal = 2
+grow_vertical = 2
+mouse_filter = 2
+texture = ExtResource("1_background")
+expand_mode = 1
+stretch_mode = 0
+
+[node name="FishingLevelCompletePopupTitle" type="Label" parent="FishingLevelCompletePopupPanel"]
+layout_mode = 0
+offset_left = 105.0
+offset_top = 65.0
+offset_right = 655.0
+offset_bottom = 147.0
+mouse_filter = 2
+theme_override_fonts/font = ExtResource("2_font")
+theme_override_font_sizes/font_size = 60
+text = "CONGRATULATIONS!"
+horizontal_alignment = 1
+vertical_alignment = 1
+
+[node name="FishingLevelCompletePopupMessage" type="Label" parent="FishingLevelCompletePopupPanel"]
+layout_mode = 0
+offset_left = 105.0
+offset_top = 170.0
+offset_right = 655.0
+offset_bottom = 232.0
+mouse_filter = 2
+theme_override_fonts/font = ExtResource("2_font")
+theme_override_font_sizes/font_size = 32
+text = "YOU'VE COMPLETED THIS LEVEL!"
+horizontal_alignment = 1
+vertical_alignment = 1
+
+[node name="FishingLevelCompleteXPReward" type="Label" parent="FishingLevelCompletePopupPanel"]
+layout_mode = 0
+offset_left = 180.0
+offset_top = 230.0
+offset_right = 580.0
+offset_bottom = 282.0
+mouse_filter = 2
+theme_override_fonts/font = ExtResource("2_font")
+theme_override_font_sizes/font_size = 40
+horizontal_alignment = 1
+vertical_alignment = 1
+
+[node name="FishingNextLevelButton" type="Button" parent="FishingLevelCompletePopupPanel"]
+layout_mode = 0
+offset_left = 192.0
+offset_top = 301.0
+offset_right = 568.0
+offset_bottom = 367.0
+focus_mode = 0
+theme_override_fonts/font = ExtResource("2_font")
+theme_override_font_sizes/font_size = 38
+text = "NEXT LEVEL"
+
+[node name="FishingLevelCompleteHomeButton" type="Button" parent="FishingLevelCompletePopupPanel"]
+layout_mode = 0
+offset_left = 192.0
+offset_top = 399.0
+offset_right = 568.0
+offset_bottom = 465.0
+focus_mode = 0
+theme_override_fonts/font = ExtResource("2_font")
+theme_override_font_sizes/font_size = 38
+text = "GO HOME"

@@ -1,0 +1,76 @@
+[gd_scene load_steps=3 format=3]
+
+[sub_resource type="StyleBoxFlat" id="StyleCircle"]
+bg_color = Color(0.913725, 0.470588, 0.341176, 1)
+border_width_left = 5
+border_width_top = 5
+border_width_right = 5
+border_width_bottom = 5
+border_color = Color(0.560784, 0.286275, 0.231373, 1)
+corner_radius_top_left = 120
+corner_radius_top_right = 120
+corner_radius_bottom_right = 120
+corner_radius_bottom_left = 120
+shadow_color = Color(0.33, 0.16, 0.12, 0.22)
+shadow_size = 9
+shadow_offset = Vector2(0, 5)
+
+[sub_resource type="StyleBoxFlat" id="StyleBar"]
+bg_color = Color(1, 0.941176, 0.784314, 1)
+border_width_left = 4
+border_width_top = 4
+border_width_right = 4
+border_width_bottom = 4
+border_color = Color(0.490196, 0.25098, 0.211765, 1)
+corner_radius_top_left = 10
+corner_radius_top_right = 10
+corner_radius_bottom_right = 10
+corner_radius_bottom_left = 10
+
+[node name="PauseOverlay" type="Button"]
+layout_mode = 3
+anchors_preset = 15
+anchor_right = 1.0
+anchor_bottom = 1.0
+grow_horizontal = 2
+grow_vertical = 2
+focus_mode = 0
+flat = true
+
+[node name="PauseDimmer" type="ColorRect" parent="."]
+layout_mode = 1
+anchors_preset = 15
+anchor_right = 1.0
+anchor_bottom = 1.0
+grow_horizontal = 2
+grow_vertical = 2
+mouse_filter = 2
+color = Color(0.12, 0.09, 0.08, 0.13)
+
+[node name="PauseCircle" type="Panel" parent="."]
+modulate = Color(1, 1, 1, 0.72)
+layout_mode = 0
+offset_left = 520.0
+offset_top = 240.0
+offset_right = 760.0
+offset_bottom = 480.0
+mouse_filter = 2
+theme_override_styles/panel = SubResource("StyleCircle")
+
+[node name="PauseBarLeft" type="Panel" parent="PauseCircle"]
+layout_mode = 0
+offset_left = 68.0
+offset_top = 61.0
+offset_right = 102.0
+offset_bottom = 169.0
+mouse_filter = 2
+theme_override_styles/panel = SubResource("StyleBar")
+
+[node name="PauseBarRight" type="Panel" parent="PauseCircle"]
+layout_mode = 0
+offset_left = 138.0
+offset_top = 61.0
+offset_right = 172.0
+offset_bottom = 169.0
+mouse_filter = 2
+theme_override_styles/panel = SubResource("StyleBar")

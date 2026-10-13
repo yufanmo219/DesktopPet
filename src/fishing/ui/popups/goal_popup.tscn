@@ -1,0 +1,166 @@
+[gd_scene load_steps=3 format=3]
+
+[ext_resource type="Texture2D" path="res://assets/ui/fishing/popups/processed/fishing_goal_popup_base_v2.png" id="1_background"]
+[ext_resource type="FontFile" path="res://assets/fonts/original_handwriting/yufan_original_handwriting.ttf" id="2_font"]
+
+[node name="FishingGoalPopupOverlay" type="Button"]
+layout_mode = 3
+anchors_preset = 15
+anchor_right = 1.0
+anchor_bottom = 1.0
+grow_horizontal = 2
+grow_vertical = 2
+focus_mode = 0
+flat = true
+
+[node name="FishingGoalPopupDimmer" type="ColorRect" parent="."]
+layout_mode = 1
+anchors_preset = 15
+anchor_right = 1.0
+anchor_bottom = 1.0
+grow_horizontal = 2
+grow_vertical = 2
+mouse_filter = 2
+color = Color(0.09, 0.07, 0.06, 0.28)
+
+[node name="FishingGoalPopupPanel" type="Control" parent="."]
+layout_mode = 0
+offset_left = 315.0
+offset_top = 35.0
+offset_right = 965.0
+offset_bottom = 685.0
+mouse_filter = 2
+
+[node name="FishingGoalPopupBackground" type="TextureRect" parent="FishingGoalPopupPanel"]
+layout_mode = 1
+anchors_preset = 15
+anchor_right = 1.0
+anchor_bottom = 1.0
+grow_horizontal = 2
+grow_vertical = 2
+mouse_filter = 2
+texture = ExtResource("1_background")
+expand_mode = 1
+stretch_mode = 0
+
+[node name="FishingGoalPopupTitle" type="Label" parent="FishingGoalPopupPanel"]
+layout_mode = 0
+offset_left = 100.0
+offset_top = 50.0
+offset_right = 550.0
+offset_bottom = 110.0
+mouse_filter = 2
+theme_override_fonts/font = ExtResource("2_font")
+theme_override_font_sizes/font_size = 45
+text = "YOU NEED TO CATCH!"
+horizontal_alignment = 1
+vertical_alignment = 1
+
+[node name="FishingGoalPopupFish1" type="TextureRect" parent="FishingGoalPopupPanel"]
+layout_mode = 0
+offset_left = 200.0
+offset_top = 120.0
+offset_right = 372.0
+offset_bottom = 216.0
+mouse_filter = 2
+expand_mode = 1
+stretch_mode = 5
+
+[node name="FishingGoalPopupFish2" type="TextureRect" parent="FishingGoalPopupPanel"]
+layout_mode = 0
+offset_left = 200.0
+offset_top = 220.0
+offset_right = 372.0
+offset_bottom = 316.0
+mouse_filter = 2
+expand_mode = 1
+stretch_mode = 5
+
+[node name="FishingGoalPopupFish3" type="TextureRect" parent="FishingGoalPopupPanel"]
+layout_mode = 0
+offset_left = 200.0
+offset_top = 320.0
+offset_right = 372.0
+offset_bottom = 416.0
+mouse_filter = 2
+expand_mode = 1
+stretch_mode = 5
+
+[node name="FishingGoalPopupCount1" type="Label" parent="FishingGoalPopupPanel"]
+layout_mode = 0
+offset_left = 382.0
+offset_top = 135.0
+offset_right = 527.0
+offset_bottom = 193.0
+mouse_filter = 2
+theme_override_colors/font_color = Color(0.345098, 0.207843, 0.168627, 1)
+theme_override_fonts/font = ExtResource("2_font")
+theme_override_font_sizes/font_size = 42
+horizontal_alignment = 1
+vertical_alignment = 1
+
+[node name="FishingGoalPopupCount2" type="Label" parent="FishingGoalPopupPanel"]
+layout_mode = 0
+offset_left = 382.0
+offset_top = 235.0
+offset_right = 527.0
+offset_bottom = 293.0
+mouse_filter = 2
+theme_override_colors/font_color = Color(0.345098, 0.207843, 0.168627, 1)
+theme_override_fonts/font = ExtResource("2_font")
+theme_override_font_sizes/font_size = 42
+horizontal_alignment = 1
+vertical_alignment = 1
+
+[node name="FishingGoalPopupCount3" type="Label" parent="FishingGoalPopupPanel"]
+layout_mode = 0
+offset_left = 382.0
+offset_top = 335.0
+offset_right = 527.0
+offset_bottom = 393.0
+mouse_filter = 2
+theme_override_colors/font_color = Color(0.345098, 0.207843, 0.168627, 1)
+theme_override_fonts/font = ExtResource("2_font")
+theme_override_font_sizes/font_size = 42
+horizontal_alignment = 1
+vertical_alignment = 1
+
+[node name="FishingGoalPopupTimeTitle" type="Label" parent="FishingGoalPopupPanel"]
+layout_mode = 0
+offset_left = 185.0
+offset_top = 415.0
+offset_right = 465.0
+offset_bottom = 457.0
+mouse_filter = 2
+theme_override_colors/font_color = Color(0.345098, 0.207843, 0.168627, 1)
+theme_override_fonts/font = ExtResource("2_font")
+theme_override_font_sizes/font_size = 29
+text = "TIME LIMIT"
+horizontal_alignment = 1
+vertical_alignment = 1
+
+[node name="FishingGoalPopupTimer" type="Label" parent="FishingGoalPopupPanel"]
+layout_mode = 0
+offset_left = 205.0
+offset_top = 463.0
+offset_right = 445.0
+offset_bottom = 518.0
+mouse_filter = 2
+theme_override_fonts/font = ExtResource("2_font")
+theme_override_font_sizes/font_size = 45
+horizontal_alignment = 1
+vertical_alignment = 1
+
+[node name="FishingGoalPopupFooter" type="Label" parent="FishingGoalPopupPanel"]
+layout_mode = 0
+offset_left = 115.0
+offset_top = 555.0
+offset_right = 535.0
+offset_bottom = 603.0
+mouse_filter = 2
+theme_override_colors/font_color = Color(0.345098, 0.207843, 0.168627, 1)
+theme_override_fonts/font = ExtResource("2_font")
+theme_override_font_sizes/font_size = 22
+text = "CLICK ANYWHERE TO START"
+horizontal_alignment = 1
+vertical_alignment = 1

@@ -1,0 +1,142 @@
+[gd_scene load_steps=3 format=3]
+
+[ext_resource type="Texture2D" path="res://assets/ui/fishing/popups/processed/fishing_catch_popup_background_v1.png" id="1_background"]
+[ext_resource type="FontFile" path="res://assets/fonts/original_handwriting/yufan_original_handwriting.ttf" id="2_font"]
+
+[node name="FishingCatchPopupOverlay" type="Button"]
+layout_mode = 3
+anchors_preset = 15
+anchor_right = 1.0
+anchor_bottom = 1.0
+grow_horizontal = 2
+grow_vertical = 2
+focus_mode = 0
+flat = true
+
+[node name="FishingCatchPopupDimmer" type="ColorRect" parent="."]
+layout_mode = 1
+anchors_preset = 15
+anchor_right = 1.0
+anchor_bottom = 1.0
+grow_horizontal = 2
+grow_vertical = 2
+mouse_filter = 2
+color = Color(0.09, 0.07, 0.06, 0.28)
+
+[node name="FishingCatchPopupPanel" type="Control" parent="."]
+layout_mode = 0
+offset_left = 315.0
+offset_top = 35.0
+offset_right = 965.0
+offset_bottom = 685.0
+mouse_filter = 2
+
+[node name="FishingCatchPopupBackground" type="TextureRect" parent="FishingCatchPopupPanel"]
+layout_mode = 1
+anchors_preset = 15
+anchor_right = 1.0
+anchor_bottom = 1.0
+grow_horizontal = 2
+grow_vertical = 2
+mouse_filter = 2
+texture = ExtResource("1_background")
+expand_mode = 1
+stretch_mode = 0
+
+[node name="FishingCatchPopupTitle" type="Label" parent="FishingCatchPopupPanel"]
+layout_mode = 0
+offset_left = 105.0
+offset_top = 42.0
+offset_right = 545.0
+offset_bottom = 102.0
+mouse_filter = 2
+theme_override_fonts/font = ExtResource("2_font")
+theme_override_font_sizes/font_size = 42
+text = "YOU CAUGHT:"
+horizontal_alignment = 1
+vertical_alignment = 1
+
+[node name="FishingCatchPopupFish1" type="TextureRect" parent="FishingCatchPopupPanel"]
+mouse_filter = 2
+expand_mode = 1
+stretch_mode = 5
+
+[node name="FishingCatchPopupFish2" type="TextureRect" parent="FishingCatchPopupPanel"]
+mouse_filter = 2
+expand_mode = 1
+stretch_mode = 5
+
+[node name="FishingCatchPopupFish3" type="TextureRect" parent="FishingCatchPopupPanel"]
+mouse_filter = 2
+expand_mode = 1
+stretch_mode = 5
+
+[node name="FishingCatchPopupFish4" type="TextureRect" parent="FishingCatchPopupPanel"]
+mouse_filter = 2
+expand_mode = 1
+stretch_mode = 5
+
+[node name="FishingCatchPopupFish5" type="TextureRect" parent="FishingCatchPopupPanel"]
+mouse_filter = 2
+expand_mode = 1
+stretch_mode = 5
+
+[node name="FishingCatchPopupFish6" type="TextureRect" parent="FishingCatchPopupPanel"]
+mouse_filter = 2
+expand_mode = 1
+stretch_mode = 5
+
+[node name="FishingCatchPopupCount1" type="Label" parent="FishingCatchPopupPanel"]
+mouse_filter = 2
+theme_override_colors/font_color = Color(0.345098, 0.207843, 0.168627, 1)
+theme_override_fonts/font = ExtResource("2_font")
+horizontal_alignment = 1
+vertical_alignment = 1
+
+[node name="FishingCatchPopupCount2" type="Label" parent="FishingCatchPopupPanel"]
+mouse_filter = 2
+theme_override_colors/font_color = Color(0.345098, 0.207843, 0.168627, 1)
+theme_override_fonts/font = ExtResource("2_font")
+horizontal_alignment = 1
+vertical_alignment = 1
+
+[node name="FishingCatchPopupCount3" type="Label" parent="FishingCatchPopupPanel"]
+mouse_filter = 2
+theme_override_colors/font_color = Color(0.345098, 0.207843, 0.168627, 1)
+theme_override_fonts/font = ExtResource("2_font")
+horizontal_alignment = 1
+vertical_alignment = 1
+
+[node name="FishingCatchPopupCount4" type="Label" parent="FishingCatchPopupPanel"]
+mouse_filter = 2
+theme_override_colors/font_color = Color(0.345098, 0.207843, 0.168627, 1)
+theme_override_fonts/font = ExtResource("2_font")
+horizontal_alignment = 1
+vertical_alignment = 1
+
+[node name="FishingCatchPopupCount5" type="Label" parent="FishingCatchPopupPanel"]
+mouse_filter = 2
+theme_override_colors/font_color = Color(0.345098, 0.207843, 0.168627, 1)
+theme_override_fonts/font = ExtResource("2_font")
+horizontal_alignment = 1
+vertical_alignment = 1
+
+[node name="FishingCatchPopupCount6" type="Label" parent="FishingCatchPopupPanel"]
+mouse_filter = 2
+theme_override_colors/font_color = Color(0.345098, 0.207843, 0.168627, 1)
+theme_override_fonts/font = ExtResource("2_font")
+horizontal_alignment = 1
+vertical_alignment = 1
+
+[node name="FishingCatchPopupFooter" type="Label" parent="FishingCatchPopupPanel"]
+layout_mode = 0
+offset_left = 110.0
+offset_top = 556.0
+offset_right = 540.0
+offset_bottom = 604.0
+mouse_filter = 2
+theme_override_colors/font_color = Color(0.345098, 0.207843, 0.168627, 1)
+theme_override_fonts/font = ExtResource("2_font")
+theme_override_font_sizes/font_size = 21
+horizontal_alignment = 1
+vertical_alignment = 1

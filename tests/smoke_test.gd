@@ -2844,8 +2844,17 @@ func run_tests() -> void:
 	game.fishing_game._pause_game()
 	check(game.fishing_game.state == game.fishing_game.GameState.SHOWING_RESULT and game.fishing_game.pause_overlay == null, "Fishing should ignore pause requests while a result popup is already open")
 	check(game.fishing_game.stats_panel.visible, "Fishing totals should remain embedded in the background while a popup is open")
-	check(game.fishing_game.stats_panel.get_parent() == game.fishing_game, "The statistics panel must remain a background-layer sibling, not become part of the popup")
-	check(game.fishing_game.result_overlay.get_index() > game.fishing_game.stats_panel.get_index(), "The popup must render above the background statistics panel")
+	var fishing_scene_view: Control = game.fishing_game.get_node("FishingView")
+	check(
+		fishing_scene_view.is_ancestor_of(game.fishing_game.stats_panel)
+		and not game.fishing_game.result_overlay.is_ancestor_of(game.fishing_game.stats_panel),
+		"The statistics panel must remain in the scene-backed HUD, not become part of the popup"
+	)
+	check(
+		game.fishing_game.result_overlay.get_parent() == game.fishing_game
+		and game.fishing_game.result_overlay.get_index() > fishing_scene_view.get_index(),
+		"The popup must render above the scene-backed fishing view"
+	)
 	check(game.fishing_game.main_background_view.texture == game.fishing_game.MAIN_SCREEN_TEXTURE, "Opening a popup must keep the normal fishing background")
 	var popup_stat_labels: Array[Node] = game.fishing_game.result_overlay.find_children("*", "Label", true, false).filter(func(label): return label.text.begins_with("LEVEL:"))
 	check(popup_stat_labels.is_empty(), "Result popups should not create a second statistics box")

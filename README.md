@@ -48,6 +48,12 @@
 
 `main.gd` 只负责进入/退出 Desktop 模式和页面导航。`DesktopCompanionController` 把鼠标输入、状态决策、窗口移动与 `PetAvatar` 动画组合起来；`DesktopCompanionStateMachine` 是不依赖 Godot 窗口的纯行为模型；`DesktopWindowHost` 则集中处理透明原生窗口、置顶、多显示器与主窗口恢复。新的行为规则应先加入状态机并通过纯状态测试，不要在 Controller 中增加互相依赖的布尔标记。
 
+## 钓鱼与玩家进度架构
+
+`GameStateStore` 是运行时共享进度的唯一所有者，`PlayerProgress` 负责类型化字段、数据约束和与旧 Dictionary 存档的双向转换。`HeartService` 集中处理扣心、离线恢复和倒计时；`FishingSession` 是不依赖 Node、贴图、音频或 Tween 的纯回合模型，管理关卡目标、倒计时、生成计划、重试补偿和一次性奖励。
+
+生产游戏通过 `src/fishing/fishing_game.tscn` 实例化钓鱼界面。主画面、HUD、Timer、音效播放器、暂停层和结果弹窗都定义在 `src/fishing/ui/` 的 `.tscn` 中；`fishing_game.gd` 只绑定节点、渲染动态鱼数据并转发玩家操作。测试和调试工具仍可以使用 `FishingGame.new()`，脚本会自动实例化同一份 `FishingView` 场景，不存在第二套 UI 实现。
+
 ## 原创字体
 
 手写原稿保存在 `dev_only/unused_assets/assets/font_source/original_handwriting_filled.png`，最终游戏使用的矢量字体是 `assets/fonts/original_handwriting/yufan_original_handwriting.ttf`。Godot 会在任意字号下实时抗锯齿渲染，颜色、描边和阴影由界面样式生成，不再缩放固定分辨率的字形图集。字体来自玩家原创手写内容，不依赖第三方商业字体许可。

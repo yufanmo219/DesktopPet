@@ -8,7 +8,7 @@ const LEGACY_PROGRESS_SAVE_KEY := "pinball_stats"
 const CURRENT_SAVE_VERSION := 8
 const MAX_PETS := 9
 const PetAvatarScript = preload("res://src/pet_avatar.gd")
-const FishingGameScript = preload("res://src/fishing_game.gd")
+const FishingGameScene = preload("res://src/fishing/fishing_game.tscn")
 const AquariumScreenScript = preload("res://src/aquarium_screen.gd")
 const AquariumLoadingScreenScript = preload("res://src/aquarium_loading_screen.gd")
 const StoreScreenScript = preload("res://src/store_screen.gd")
@@ -545,7 +545,7 @@ func show_fishing() -> void:
 	var music_manager := get_node_or_null("/root/MusicManager")
 	if music_manager != null:
 		music_manager.play_fishing_music()
-	fishing_game = FishingGameScript.new()
+	fishing_game = FishingGameScene.instantiate()
 	fishing_game.configure(pet, get_progress_stats(), game_state_store)
 	fishing_game.catch_completed.connect(_on_fishing_catch_completed)
 	fishing_game.back_requested.connect(_on_fishing_back_requested)
