@@ -92,7 +92,7 @@ func _run_tests() -> void:
 	double_click.button_index = MOUSE_BUTTON_LEFT
 	double_click.pressed = true
 	double_click.double_click = true
-	main._on_home_pet_input(double_click)
+	main.home_screen.handle_pet_input(double_click)
 	_check(main.avatar.is_playing_interaction(), "Home double-click should start the repaired Mochi animation")
 	main.enter_desktop_mode()
 	main.avatar.set_process(false)
