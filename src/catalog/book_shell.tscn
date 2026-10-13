@@ -1,0 +1,61 @@
+[gd_scene load_steps=2 format=3]
+
+[ext_resource type="Texture2D" path="res://assets/ui/store/concepts/adopt_cat_store_background_v3.png" id="1_background"]
+
+[node name="CatalogBookShell" type="Control"]
+layout_mode = 3
+anchors_preset = 15
+anchor_right = 1.0
+anchor_bottom = 1.0
+grow_horizontal = 2
+grow_vertical = 2
+mouse_filter = 2
+
+[node name="BookBackground" type="TextureRect" parent="."]
+z_index = -10
+layout_mode = 1
+anchors_preset = 15
+anchor_right = 1.0
+anchor_bottom = 1.0
+grow_horizontal = 2
+grow_vertical = 2
+mouse_filter = 2
+texture = ExtResource("1_background")
+expand_mode = 1
+stretch_mode = 0
+
+[node name="CatalogTitle" type="Label" parent="."]
+z_index = 10
+layout_mode = 0
+offset_left = 112.0
+offset_top = 68.0
+offset_right = 386.0
+offset_bottom = 130.0
+theme_override_colors/font_color = Color(0.356863, 0.219608, 0.184314, 1)
+theme_override_font_sizes/font_size = 34
+text = "CATALOG"
+horizontal_alignment = 1
+vertical_alignment = 1
+autowrap_mode = 2
+
+[node name="ExperienceLabel" type="Label" parent="."]
+z_index = 10
+layout_mode = 0
+offset_left = 918.0
+offset_top = 70.0
+offset_right = 1185.0
+offset_bottom = 113.0
+theme_override_colors/font_color = Color(0.356863, 0.219608, 0.184314, 1)
+theme_override_font_sizes/font_size = 29
+text = "YOUR XP: 0"
+horizontal_alignment = 1
+vertical_alignment = 1
+
+[node name="BackButton" type="Button" parent="."]
+z_index = 20
+layout_mode = 0
+offset_left = 42.0
+offset_top = 641.0
+offset_right = 206.0
+offset_bottom = 690.0
+text = "BACK"
