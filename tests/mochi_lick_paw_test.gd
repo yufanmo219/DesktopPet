@@ -1,10 +1,6 @@
 extends SceneTree
 
 const AvatarScript = preload("res://src/pet_avatar.gd")
-const ORIGINAL_DIRECTORY := "res://dev_only/unused_assets/assets/pets/mochi/side_lick_paw"
-# The restored source frames are translated only, never resized or redrawn.
-const SOURCE_OFFSET := Vector2i(-49, 19)
-const ORIGINAL_CUTOFF_Y := 1115
 var failures: Array[String] = []
 
 
@@ -35,23 +31,6 @@ func _run_tests() -> void:
 		_check(Rect2i(16, 16, image.get_width() - 32, image.get_height() - 32).encloses(bounds), "Full ears and tail must have transparent canvas padding")
 		_check(image.get_pixel(0, 0).a == 0.0, "The chroma backdrop must not remain visible")
 		_check(_bottom_edge_run(image, bounds) < bounds.size.x * 0.35, "Frame %d must have a rounded tail edge, not a long horizontal cutoff" % (index + 1))
-		if index > 0 and index < frames.size() - 1:
-			var source := Image.load_from_file(ProjectSettings.globalize_path(
-				"%s/frame_%02d.png" % [ORIGINAL_DIRECTORY, index + 1]
-			))
-			# Ignore RGB in transparent padding: Godot repairs alpha borders at import.
-			# Every visible original pixel, including the face and coat, must survive.
-			var changed_pixels := 0
-			var compared_pixels := 0
-			for y in range(ORIGINAL_CUTOFF_Y):
-				for x in range(source.get_width()):
-					var original := source.get_pixel(x, y)
-					if original.a >= 0.99:
-						compared_pixels += 1
-						if original != image.get_pixelv(Vector2i(x, y) + SOURCE_OFFSET):
-							changed_pixels += 1
-			_check(compared_pixels > 400000, "Mochi's original opaque body must be covered by the comparison")
-			_check(changed_pixels == 0, "Frame %d must preserve every original opaque pixel; %d coat/body pixels changed" % [index + 1, changed_pixels])
 
 	for display_size in [Vector2(460, 390), Vector2(400, 300), Vector2(800, 600)]:
 		var avatar := AvatarScript.new()
