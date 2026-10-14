@@ -35,6 +35,17 @@ def parse_args() -> argparse.Namespace:
         default=180.0,
         help="Per-test timeout in seconds (default: 180).",
     )
+    parser.add_argument(
+        "--import-timeout",
+        type=float,
+        default=600.0,
+        help="Project import timeout in seconds (default: 600).",
+    )
+    parser.add_argument(
+        "--skip-import",
+        action="store_true",
+        help="Skip the one-time Godot resource import performed before tests.",
+    )
     parser.add_argument("--list", action="store_true", help="List selected tests and exit.")
     return parser.parse_args()
 
@@ -72,6 +83,43 @@ def selected_tests(filters: list[str]) -> list[Path]:
         for test in tests
         if any(value in test.name.lower() for value in lowered_filters)
     ]
+
+
+def import_project(godot: str, timeout: float) -> tuple[bool, float, str]:
+    command = [
+        godot,
+        "--headless",
+        "--path",
+        str(PROJECT_ROOT),
+        "--import",
+    ]
+    started = time.monotonic()
+    try:
+        completed = subprocess.run(
+            command,
+            cwd=PROJECT_ROOT,
+            capture_output=True,
+            text=True,
+            timeout=timeout,
+            check=False,
+        )
+    except subprocess.TimeoutExpired as error:
+        elapsed = time.monotonic() - started
+        output_parts: list[str] = []
+        for part in [error.stdout, error.stderr]:
+            if isinstance(part, bytes):
+                output_parts.append(part.decode(errors="replace"))
+            elif part:
+                output_parts.append(part)
+        return False, elapsed, (
+            f"Godot project import timed out after {timeout:.1f}s.\n"
+            + "".join(output_parts)
+        )
+    elapsed = time.monotonic() - started
+    output = "\n".join(
+        part.strip() for part in [completed.stdout, completed.stderr] if part.strip()
+    )
+    return completed.returncode == 0, elapsed, output
 
 
 def run_test(godot: str, test: Path, log_directory: Path, timeout: float) -> tuple[bool, float, str]:
@@ -129,6 +177,21 @@ def main() -> int:
         return 0
 
     godot = find_godot(args.godot)
+    if not args.skip_import:
+        imported, import_elapsed, import_output = import_project(
+            godot,
+            args.import_timeout,
+        )
+        import_result = "PASS" if imported else "FAIL"
+        print(
+            f"[IMPORT] {import_result} Godot resources ({import_elapsed:.2f}s)",
+            flush=True,
+        )
+        if not imported:
+            if import_output:
+                print(import_output, file=sys.stderr)
+            return 1
+
     failures: list[tuple[Path, str]] = []
     suite_started = time.monotonic()
     with tempfile.TemporaryDirectory(prefix="desktop-pet-tests-") as temporary_directory:
