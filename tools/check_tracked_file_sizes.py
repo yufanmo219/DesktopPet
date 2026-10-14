@@ -1,5 +1,5 @@
 #!/usr/bin/env python3
-"""Reject newly tracked files that need the repository's future LFS policy."""
+"""Reject oversized blobs stored directly in Git instead of Git LFS."""
 
 from __future__ import annotations
 
@@ -26,28 +26,32 @@ def main() -> int:
     args = parse_args()
     maximum_bytes = int(args.max_mib * 1024 * 1024)
     result = subprocess.run(
-        ["git", "ls-files", "-z"],
+        ["git", "ls-tree", "-lr", "-z", "--full-tree", "HEAD"],
         cwd=PROJECT_ROOT,
         check=True,
         capture_output=True,
     )
     oversized: list[tuple[int, Path]] = []
-    for raw_path in result.stdout.split(b"\0"):
-        if not raw_path:
+    for record in result.stdout.split(b"\0"):
+        if not record:
             continue
-        relative_path = Path(raw_path.decode(errors="surrogateescape"))
-        absolute_path = PROJECT_ROOT / relative_path
-        if absolute_path.is_file() and absolute_path.stat().st_size > maximum_bytes:
-            oversized.append((absolute_path.stat().st_size, relative_path))
+        metadata, raw_path = record.split(b"\t", 1)
+        fields = metadata.split()
+        if len(fields) != 4 or fields[1] != b"blob":
+            continue
+        blob_size = int(fields[3])
+        if blob_size > maximum_bytes:
+            relative_path = Path(raw_path.decode(errors="surrogateescape"))
+            oversized.append((blob_size, relative_path))
     if oversized:
         print(
-            f"Tracked files exceed the {args.max_mib:g} MiB pre-LFS limit:",
+            f"Direct Git blobs exceed the {args.max_mib:g} MiB limit:",
         )
         for size, path in sorted(oversized, reverse=True):
             print(f"  {size / 1024 / 1024:.2f} MiB  {path}")
-        print("Optimize the asset or complete the coordinated Git LFS migration.")
+        print("Move approved binary assets to Git LFS or optimize the file.")
         return 1
-    print(f"Tracked file size check passed ({args.max_mib:g} MiB maximum).")
+    print(f"Direct Git blob size check passed ({args.max_mib:g} MiB maximum).")
     return 0
 
 

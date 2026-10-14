@@ -68,7 +68,10 @@ jobs:
           python -c "import os, subprocess;
           subprocess.run([os.environ['GODOT_BIN'], '--version'], check=True)"
 
-      - name: Enforce pre-LFS file-size policy
+      - name: Verify Git LFS objects
+        run: git lfs fsck --objects --pointers HEAD
+
+      - name: Enforce direct Git blob-size policy
         run: python tools/check_tracked_file_sizes.py
 
       - name: Run complete test suite

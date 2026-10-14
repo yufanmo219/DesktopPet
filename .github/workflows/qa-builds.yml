@@ -41,6 +41,9 @@ jobs:
         with:
           python-version: "3.13"
 
+      - name: Verify Git LFS objects
+        run: git lfs fsck --objects --pointers HEAD
+
       - name: Install Godot and templates on macOS
         if: runner.os == 'macOS'
         shell: bash

@@ -47,22 +47,35 @@ Do not commit certificates, passwords, provisioning data, API keys, or decoded
 temporary keychains. Production release jobs should fail when protected secrets
 are absent; they should never silently publish unsigned binaries.
 
-## Git LFS migration boundary
+## Git LFS asset policy and migration record
 
-The current checkout contains about 314 MiB of runtime assets and the existing
-Git object pack is about 2.34 GiB. Git LFS is not installed in the current
-development environment, and the repository's existing binary history is
-already shared by `master`, `codex/windows-export`, and `codex/macos-export`.
+Git LFS is required for this repository. `.gitattributes` tracks every `*.png`
+and `*.wav`; source code, fonts, project settings, and release artifacts remain
+ordinary Git content. GitHub Actions checks out LFS objects and runs
+`git lfs fsck --objects --pointers HEAD` before tests or QA exports.
 
-Adding only a `.gitattributes` file would not migrate existing objects and could
-leave contributors with pointer files they cannot materialize. A real migration
-therefore needs a coordinated maintenance window:
+The binary history migration completed on 2026-10-14 for `master`,
+`codex/industry-refactor-step-1`, `codex/windows-export`, and
+`codex/macos-export`. It uploaded 769 unique LFS objects (about 315 MB) before
+the four branch tips were updated with explicit force-with-lease guards.
+Migration-time recovery refs are retained on GitHub under:
 
-1. Confirm GitHub LFS storage/bandwidth and install Git LFS on every build host.
-2. Freeze all three long-lived branches.
-3. Run a full `git lfs migrate import` for approved binary patterns.
-4. Force-push the rewritten branch tips, then have every contributor reclone.
-5. Enable `lfs: true` in checkout jobs and verify clean Windows/macOS exports.
+- `backup/pre-lfs-2026-10-14/master`
+- `backup/pre-lfs-2026-10-14/industry-refactor`
+- `backup/pre-lfs-2026-10-14/windows-export`
+- `backup/pre-lfs-2026-10-14/macos-export`
 
-Until that coordinated migration, CI uses shallow clones and new individual
-assets are limited to 20 MiB by `tools/check_tracked_file_sizes.py`.
+Do not merge a pre-migration backup ref into rewritten history. Recover an old
+change by generating a patch or carefully cherry-picking it, then confirm that
+no raw PNG or WAV blob was reintroduced.
+
+Existing clones should be replaced with a fresh clone after installing Git LFS.
+If a contributor has no local work and intentionally repairs a clone in place,
+they may fetch, hard-reset their branch to its rewritten remote tip, and run
+`git lfs pull`. Back up local commits first; old and rewritten commit IDs are
+unrelated.
+
+`tools/check_tracked_file_sizes.py` examines committed Git blobs rather than
+materialized worktree files. CI rejects direct Git blobs above 20 MiB while LFS
+pointers remain small; `git lfs fsck` independently verifies that tracked LFS
+paths contain valid pointers and available objects.

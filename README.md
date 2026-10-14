@@ -106,4 +106,4 @@ python3 tools/export_builds.py --target windows
 python3 tools/export_builds.py --target macos
 ```
 
-GitHub CI 会在 macOS 与 Windows 上运行完整测试；手动触发 `QA builds` 会生成保留 14 天的 QA artifacts。正式签名、notarization、证书密钥边界以及 Git LFS 的协调迁移步骤记录在 `docs/release.md`。
+GitHub CI 会在 macOS 与 Windows 上拉取并校验 Git LFS 对象，然后运行完整测试；手动触发 `QA builds` 会生成保留 14 天的 QA artifacts。PNG/WAV 历史已迁移到 Git LFS，新环境需要先安装 Git LFS。正式签名、notarization、证书密钥边界以及迁移恢复说明记录在 `docs/release.md`。
