@@ -1,6 +1,6 @@
 # Desktop Pet
 
-[English](README.md) | [简体中文](docs/README.zh-CN.md)
+[English](README.md) | [Chinese documentation](docs/README.zh-CN.md)
 
 [![CI](https://github.com/yufanmo219/DesktopPet/actions/workflows/ci.yml/badge.svg)](https://github.com/yufanmo219/DesktopPet/actions/workflows/ci.yml)
 
