@@ -53,9 +53,11 @@ func _visible_component_count(image: Image) -> int:
 
 
 func _initialize() -> void:
+	var avatar := AvatarScript.new()
+	avatar.set_pet({"id": "maine_coon", "name": "Cedar"})
 	var directions := {
-		"left": AvatarScript.MAINE_COON_MOVE_LEFT_FRAMES,
-		"right": AvatarScript.MAINE_COON_MOVE_RIGHT_FRAMES,
+		"left": avatar.MAINE_COON_MOVE_LEFT_FRAMES,
+		"right": avatar.MAINE_COON_MOVE_RIGHT_FRAMES,
 	}
 	for direction in directions:
 		var frames: Array = directions[direction]
@@ -75,5 +77,6 @@ func _initialize() -> void:
 				push_error("Maine Coon %s frame %02d contains detached backdrop pixels" % [direction, index + 1])
 				quit(1)
 				return
+	avatar.free()
 	print("MAINE COON WALK CLEANUP TEST PASS: all 24 frames have clean leg gaps and one intact subject")
 	quit(0)

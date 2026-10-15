@@ -1,0 +1,79 @@
+name: CI
+
+on:
+  push:
+  pull_request:
+  workflow_dispatch:
+
+permissions:
+  contents: read
+
+concurrency:
+  group: ci-${{ github.workflow }}-${{ github.ref }}
+  cancel-in-progress: true
+
+env:
+  GODOT_VERSION: 4.7.1
+  GODOT_RELEASE: 4.7.1-stable
+
+jobs:
+  tests:
+    name: Godot tests (${{ matrix.os }})
+    runs-on: ${{ matrix.os }}
+    timeout-minutes: 30
+    strategy:
+      fail-fast: false
+      matrix:
+        os: [macos-14, windows-2022]
+
+    steps:
+      - name: Check out source
+        uses: actions/checkout@v4
+        with:
+          fetch-depth: 1
+          lfs: true
+
+      - name: Set up Python
+        uses: actions/setup-python@v5
+        with:
+          python-version: "3.13"
+
+      - name: Install Godot on macOS
+        if: runner.os == 'macOS'
+        shell: bash
+        run: |
+          set -euo pipefail
+          archive="$RUNNER_TEMP/godot.zip"
+          app="$RUNNER_TEMP/Godot.app"
+          curl --fail --location --retry 3 \
+            "https://github.com/godotengine/godot/releases/download/${GODOT_RELEASE}/Godot_v${GODOT_RELEASE}_macos.universal.zip" \
+            --output "$archive"
+          ditto -x -k "$archive" "$RUNNER_TEMP"
+          echo "GODOT_BIN=$app/Contents/MacOS/Godot" >> "$GITHUB_ENV"
+
+      - name: Install Godot on Windows
+        if: runner.os == 'Windows'
+        shell: pwsh
+        run: |
+          $archive = Join-Path $env:RUNNER_TEMP "godot.zip"
+          $folder = Join-Path $env:RUNNER_TEMP "godot"
+          $url = "https://github.com/godotengine/godot/releases/download/$env:GODOT_RELEASE/Godot_v$env:GODOT_RELEASE" + "_win64.exe.zip"
+          Invoke-WebRequest -Uri $url -OutFile $archive
+          Expand-Archive -Path $archive -DestinationPath $folder -Force
+          $executable = Get-ChildItem -Path $folder -Filter "*.exe" | Select-Object -First 1
+          "GODOT_BIN=$($executable.FullName)" | Out-File -FilePath $env:GITHUB_ENV -Encoding utf8 -Append
+
+      - name: Verify engine version
+        run: >-
+          python -c "import os, subprocess;
+          subprocess.run([os.environ['GODOT_BIN'], '--version'], check=True)"
+
+      - name: Verify Git LFS objects
+        run: git lfs fsck --objects --pointers HEAD
+
+      - name: Enforce direct Git blob-size policy
+        run: python tools/check_tracked_file_sizes.py
+
+      - name: Run complete test suite
+        shell: bash
+        run: python tools/run_tests.py --godot "$GODOT_BIN" --timeout 300

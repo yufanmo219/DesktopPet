@@ -26,9 +26,11 @@ func _fail(message: String) -> void:
 
 
 func _initialize() -> void:
+	var avatar := AvatarScript.new()
+	avatar.set_pet({"id": "golden_munchkin", "name": "Honey"})
 	var directions := {
-		"left": AvatarScript.GOLDEN_MUNCHKIN_MOVE_LEFT_FRAMES,
-		"right": AvatarScript.GOLDEN_MUNCHKIN_MOVE_RIGHT_FRAMES,
+		"left": avatar.GOLDEN_MUNCHKIN_MOVE_LEFT_FRAMES,
+		"right": avatar.GOLDEN_MUNCHKIN_MOVE_RIGHT_FRAMES,
 	}
 	for direction: String in directions:
 		var frames: Array = directions[direction]
@@ -53,5 +55,6 @@ func _initialize() -> void:
 				_fail("Honey still has a backdrop pixel at %s in %s" % [point, path])
 				return
 
+	avatar.free()
 	print("GOLDEN MUNCHKIN WALK CLEANUP TEST PASS: all sixteen frames keep their fixed canvas and every known leg-gap remnant is transparent")
 	quit(0)

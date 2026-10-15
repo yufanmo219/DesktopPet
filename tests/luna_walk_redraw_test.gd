@@ -18,8 +18,10 @@ func _check(condition: bool, message: String) -> void:
 
 
 func _run() -> void:
-	var left_frames := AvatarScript.LUNA_MOVE_LEFT_FRAMES
-	var right_frames := AvatarScript.LUNA_MOVE_RIGHT_FRAMES
+	var luna_assets := AvatarScript.new()
+	luna_assets.set_pet({"id": "luna", "name": "Luna"})
+	var left_frames := luna_assets.LUNA_MOVE_LEFT_FRAMES
+	var right_frames := luna_assets.LUNA_MOVE_RIGHT_FRAMES
 	_check(left_frames.size() == 12 and right_frames.size() == 12, "Both new walking directions must have twelve frames")
 	_check(AvatarScript.LUNA_MOVE_FPS == 12.0 and AvatarScript.MOVE_FPS == 7.0, "Only Luna's new walk cadence may change")
 	var leg_silhouettes: Dictionary = {}
@@ -91,15 +93,15 @@ func _run() -> void:
 			_check(avatar.move_frame == 0 and avatar.move_frame_elapsed == 0.0, "A real direction change should start the opposite cycle cleanly")
 			_check(avatar.cat_sprite.position.is_equal_approx(position) and avatar.cat_sprite.scale.is_equal_approx(scale_value), "Turning around must preserve the exact canvas anchor and scale")
 			avatar.stop_move()
-			_check(avatar.cat_sprite.texture == AvatarScript.LUNA_IDLE_TEXTURE, "Stopping must restore the unchanged seated Luna")
+			_check(avatar.cat_sprite.texture == avatar.LUNA_IDLE_TEXTURE, "Stopping must restore the unchanged seated Luna")
 		avatar.set_mood("sleep")
 		avatar.play_move(Vector2.LEFT)
-		_check(avatar.cat_sprite.texture == AvatarScript.LUNA_SLEEP_TEXTURE and avatar.move_time_remaining == 0.0, "Sleeping must block walking")
-		_check(AvatarScript.LUNA_SLEEP_IDLE_FRAMES[2].resource_path.contains("face_wash_v2/"), "The user's selected sleeping animation must remain untouched")
+		_check(avatar.cat_sprite.texture == avatar.LUNA_SLEEP_TEXTURE and avatar.move_time_remaining == 0.0, "Sleeping must block walking")
+		_check(avatar.LUNA_SLEEP_IDLE_FRAMES[2].resource_path.contains("face_wash_v2/"), "The user's selected sleeping animation must remain untouched")
 		avatar.set_mood("idle")
 		avatar.play_move(Vector2.LEFT)
 		avatar._process(1.16)
-		_check(avatar.cat_sprite.texture == AvatarScript.LUNA_IDLE_TEXTURE, "The normal movement timeout must still return to idle")
+		_check(avatar.cat_sprite.texture == avatar.LUNA_IDLE_TEXTURE, "The normal movement timeout must still return to idle")
 		avatar.set_pet({"id": "mochi", "name": "Mochi"})
 		avatar.play_move(Vector2.LEFT)
 		avatar._process(0.10)
@@ -109,6 +111,7 @@ func _run() -> void:
 		avatar.queue_free()
 		await process_frame
 
+	luna_assets.free()
 	if OS.get_cmdline_user_args().has("--capture-walk"):
 		await _capture_walk()
 	if failures.is_empty():

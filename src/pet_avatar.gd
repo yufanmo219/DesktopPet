@@ -1,530 +1,66 @@
 class_name PetAvatar
 extends Control
 
-const PET_TEXTURE: Texture2D = preload("res://assets/pets/current/orange_cat.png")
-const SLEEP_TEXTURE: Texture2D = preload("res://assets/pets/current/sprites/orange_cat_sleep.png")
-const MOCHI_HOME_TAIL_BLINK_FRAMES: Array[Texture2D] = [
-	preload("res://assets/pets/mochi/home_tail_blink/frame_01.png"),
-	preload("res://assets/pets/mochi/home_tail_blink/frame_02.png"),
-	preload("res://assets/pets/mochi/home_tail_blink/frame_03.png"),
-	preload("res://assets/pets/mochi/home_tail_blink/frame_04.png"),
-	preload("res://assets/pets/mochi/home_tail_blink/frame_05.png"),
-	preload("res://assets/pets/mochi/home_tail_blink/frame_06.png"),
-	preload("res://assets/pets/mochi/home_tail_blink/frame_07.png"),
-	preload("res://assets/pets/mochi/home_tail_blink/frame_08.png")
-]
-const MOCHI_SLEEP_TEXTURE: Texture2D = preload("res://assets/pets/mochi/sleep/mochi_sleep.png")
-const MOCHI_SLEEP_EAR_TWITCH_FRAMES: Array[Texture2D] = [
-	preload("res://assets/pets/mochi/sleep/ear_twitch/frame_01.png"),
-	preload("res://assets/pets/mochi/sleep/ear_twitch/frame_02.png"),
-	preload("res://assets/pets/mochi/sleep/ear_twitch/frame_03.png"),
-	preload("res://assets/pets/mochi/sleep/ear_twitch/frame_04.png"),
-	preload("res://assets/pets/mochi/sleep/ear_twitch/frame_05.png"),
-	preload("res://assets/pets/mochi/sleep/ear_twitch/frame_06.png"),
-	preload("res://assets/pets/mochi/sleep/ear_twitch/frame_07.png"),
-	preload("res://assets/pets/mochi/sleep/ear_twitch/frame_08.png")
-]
-const MOCHI_LICK_PAW_FRAMES: Array[Texture2D] = [
-	preload("res://assets/pets/mochi/side_lick_paw_v3/frame_01.png"),
-	preload("res://assets/pets/mochi/side_lick_paw_v3/frame_02.png"),
-	preload("res://assets/pets/mochi/side_lick_paw_v3/frame_03.png"),
-	preload("res://assets/pets/mochi/side_lick_paw_v3/frame_04.png"),
-	preload("res://assets/pets/mochi/side_lick_paw_v3/frame_05.png"),
-	preload("res://assets/pets/mochi/side_lick_paw_v3/frame_06.png"),
-	preload("res://assets/pets/mochi/side_lick_paw_v3/frame_07.png"),
-	preload("res://assets/pets/mochi/side_lick_paw_v3/frame_08.png"),
-	preload("res://assets/pets/mochi/side_lick_paw_v3/frame_09.png"),
-	preload("res://assets/pets/mochi/side_lick_paw_v3/frame_10.png"),
-	preload("res://assets/pets/mochi/side_lick_paw_v3/frame_11.png"),
-	preload("res://assets/pets/mochi/side_lick_paw_v3/frame_12.png")
-]
-const MOCHI_MOVE_LEFT_FRAMES: Array[Texture2D] = [
-	preload("res://assets/pets/mochi/walk_left/frame_01.png"),
-	preload("res://assets/pets/mochi/walk_left/frame_02.png"),
-	preload("res://assets/pets/mochi/walk_left/frame_03.png"),
-	preload("res://assets/pets/mochi/walk_left/frame_04.png"),
-	preload("res://assets/pets/mochi/walk_left/frame_05.png"),
-	preload("res://assets/pets/mochi/walk_left/frame_06.png"),
-	preload("res://assets/pets/mochi/walk_left/frame_07.png"),
-	preload("res://assets/pets/mochi/walk_left/frame_08.png"),
-	preload("res://assets/pets/mochi/walk_left/frame_09.png"),
-	preload("res://assets/pets/mochi/walk_left/frame_10.png"),
-	preload("res://assets/pets/mochi/walk_left/frame_11.png"),
-	preload("res://assets/pets/mochi/walk_left/frame_12.png")
-]
-const MOCHI_MOVE_RIGHT_FRAMES: Array[Texture2D] = [
-	preload("res://assets/pets/mochi/walk_right/frame_01.png"),
-	preload("res://assets/pets/mochi/walk_right/frame_02.png"),
-	preload("res://assets/pets/mochi/walk_right/frame_03.png"),
-	preload("res://assets/pets/mochi/walk_right/frame_04.png"),
-	preload("res://assets/pets/mochi/walk_right/frame_05.png"),
-	preload("res://assets/pets/mochi/walk_right/frame_06.png"),
-	preload("res://assets/pets/mochi/walk_right/frame_07.png"),
-	preload("res://assets/pets/mochi/walk_right/frame_08.png"),
-	preload("res://assets/pets/mochi/walk_right/frame_09.png"),
-	preload("res://assets/pets/mochi/walk_right/frame_10.png"),
-	preload("res://assets/pets/mochi/walk_right/frame_11.png"),
-	preload("res://assets/pets/mochi/walk_right/frame_12.png")
-]
-const BISCUIT_IDLE_TEXTURE: Texture2D = preload(
-	"res://assets/pets/biscuit/home/biscuit_side_sitting.png"
-)
-const BISCUIT_SLEEP_TEXTURE: Texture2D = preload(
-	"res://assets/pets/biscuit/sleep/biscuit_sleep.png"
-)
-const BISCUIT_BUTTERFLY_FRAMES: Array[Texture2D] = [
-	preload("res://assets/pets/biscuit/desktop/butterfly/frame_01.png"),
-	preload("res://assets/pets/biscuit/desktop/butterfly/frame_02.png"),
-	preload("res://assets/pets/biscuit/desktop/butterfly/frame_03.png"),
-	preload("res://assets/pets/biscuit/desktop/butterfly/frame_04.png"),
-	preload("res://assets/pets/biscuit/desktop/butterfly/frame_05.png"),
-	preload("res://assets/pets/biscuit/desktop/butterfly/frame_06.png"),
-	preload("res://assets/pets/biscuit/desktop/butterfly/frame_07.png"),
-	preload("res://assets/pets/biscuit/desktop/butterfly/frame_08.png"),
-	preload("res://assets/pets/biscuit/desktop/butterfly/frame_09.png"),
-	preload("res://assets/pets/biscuit/desktop/butterfly/frame_10.png"),
-	preload("res://assets/pets/biscuit/desktop/butterfly/frame_11.png"),
-	preload("res://assets/pets/biscuit/desktop/butterfly/frame_12.png"),
-	preload("res://assets/pets/biscuit/desktop/butterfly/frame_13.png"),
-	preload("res://assets/pets/biscuit/desktop/butterfly/frame_14.png"),
-	preload("res://assets/pets/biscuit/desktop/butterfly/frame_15.png"),
-	preload("res://assets/pets/biscuit/desktop/butterfly/frame_16.png")
-]
-const BISCUIT_MOVE_LEFT_FRAMES: Array[Texture2D] = [
-	preload("res://assets/pets/biscuit/walk_left/frame_01.png"),
-	preload("res://assets/pets/biscuit/walk_left/frame_02.png"),
-	preload("res://assets/pets/biscuit/walk_left/frame_03.png"),
-	preload("res://assets/pets/biscuit/walk_left/frame_04.png"),
-	preload("res://assets/pets/biscuit/walk_left/frame_05.png"),
-	preload("res://assets/pets/biscuit/walk_left/frame_06.png"),
-	preload("res://assets/pets/biscuit/walk_left/frame_07.png"),
-	preload("res://assets/pets/biscuit/walk_left/frame_08.png"),
-	preload("res://assets/pets/biscuit/walk_left/frame_09.png"),
-	preload("res://assets/pets/biscuit/walk_left/frame_10.png"),
-	preload("res://assets/pets/biscuit/walk_left/frame_11.png"),
-	preload("res://assets/pets/biscuit/walk_left/frame_12.png")
-]
-const BISCUIT_MOVE_RIGHT_FRAMES: Array[Texture2D] = [
-	preload("res://assets/pets/biscuit/walk_right/frame_01.png"),
-	preload("res://assets/pets/biscuit/walk_right/frame_02.png"),
-	preload("res://assets/pets/biscuit/walk_right/frame_03.png"),
-	preload("res://assets/pets/biscuit/walk_right/frame_04.png"),
-	preload("res://assets/pets/biscuit/walk_right/frame_05.png"),
-	preload("res://assets/pets/biscuit/walk_right/frame_06.png"),
-	preload("res://assets/pets/biscuit/walk_right/frame_07.png"),
-	preload("res://assets/pets/biscuit/walk_right/frame_08.png"),
-	preload("res://assets/pets/biscuit/walk_right/frame_09.png"),
-	preload("res://assets/pets/biscuit/walk_right/frame_10.png"),
-	preload("res://assets/pets/biscuit/walk_right/frame_11.png"),
-	preload("res://assets/pets/biscuit/walk_right/frame_12.png")
-]
-const LUNA_IDLE_TEXTURE: Texture2D = preload(
-	"res://assets/pets/russian_blue/home/luna_side_sitting.png"
-)
-const LUNA_SLEEP_TEXTURE: Texture2D = preload(
-	"res://assets/pets/russian_blue/sleep/luna_sleep_v2.png"
-)
-const LUNA_SLEEP_IDLE_FRAMES: Array[Texture2D] = [
-	LUNA_SLEEP_TEXTURE,
-	preload("res://assets/pets/russian_blue/sleep/face_wash_v2/frame_02.png"),
-	preload("res://assets/pets/russian_blue/sleep/face_wash_v2/frame_03.png"),
-	preload("res://assets/pets/russian_blue/sleep/face_wash_v2/frame_04.png"),
-	preload("res://assets/pets/russian_blue/sleep/face_wash_v2/frame_05.png"),
-	preload("res://assets/pets/russian_blue/sleep/face_wash_v2/frame_06.png"),
-	preload("res://assets/pets/russian_blue/sleep/face_wash_v2/frame_07.png"),
-	preload("res://assets/pets/russian_blue/sleep/face_wash_v2/frame_08.png"),
-	preload("res://assets/pets/russian_blue/sleep/face_wash_v2/frame_09.png"),
-	preload("res://assets/pets/russian_blue/sleep/face_wash_v2/frame_10.png"),
-	preload("res://assets/pets/russian_blue/sleep/face_wash_v2/frame_11.png"),
-	LUNA_SLEEP_TEXTURE
-]
-const LUNA_STRETCH_YAWN_FRAMES: Array[Texture2D] = [
-	preload("res://assets/pets/russian_blue/desktop/stretch_yawn/frame_01.png"),
-	preload("res://assets/pets/russian_blue/desktop/stretch_yawn/frame_02.png"),
-	preload("res://assets/pets/russian_blue/desktop/stretch_yawn/frame_03.png"),
-	preload("res://assets/pets/russian_blue/desktop/stretch_yawn/frame_04.png"),
-	preload("res://assets/pets/russian_blue/desktop/stretch_yawn/frame_05.png"),
-	preload("res://assets/pets/russian_blue/desktop/stretch_yawn/frame_06.png"),
-	preload("res://assets/pets/russian_blue/desktop/stretch_yawn/frame_07.png"),
-	preload("res://assets/pets/russian_blue/desktop/stretch_yawn/frame_08.png"),
-	preload("res://assets/pets/russian_blue/desktop/stretch_yawn/frame_09.png"),
-	preload("res://assets/pets/russian_blue/desktop/stretch_yawn/frame_10.png"),
-	preload("res://assets/pets/russian_blue/desktop/stretch_yawn/frame_11.png"),
-	preload("res://assets/pets/russian_blue/desktop/stretch_yawn/frame_12.png")
-]
-const LUNA_MOVE_LEFT_FRAMES: Array[Texture2D] = [
-	preload("res://assets/pets/russian_blue/walk_left_v3/frame_01.png"),
-	preload("res://assets/pets/russian_blue/walk_left_v3/frame_02.png"),
-	preload("res://assets/pets/russian_blue/walk_left_v3/frame_03.png"),
-	preload("res://assets/pets/russian_blue/walk_left_v3/frame_04.png"),
-	preload("res://assets/pets/russian_blue/walk_left_v3/frame_05.png"),
-	preload("res://assets/pets/russian_blue/walk_left_v3/frame_06.png"),
-	preload("res://assets/pets/russian_blue/walk_left_v3/frame_07.png"),
-	preload("res://assets/pets/russian_blue/walk_left_v3/frame_08.png"),
-	preload("res://assets/pets/russian_blue/walk_left_v3/frame_09.png"),
-	preload("res://assets/pets/russian_blue/walk_left_v3/frame_10.png"),
-	preload("res://assets/pets/russian_blue/walk_left_v3/frame_11.png"),
-	preload("res://assets/pets/russian_blue/walk_left_v3/frame_12.png")
-]
-const LUNA_MOVE_RIGHT_FRAMES: Array[Texture2D] = [
-	preload("res://assets/pets/russian_blue/walk_right_v3/frame_01.png"),
-	preload("res://assets/pets/russian_blue/walk_right_v3/frame_02.png"),
-	preload("res://assets/pets/russian_blue/walk_right_v3/frame_03.png"),
-	preload("res://assets/pets/russian_blue/walk_right_v3/frame_04.png"),
-	preload("res://assets/pets/russian_blue/walk_right_v3/frame_05.png"),
-	preload("res://assets/pets/russian_blue/walk_right_v3/frame_06.png"),
-	preload("res://assets/pets/russian_blue/walk_right_v3/frame_07.png"),
-	preload("res://assets/pets/russian_blue/walk_right_v3/frame_08.png"),
-	preload("res://assets/pets/russian_blue/walk_right_v3/frame_09.png"),
-	preload("res://assets/pets/russian_blue/walk_right_v3/frame_10.png"),
-	preload("res://assets/pets/russian_blue/walk_right_v3/frame_11.png"),
-	preload("res://assets/pets/russian_blue/walk_right_v3/frame_12.png")
-]
-const POPPY_IDLE_TEXTURE: Texture2D = preload("res://assets/pets/blue_british/home/poppy_side_sitting.png")
-const POPPY_SLEEP_TEXTURE: Texture2D = preload("res://assets/pets/blue_british/sleep/poppy_sleep.png")
-const POPPY_SLEEP_FACE_RUB_FRAMES: Array[Texture2D] = [
-	preload("res://assets/pets/blue_british/sleep/face_rub/frame_01.png"),
-	preload("res://assets/pets/blue_british/sleep/face_rub/frame_02.png"),
-	preload("res://assets/pets/blue_british/sleep/face_rub/frame_03.png"),
-	preload("res://assets/pets/blue_british/sleep/face_rub/frame_04.png"),
-	preload("res://assets/pets/blue_british/sleep/face_rub/frame_05.png"),
-	preload("res://assets/pets/blue_british/sleep/face_rub/frame_06.png"),
-	preload("res://assets/pets/blue_british/sleep/face_rub/frame_07.png"),
-	preload("res://assets/pets/blue_british/sleep/face_rub/frame_08.png"),
-	preload("res://assets/pets/blue_british/sleep/face_rub/frame_09.png"),
-	preload("res://assets/pets/blue_british/sleep/face_rub/frame_10.png"),
-	preload("res://assets/pets/blue_british/sleep/face_rub/frame_11.png"),
-	preload("res://assets/pets/blue_british/sleep/face_rub/frame_12.png")
-]
-const POPPY_TEASER_PLAY_FRAMES: Array[Texture2D] = [
-	preload("res://assets/pets/blue_british/desktop/teaser_play/frame_01.png"),
-	preload("res://assets/pets/blue_british/desktop/teaser_play/frame_02.png"),
-	preload("res://assets/pets/blue_british/desktop/teaser_play/frame_03.png"),
-	preload("res://assets/pets/blue_british/desktop/teaser_play/frame_04.png"),
-	preload("res://assets/pets/blue_british/desktop/teaser_play/frame_05.png"),
-	preload("res://assets/pets/blue_british/desktop/teaser_play/frame_06.png"),
-	preload("res://assets/pets/blue_british/desktop/teaser_play/frame_07.png"),
-	preload("res://assets/pets/blue_british/desktop/teaser_play/frame_08.png"),
-	preload("res://assets/pets/blue_british/desktop/teaser_play/frame_09.png"),
-	preload("res://assets/pets/blue_british/desktop/teaser_play/frame_10.png"),
-	preload("res://assets/pets/blue_british/desktop/teaser_play/frame_11.png"),
-	preload("res://assets/pets/blue_british/desktop/teaser_play/frame_12.png"),
-	preload("res://assets/pets/blue_british/desktop/teaser_play/frame_13.png"),
-	preload("res://assets/pets/blue_british/desktop/teaser_play/frame_14.png"),
-	preload("res://assets/pets/blue_british/desktop/teaser_play/frame_15.png"),
-	preload("res://assets/pets/blue_british/desktop/teaser_play/frame_16.png")
-]
-const POPPY_MOVE_LEFT_FRAMES: Array[Texture2D] = [
-	preload("res://assets/pets/blue_british/walk_left/frame_01.png"),
-	preload("res://assets/pets/blue_british/walk_left/frame_02.png"),
-	preload("res://assets/pets/blue_british/walk_left/frame_03.png"),
-	preload("res://assets/pets/blue_british/walk_left/frame_04.png"),
-	preload("res://assets/pets/blue_british/walk_left/frame_05.png"),
-	preload("res://assets/pets/blue_british/walk_left/frame_06.png"),
-	preload("res://assets/pets/blue_british/walk_left/frame_07.png"),
-	preload("res://assets/pets/blue_british/walk_left/frame_08.png"),
-	preload("res://assets/pets/blue_british/walk_left/frame_09.png"),
-	preload("res://assets/pets/blue_british/walk_left/frame_10.png"),
-	preload("res://assets/pets/blue_british/walk_left/frame_11.png"),
-	preload("res://assets/pets/blue_british/walk_left/frame_12.png")
-]
-const POPPY_MOVE_RIGHT_FRAMES: Array[Texture2D] = [
-	preload("res://assets/pets/blue_british/walk_right/frame_01.png"),
-	preload("res://assets/pets/blue_british/walk_right/frame_02.png"),
-	preload("res://assets/pets/blue_british/walk_right/frame_03.png"),
-	preload("res://assets/pets/blue_british/walk_right/frame_04.png"),
-	preload("res://assets/pets/blue_british/walk_right/frame_05.png"),
-	preload("res://assets/pets/blue_british/walk_right/frame_06.png"),
-	preload("res://assets/pets/blue_british/walk_right/frame_07.png"),
-	preload("res://assets/pets/blue_british/walk_right/frame_08.png"),
-	preload("res://assets/pets/blue_british/walk_right/frame_09.png"),
-	preload("res://assets/pets/blue_british/walk_right/frame_10.png"),
-	preload("res://assets/pets/blue_british/walk_right/frame_11.png"),
-	preload("res://assets/pets/blue_british/walk_right/frame_12.png")
-]
-const BLACK_CAT_IDLE_TEXTURE: Texture2D = preload(
-	"res://assets/pets/black_cat/home/black_cat_side_sitting.png"
-)
-const BLACK_CAT_SLEEP_TEXTURE: Texture2D = preload(
-	"res://assets/pets/black_cat/sleep/black_cat_sleep.png"
-)
-const BLACK_CAT_FALL_ASLEEP_FRAMES: Array[Texture2D] = [
-	preload("res://assets/pets/black_cat/sleep/fall_asleep/frame_01.png"),
-	preload("res://assets/pets/black_cat/sleep/fall_asleep/frame_02.png"),
-	preload("res://assets/pets/black_cat/sleep/fall_asleep/frame_03.png"),
-	preload("res://assets/pets/black_cat/sleep/fall_asleep/frame_04.png"),
-	preload("res://assets/pets/black_cat/sleep/fall_asleep/frame_05.png"),
-	preload("res://assets/pets/black_cat/sleep/fall_asleep/frame_06.png"),
-	preload("res://assets/pets/black_cat/sleep/fall_asleep/frame_07.png"),
-	preload("res://assets/pets/black_cat/sleep/fall_asleep/frame_08.png")
-]
-const BLACK_CAT_LICK_PAW_FRAMES: Array[Texture2D] = [
-	preload("res://assets/pets/black_cat/fishing/success/frame_01.png"),
-	preload("res://assets/pets/black_cat/fishing/success/frame_02.png"),
-	preload("res://assets/pets/black_cat/fishing/success/frame_03.png"),
-	preload("res://assets/pets/black_cat/fishing/success/frame_04.png"),
-	preload("res://assets/pets/black_cat/fishing/success/frame_05.png"),
-	preload("res://assets/pets/black_cat/fishing/success/frame_06.png"),
-	preload("res://assets/pets/black_cat/fishing/success/frame_07.png"),
-	preload("res://assets/pets/black_cat/fishing/success/frame_08.png")
-]
-const BLACK_CAT_MOVE_LEFT_FRAMES: Array[Texture2D] = [
-	preload("res://assets/pets/black_cat/walk_left_v3/frame_01.png"),
-	preload("res://assets/pets/black_cat/walk_left_v3/frame_02.png"),
-	preload("res://assets/pets/black_cat/walk_left_v3/frame_03.png"),
-	preload("res://assets/pets/black_cat/walk_left_v3/frame_04.png"),
-	preload("res://assets/pets/black_cat/walk_left_v3/frame_05.png"),
-	preload("res://assets/pets/black_cat/walk_left_v3/frame_06.png"),
-	preload("res://assets/pets/black_cat/walk_left_v3/frame_07.png"),
-	preload("res://assets/pets/black_cat/walk_left_v3/frame_08.png"),
-	preload("res://assets/pets/black_cat/walk_left_v3/frame_09.png"),
-	preload("res://assets/pets/black_cat/walk_left_v3/frame_10.png"),
-	preload("res://assets/pets/black_cat/walk_left_v3/frame_11.png"),
-	preload("res://assets/pets/black_cat/walk_left_v3/frame_12.png")
-]
-const BLACK_CAT_MOVE_RIGHT_FRAMES: Array[Texture2D] = [
-	preload("res://assets/pets/black_cat/walk_right_v3/frame_01.png"),
-	preload("res://assets/pets/black_cat/walk_right_v3/frame_02.png"),
-	preload("res://assets/pets/black_cat/walk_right_v3/frame_03.png"),
-	preload("res://assets/pets/black_cat/walk_right_v3/frame_04.png"),
-	preload("res://assets/pets/black_cat/walk_right_v3/frame_05.png"),
-	preload("res://assets/pets/black_cat/walk_right_v3/frame_06.png"),
-	preload("res://assets/pets/black_cat/walk_right_v3/frame_07.png"),
-	preload("res://assets/pets/black_cat/walk_right_v3/frame_08.png"),
-	preload("res://assets/pets/black_cat/walk_right_v3/frame_09.png"),
-	preload("res://assets/pets/black_cat/walk_right_v3/frame_10.png"),
-	preload("res://assets/pets/black_cat/walk_right_v3/frame_11.png"),
-	preload("res://assets/pets/black_cat/walk_right_v3/frame_12.png")
-]
-const MAINE_COON_IDLE_TEXTURE: Texture2D = preload(
-	"res://assets/pets/maine_coon/home/maine_coon_side_sitting.png"
-)
-const MAINE_COON_SLEEP_TEXTURE: Texture2D = preload(
-	"res://assets/pets/maine_coon/sleep/maine_coon_sleep.png"
-)
-const MAINE_COON_SLEEP_PAW_LICK_FRAMES: Array[Texture2D] = [
-	preload("res://assets/pets/maine_coon/sleep/paw_lick/frame_01.png"),
-	preload("res://assets/pets/maine_coon/sleep/paw_lick/frame_02.png"),
-	preload("res://assets/pets/maine_coon/sleep/paw_lick/frame_03.png"),
-	preload("res://assets/pets/maine_coon/sleep/paw_lick/frame_04.png"),
-	preload("res://assets/pets/maine_coon/sleep/paw_lick/frame_05.png"),
-	preload("res://assets/pets/maine_coon/sleep/paw_lick/frame_06.png"),
-	preload("res://assets/pets/maine_coon/sleep/paw_lick/frame_07.png"),
-	preload("res://assets/pets/maine_coon/sleep/paw_lick/frame_08.png")
-]
-const MAINE_COON_NUZZLE_FRAMES: Array[Texture2D] = [
-	preload("res://assets/pets/maine_coon/desktop/nuzzle/frame_01.png"),
-	preload("res://assets/pets/maine_coon/desktop/nuzzle/frame_02.png"),
-	preload("res://assets/pets/maine_coon/desktop/nuzzle/frame_03.png"),
-	preload("res://assets/pets/maine_coon/desktop/nuzzle/frame_04.png"),
-	preload("res://assets/pets/maine_coon/desktop/nuzzle/frame_05.png"),
-	preload("res://assets/pets/maine_coon/desktop/nuzzle/frame_06.png"),
-	preload("res://assets/pets/maine_coon/desktop/nuzzle/frame_07.png"),
-	preload("res://assets/pets/maine_coon/desktop/nuzzle/frame_08.png")
-]
-const MAINE_COON_MOVE_LEFT_FRAMES: Array[Texture2D] = [
-	preload("res://assets/pets/maine_coon/walk_left/frame_01.png"),
-	preload("res://assets/pets/maine_coon/walk_left/frame_02.png"),
-	preload("res://assets/pets/maine_coon/walk_left/frame_03.png"),
-	preload("res://assets/pets/maine_coon/walk_left/frame_04.png"),
-	preload("res://assets/pets/maine_coon/walk_left/frame_05.png"),
-	preload("res://assets/pets/maine_coon/walk_left/frame_06.png"),
-	preload("res://assets/pets/maine_coon/walk_left/frame_07.png"),
-	preload("res://assets/pets/maine_coon/walk_left/frame_08.png"),
-	preload("res://assets/pets/maine_coon/walk_left/frame_09.png"),
-	preload("res://assets/pets/maine_coon/walk_left/frame_10.png"),
-	preload("res://assets/pets/maine_coon/walk_left/frame_11.png"),
-	preload("res://assets/pets/maine_coon/walk_left/frame_12.png")
-]
-const MAINE_COON_MOVE_RIGHT_FRAMES: Array[Texture2D] = [
-	preload("res://assets/pets/maine_coon/walk_right/frame_01.png"),
-	preload("res://assets/pets/maine_coon/walk_right/frame_02.png"),
-	preload("res://assets/pets/maine_coon/walk_right/frame_03.png"),
-	preload("res://assets/pets/maine_coon/walk_right/frame_04.png"),
-	preload("res://assets/pets/maine_coon/walk_right/frame_05.png"),
-	preload("res://assets/pets/maine_coon/walk_right/frame_06.png"),
-	preload("res://assets/pets/maine_coon/walk_right/frame_07.png"),
-	preload("res://assets/pets/maine_coon/walk_right/frame_08.png"),
-	preload("res://assets/pets/maine_coon/walk_right/frame_09.png"),
-	preload("res://assets/pets/maine_coon/walk_right/frame_10.png"),
-	preload("res://assets/pets/maine_coon/walk_right/frame_11.png"),
-	preload("res://assets/pets/maine_coon/walk_right/frame_12.png")
-]
-const GOLDEN_MUNCHKIN_IDLE_TEXTURE: Texture2D = preload(
-	"res://assets/pets/golden_munchkin/home/golden_munchkin_side_sitting.png"
-)
-const GOLDEN_MUNCHKIN_SLEEP_TEXTURE: Texture2D = preload(
-	"res://assets/pets/golden_munchkin/sleep/golden_munchkin_sleep.png"
-)
-const GOLDEN_MUNCHKIN_SLEEP_TAIL_FRAMES: Array[Texture2D] = [
-	preload("res://assets/pets/golden_munchkin/sleep/tail_sweep/frame_01.png"),
-	preload("res://assets/pets/golden_munchkin/sleep/tail_sweep/frame_02.png"),
-	preload("res://assets/pets/golden_munchkin/sleep/tail_sweep/frame_03.png"),
-	preload("res://assets/pets/golden_munchkin/sleep/tail_sweep/frame_04.png"),
-	preload("res://assets/pets/golden_munchkin/sleep/tail_sweep/frame_05.png"),
-	preload("res://assets/pets/golden_munchkin/sleep/tail_sweep/frame_06.png"),
-	preload("res://assets/pets/golden_munchkin/sleep/tail_sweep/frame_07.png"),
-	preload("res://assets/pets/golden_munchkin/sleep/tail_sweep/frame_08.png"),
-	preload("res://assets/pets/golden_munchkin/sleep/tail_sweep/frame_09.png"),
-	preload("res://assets/pets/golden_munchkin/sleep/tail_sweep/frame_10.png"),
-	preload("res://assets/pets/golden_munchkin/sleep/tail_sweep/frame_11.png"),
-	preload("res://assets/pets/golden_munchkin/sleep/tail_sweep/frame_12.png"),
-	preload("res://assets/pets/golden_munchkin/sleep/tail_sweep/frame_13.png"),
-	preload("res://assets/pets/golden_munchkin/sleep/tail_sweep/frame_14.png"),
-	preload("res://assets/pets/golden_munchkin/sleep/tail_sweep/frame_15.png")
-]
-const GOLDEN_MUNCHKIN_FAILED_ROLL_FRAMES: Array[Texture2D] = [
-	preload("res://assets/pets/golden_munchkin/desktop/failed_roll/frame_01.png"),
-	preload("res://assets/pets/golden_munchkin/desktop/failed_roll/frame_02.png"),
-	preload("res://assets/pets/golden_munchkin/desktop/failed_roll/frame_03.png"),
-	preload("res://assets/pets/golden_munchkin/desktop/failed_roll/frame_04.png"),
-	preload("res://assets/pets/golden_munchkin/desktop/failed_roll/frame_05.png"),
-	preload("res://assets/pets/golden_munchkin/desktop/failed_roll/frame_06.png"),
-	preload("res://assets/pets/golden_munchkin/desktop/failed_roll/frame_07.png"),
-	preload("res://assets/pets/golden_munchkin/desktop/failed_roll/frame_08.png"),
-	preload("res://assets/pets/golden_munchkin/desktop/failed_roll/frame_09.png"),
-	preload("res://assets/pets/golden_munchkin/desktop/failed_roll/frame_10.png"),
-	preload("res://assets/pets/golden_munchkin/desktop/failed_roll/frame_11.png"),
-	preload("res://assets/pets/golden_munchkin/desktop/failed_roll/frame_12.png")
-]
-const GOLDEN_MUNCHKIN_MOVE_LEFT_FRAMES: Array[Texture2D] = [
-	preload("res://assets/pets/golden_munchkin/move_left/frame_01.png"),
-	preload("res://assets/pets/golden_munchkin/move_left/frame_02.png"),
-	preload("res://assets/pets/golden_munchkin/move_left/frame_03.png"),
-	preload("res://assets/pets/golden_munchkin/move_left/frame_04.png"),
-	preload("res://assets/pets/golden_munchkin/move_left/frame_05.png"),
-	preload("res://assets/pets/golden_munchkin/move_left/frame_06.png"),
-	preload("res://assets/pets/golden_munchkin/move_left/frame_07.png"),
-	preload("res://assets/pets/golden_munchkin/move_left/frame_08.png")
-]
-const GOLDEN_MUNCHKIN_MOVE_RIGHT_FRAMES: Array[Texture2D] = [
-	preload("res://assets/pets/golden_munchkin/move_right/frame_01.png"),
-	preload("res://assets/pets/golden_munchkin/move_right/frame_02.png"),
-	preload("res://assets/pets/golden_munchkin/move_right/frame_03.png"),
-	preload("res://assets/pets/golden_munchkin/move_right/frame_04.png"),
-	preload("res://assets/pets/golden_munchkin/move_right/frame_05.png"),
-	preload("res://assets/pets/golden_munchkin/move_right/frame_06.png"),
-	preload("res://assets/pets/golden_munchkin/move_right/frame_07.png"),
-	preload("res://assets/pets/golden_munchkin/move_right/frame_08.png")
-]
-const SIAMESE_IDLE_TEXTURE: Texture2D = preload(
-	"res://assets/pets/siamese/home/siamese_side_sitting.png"
-)
-const SIAMESE_SLEEP_TEXTURE: Texture2D = preload(
-	"res://assets/pets/siamese/sleep/siamese_sleep.png"
-)
-const SIAMESE_TREAT_FRAMES: Array[Texture2D] = [
-	preload("res://assets/pets/siamese/desktop/treat/frame_01.png"),
-	preload("res://assets/pets/siamese/desktop/treat/frame_02.png"),
-	preload("res://assets/pets/siamese/desktop/treat/frame_03.png"),
-	preload("res://assets/pets/siamese/desktop/treat/frame_04.png"),
-	preload("res://assets/pets/siamese/desktop/treat/frame_05.png"),
-	preload("res://assets/pets/siamese/desktop/treat/frame_06.png"),
-	preload("res://assets/pets/siamese/desktop/treat/frame_07.png"),
-	preload("res://assets/pets/siamese/desktop/treat/frame_08.png"),
-	preload("res://assets/pets/siamese/desktop/treat/frame_09.png"),
-	preload("res://assets/pets/siamese/desktop/treat/frame_10.png"),
-	preload("res://assets/pets/siamese/desktop/treat/frame_11.png"),
-	preload("res://assets/pets/siamese/desktop/treat/frame_12.png")
-]
-const SIAMESE_MOVE_LEFT_FRAMES: Array[Texture2D] = [
-	preload("res://assets/pets/siamese/walk_left/frame_01.png"),
-	preload("res://assets/pets/siamese/walk_left/frame_02.png"),
-	preload("res://assets/pets/siamese/walk_left/frame_03.png"),
-	preload("res://assets/pets/siamese/walk_left/frame_04.png")
-]
-const SIAMESE_MOVE_RIGHT_FRAMES: Array[Texture2D] = [
-	preload("res://assets/pets/siamese/walk_right/frame_01.png"),
-	preload("res://assets/pets/siamese/walk_right/frame_02.png"),
-	preload("res://assets/pets/siamese/walk_right/frame_03.png"),
-	preload("res://assets/pets/siamese/walk_right/frame_04.png")
-]
-const SLEEP_BUBBLE_FRAMES: Array[Texture2D] = [
-	preload("res://assets/pets/current/sprites/sleep_bubble/frames/frame_01.png"),
-	preload("res://assets/pets/current/sprites/sleep_bubble/frames/frame_02.png"),
-	preload("res://assets/pets/current/sprites/sleep_bubble/frames/frame_03.png"),
-	preload("res://assets/pets/current/sprites/sleep_bubble/frames/frame_04.png"),
-	preload("res://assets/pets/current/sprites/sleep_bubble/frames/frame_05.png"),
-	preload("res://assets/pets/current/sprites/sleep_bubble/frames/frame_06.png"),
-	preload("res://assets/pets/current/sprites/sleep_bubble/frames/frame_07.png"),
-	preload("res://assets/pets/current/sprites/sleep_bubble/frames/frame_08.png"),
-	preload("res://assets/pets/current/sprites/sleep_bubble/frames/frame_09.png"),
-	preload("res://assets/pets/current/sprites/sleep_bubble/frames/frame_10.png"),
-	preload("res://assets/pets/current/sprites/sleep_bubble/frames/frame_11.png"),
-	preload("res://assets/pets/current/sprites/sleep_bubble/frames/frame_12.png"),
-	preload("res://assets/pets/current/sprites/sleep_bubble/frames/frame_13.png"),
-	preload("res://assets/pets/current/sprites/sleep_bubble/frames/frame_14.png")
-]
-const MOVE_LEFT_FRAMES: Array[Texture2D] = [
-	preload("res://assets/pets/current/sprites/move_left/frame_01.png"),
-	preload("res://assets/pets/current/sprites/move_left/frame_02.png"),
-	preload("res://assets/pets/current/sprites/move_left/frame_03.png"),
-	preload("res://assets/pets/current/sprites/move_left/frame_04.png"),
-	preload("res://assets/pets/current/sprites/move_left/frame_05.png"),
-	preload("res://assets/pets/current/sprites/move_left/frame_06.png"),
-	preload("res://assets/pets/current/sprites/move_left/frame_07.png"),
-	preload("res://assets/pets/current/sprites/move_left/frame_08.png"),
-	preload("res://assets/pets/current/sprites/move_left/frame_09.png"),
-	preload("res://assets/pets/current/sprites/move_left/frame_10.png"),
-	preload("res://assets/pets/current/sprites/move_left/frame_11.png"),
-	preload("res://assets/pets/current/sprites/move_left/frame_12.png")
-]
-const MOVE_RIGHT_FRAMES: Array[Texture2D] = [
-	preload("res://assets/pets/current/sprites/move_right/frame_01.png"),
-	preload("res://assets/pets/current/sprites/move_right/frame_02.png"),
-	preload("res://assets/pets/current/sprites/move_right/frame_03.png"),
-	preload("res://assets/pets/current/sprites/move_right/frame_04.png"),
-	preload("res://assets/pets/current/sprites/move_right/frame_05.png"),
-	preload("res://assets/pets/current/sprites/move_right/frame_06.png"),
-	preload("res://assets/pets/current/sprites/move_right/frame_07.png"),
-	preload("res://assets/pets/current/sprites/move_right/frame_08.png"),
-	preload("res://assets/pets/current/sprites/move_right/frame_09.png"),
-	preload("res://assets/pets/current/sprites/move_right/frame_10.png"),
-	preload("res://assets/pets/current/sprites/move_right/frame_11.png"),
-	preload("res://assets/pets/current/sprites/move_right/frame_12.png")
-]
-const SHY_FRAMES: Array[Texture2D] = [
-	preload("res://assets/pets/current/sprites/shy/frame_01.png"),
-	preload("res://assets/pets/current/sprites/shy/frame_02.png"),
-	preload("res://assets/pets/current/sprites/shy/frame_03.png"),
-	preload("res://assets/pets/current/sprites/shy/frame_04.png"),
-	preload("res://assets/pets/current/sprites/shy/frame_05.png"),
-	preload("res://assets/pets/current/sprites/shy/frame_06.png")
-]
-const DESKTOP_WINK_FRAMES: Array[Texture2D] = [
-	preload("res://assets/pets/current/sprites/desktop_wink/frame_01.png"),
-	preload("res://assets/pets/current/sprites/desktop_wink/frame_02.png"),
-	preload("res://assets/pets/current/sprites/desktop_wink/frame_03.png"),
-	preload("res://assets/pets/current/sprites/desktop_wink/frame_04.png"),
-	preload("res://assets/pets/current/sprites/desktop_wink/frame_05.png"),
-	preload("res://assets/pets/current/sprites/desktop_wink/frame_06.png"),
-	preload("res://assets/pets/current/sprites/desktop_wink/frame_07.png"),
-	preload("res://assets/pets/current/sprites/desktop_wink/frame_08.png"),
-	preload("res://assets/pets/current/sprites/desktop_wink/frame_09.png")
-]
-const DESKTOP_BELLY_FRAMES: Array[Texture2D] = [
-	preload("res://assets/pets/current/sprites/desktop_roll/frame_01.png"),
-	preload("res://assets/pets/current/sprites/desktop_roll/frame_02.png"),
-	preload("res://assets/pets/current/sprites/desktop_roll/frame_03.png"),
-	preload("res://assets/pets/current/sprites/desktop_roll/frame_04.png"),
-	preload("res://assets/pets/current/sprites/desktop_roll/frame_05.png"),
-	preload("res://assets/pets/current/sprites/desktop_roll/frame_06.png"),
-	preload("res://assets/pets/current/sprites/desktop_biscuit/frame_01.png"),
-	preload("res://assets/pets/current/sprites/desktop_biscuit/frame_02.png"),
-	preload("res://assets/pets/current/sprites/desktop_biscuit/frame_03.png"),
-	preload("res://assets/pets/current/sprites/desktop_biscuit/frame_04.png"),
-	preload("res://assets/pets/current/sprites/desktop_biscuit/frame_05.png"),
-	preload("res://assets/pets/current/sprites/desktop_biscuit/frame_06.png"),
-	preload("res://assets/pets/current/sprites/desktop_biscuit/frame_07.png"),
-	preload("res://assets/pets/current/sprites/desktop_biscuit/frame_08.png"),
-	preload("res://assets/pets/current/sprites/desktop_biscuit/frame_09.png"),
-	preload("res://assets/pets/current/sprites/desktop_roll/frame_06.png"),
-	preload("res://assets/pets/current/sprites/desktop_roll/frame_05.png"),
-	preload("res://assets/pets/current/sprites/desktop_roll/frame_04.png"),
-	preload("res://assets/pets/current/sprites/desktop_roll/frame_03.png"),
-	preload("res://assets/pets/current/sprites/desktop_roll/frame_02.png"),
-	preload("res://assets/pets/current/sprites/desktop_roll/frame_01.png")
-]
+const PetCatalogScript = preload("res://src/pets/pet_catalog.gd")
+
+# Compatibility names remain instance-scoped for existing animation code and
+# tests. Unlike the former constants, these hold only the active pet's assets.
+var PET_TEXTURE: Texture2D
+var SLEEP_TEXTURE: Texture2D
+var MOCHI_HOME_TAIL_BLINK_FRAMES: Array[Texture2D] = []
+var MOCHI_SLEEP_TEXTURE: Texture2D
+var MOCHI_SLEEP_EAR_TWITCH_FRAMES: Array[Texture2D] = []
+var MOCHI_LICK_PAW_FRAMES: Array[Texture2D] = []
+var MOCHI_MOVE_LEFT_FRAMES: Array[Texture2D] = []
+var MOCHI_MOVE_RIGHT_FRAMES: Array[Texture2D] = []
+var BISCUIT_IDLE_TEXTURE: Texture2D
+var BISCUIT_SLEEP_TEXTURE: Texture2D
+var BISCUIT_BUTTERFLY_FRAMES: Array[Texture2D] = []
+var BISCUIT_MOVE_LEFT_FRAMES: Array[Texture2D] = []
+var BISCUIT_MOVE_RIGHT_FRAMES: Array[Texture2D] = []
+var LUNA_IDLE_TEXTURE: Texture2D
+var LUNA_SLEEP_TEXTURE: Texture2D
+var LUNA_SLEEP_IDLE_FRAMES: Array[Texture2D] = []
+var LUNA_STRETCH_YAWN_FRAMES: Array[Texture2D] = []
+var LUNA_MOVE_LEFT_FRAMES: Array[Texture2D] = []
+var LUNA_MOVE_RIGHT_FRAMES: Array[Texture2D] = []
+var POPPY_IDLE_TEXTURE: Texture2D
+var POPPY_SLEEP_TEXTURE: Texture2D
+var POPPY_SLEEP_FACE_RUB_FRAMES: Array[Texture2D] = []
+var POPPY_TEASER_PLAY_FRAMES: Array[Texture2D] = []
+var POPPY_MOVE_LEFT_FRAMES: Array[Texture2D] = []
+var POPPY_MOVE_RIGHT_FRAMES: Array[Texture2D] = []
+var BLACK_CAT_IDLE_TEXTURE: Texture2D
+var BLACK_CAT_SLEEP_TEXTURE: Texture2D
+var BLACK_CAT_FALL_ASLEEP_FRAMES: Array[Texture2D] = []
+var BLACK_CAT_LICK_PAW_FRAMES: Array[Texture2D] = []
+var BLACK_CAT_MOVE_LEFT_FRAMES: Array[Texture2D] = []
+var BLACK_CAT_MOVE_RIGHT_FRAMES: Array[Texture2D] = []
+var MAINE_COON_IDLE_TEXTURE: Texture2D
+var MAINE_COON_SLEEP_TEXTURE: Texture2D
+var MAINE_COON_SLEEP_PAW_LICK_FRAMES: Array[Texture2D] = []
+var MAINE_COON_NUZZLE_FRAMES: Array[Texture2D] = []
+var MAINE_COON_MOVE_LEFT_FRAMES: Array[Texture2D] = []
+var MAINE_COON_MOVE_RIGHT_FRAMES: Array[Texture2D] = []
+var GOLDEN_MUNCHKIN_IDLE_TEXTURE: Texture2D
+var GOLDEN_MUNCHKIN_SLEEP_TEXTURE: Texture2D
+var GOLDEN_MUNCHKIN_SLEEP_TAIL_FRAMES: Array[Texture2D] = []
+var GOLDEN_MUNCHKIN_FAILED_ROLL_FRAMES: Array[Texture2D] = []
+var GOLDEN_MUNCHKIN_MOVE_LEFT_FRAMES: Array[Texture2D] = []
+var GOLDEN_MUNCHKIN_MOVE_RIGHT_FRAMES: Array[Texture2D] = []
+var SIAMESE_IDLE_TEXTURE: Texture2D
+var SIAMESE_SLEEP_TEXTURE: Texture2D
+var SIAMESE_TREAT_FRAMES: Array[Texture2D] = []
+var SIAMESE_MOVE_LEFT_FRAMES: Array[Texture2D] = []
+var SIAMESE_MOVE_RIGHT_FRAMES: Array[Texture2D] = []
+var SLEEP_BUBBLE_FRAMES: Array[Texture2D] = []
+var MOVE_LEFT_FRAMES: Array[Texture2D] = []
+var MOVE_RIGHT_FRAMES: Array[Texture2D] = []
+var SHY_FRAMES: Array[Texture2D] = []
+var DESKTOP_WINK_FRAMES: Array[Texture2D] = []
+var DESKTOP_BELLY_FRAMES: Array[Texture2D] = []
+
+
 const MOVE_FPS := 7.0
 const LUNA_MOVE_FPS := 12.0
 const BLACK_CAT_MOVE_FPS := 10.0
@@ -609,6 +145,8 @@ const GameFontStylesScript = preload("res://src/game_font_styles.gd")
 
 var mood := "idle"
 var pet_id := "default_orange_cat"
+var pet_definition: PetDefinition
+var loaded_asset_pet_id := ""
 var home_idle_enabled := false
 var home_idle_playing := false
 var home_idle_frame := 0
@@ -662,11 +200,143 @@ var golden_munchkin_sleep_tail_frame_elapsed := 0.0
 static var texture_visual_bounds_cache: Dictionary = {}
 
 
+func _load_pet_assets(requested_pet_id: String) -> void:
+	var definition: PetDefinition = PetCatalogScript.definition_or_default(requested_pet_id)
+	if definition == pet_definition and loaded_asset_pet_id == definition.pet_id:
+		return
+	_clear_pet_assets()
+	pet_definition = definition
+	loaded_asset_pet_id = definition.pet_id
+	match definition.pet_id:
+		"mochi":
+			MOCHI_HOME_TAIL_BLINK_FRAMES = definition.load_animation("home_idle")
+			MOCHI_SLEEP_TEXTURE = definition.load_texture("sleep")
+			MOCHI_SLEEP_EAR_TWITCH_FRAMES = definition.load_animation("sleep_effect")
+			MOCHI_LICK_PAW_FRAMES = definition.load_animation("interaction")
+			MOCHI_MOVE_LEFT_FRAMES = definition.load_animation("move_left")
+			MOCHI_MOVE_RIGHT_FRAMES = definition.load_animation("move_right")
+		"biscuit":
+			BISCUIT_IDLE_TEXTURE = definition.load_texture("idle")
+			BISCUIT_SLEEP_TEXTURE = definition.load_texture("sleep")
+			BISCUIT_BUTTERFLY_FRAMES = definition.load_animation("interaction")
+			BISCUIT_MOVE_LEFT_FRAMES = definition.load_animation("move_left")
+			BISCUIT_MOVE_RIGHT_FRAMES = definition.load_animation("move_right")
+			SLEEP_BUBBLE_FRAMES = definition.load_animation("sleep_bubble")
+		"luna":
+			LUNA_IDLE_TEXTURE = definition.load_texture("idle")
+			LUNA_SLEEP_TEXTURE = definition.load_texture("sleep")
+			LUNA_SLEEP_IDLE_FRAMES = definition.load_animation("sleep_effect")
+			LUNA_STRETCH_YAWN_FRAMES = definition.load_animation("interaction")
+			LUNA_MOVE_LEFT_FRAMES = definition.load_animation("move_left")
+			LUNA_MOVE_RIGHT_FRAMES = definition.load_animation("move_right")
+		"poppy":
+			POPPY_IDLE_TEXTURE = definition.load_texture("idle")
+			POPPY_SLEEP_TEXTURE = definition.load_texture("sleep")
+			POPPY_SLEEP_FACE_RUB_FRAMES = definition.load_animation("sleep_effect")
+			POPPY_TEASER_PLAY_FRAMES = definition.load_animation("interaction")
+			POPPY_MOVE_LEFT_FRAMES = definition.load_animation("move_left")
+			POPPY_MOVE_RIGHT_FRAMES = definition.load_animation("move_right")
+		"black_cat":
+			BLACK_CAT_IDLE_TEXTURE = definition.load_texture("idle")
+			BLACK_CAT_SLEEP_TEXTURE = definition.load_texture("sleep")
+			BLACK_CAT_FALL_ASLEEP_FRAMES = definition.load_animation("sleep_effect")
+			BLACK_CAT_LICK_PAW_FRAMES = definition.load_animation("interaction")
+			BLACK_CAT_MOVE_LEFT_FRAMES = definition.load_animation("move_left")
+			BLACK_CAT_MOVE_RIGHT_FRAMES = definition.load_animation("move_right")
+		"maine_coon":
+			MAINE_COON_IDLE_TEXTURE = definition.load_texture("idle")
+			MAINE_COON_SLEEP_TEXTURE = definition.load_texture("sleep")
+			MAINE_COON_SLEEP_PAW_LICK_FRAMES = definition.load_animation("sleep_effect")
+			MAINE_COON_NUZZLE_FRAMES = definition.load_animation("interaction")
+			MAINE_COON_MOVE_LEFT_FRAMES = definition.load_animation("move_left")
+			MAINE_COON_MOVE_RIGHT_FRAMES = definition.load_animation("move_right")
+		"golden_munchkin":
+			GOLDEN_MUNCHKIN_IDLE_TEXTURE = definition.load_texture("idle")
+			GOLDEN_MUNCHKIN_SLEEP_TEXTURE = definition.load_texture("sleep")
+			GOLDEN_MUNCHKIN_SLEEP_TAIL_FRAMES = definition.load_animation("sleep_effect")
+			GOLDEN_MUNCHKIN_FAILED_ROLL_FRAMES = definition.load_animation("interaction")
+			GOLDEN_MUNCHKIN_MOVE_LEFT_FRAMES = definition.load_animation("move_left")
+			GOLDEN_MUNCHKIN_MOVE_RIGHT_FRAMES = definition.load_animation("move_right")
+		"siamese":
+			SIAMESE_IDLE_TEXTURE = definition.load_texture("idle")
+			SIAMESE_SLEEP_TEXTURE = definition.load_texture("sleep")
+			SIAMESE_TREAT_FRAMES = definition.load_animation("interaction")
+			SIAMESE_MOVE_LEFT_FRAMES = definition.load_animation("move_left")
+			SIAMESE_MOVE_RIGHT_FRAMES = definition.load_animation("move_right")
+		_:
+			PET_TEXTURE = definition.load_texture("idle")
+			SLEEP_TEXTURE = definition.load_texture("sleep")
+			MOVE_LEFT_FRAMES = definition.load_animation("move_left")
+			MOVE_RIGHT_FRAMES = definition.load_animation("move_right")
+			SHY_FRAMES = definition.load_animation("shy")
+			DESKTOP_WINK_FRAMES = definition.load_animation("desktop_wink")
+			DESKTOP_BELLY_FRAMES = definition.load_animation("desktop_belly")
+			SLEEP_BUBBLE_FRAMES = definition.load_animation("sleep_bubble")
+
+
+func _clear_pet_assets() -> void:
+	PET_TEXTURE = null
+	SLEEP_TEXTURE = null
+	MOCHI_HOME_TAIL_BLINK_FRAMES = []
+	MOCHI_SLEEP_TEXTURE = null
+	MOCHI_SLEEP_EAR_TWITCH_FRAMES = []
+	MOCHI_LICK_PAW_FRAMES = []
+	MOCHI_MOVE_LEFT_FRAMES = []
+	MOCHI_MOVE_RIGHT_FRAMES = []
+	BISCUIT_IDLE_TEXTURE = null
+	BISCUIT_SLEEP_TEXTURE = null
+	BISCUIT_BUTTERFLY_FRAMES = []
+	BISCUIT_MOVE_LEFT_FRAMES = []
+	BISCUIT_MOVE_RIGHT_FRAMES = []
+	LUNA_IDLE_TEXTURE = null
+	LUNA_SLEEP_TEXTURE = null
+	LUNA_SLEEP_IDLE_FRAMES = []
+	LUNA_STRETCH_YAWN_FRAMES = []
+	LUNA_MOVE_LEFT_FRAMES = []
+	LUNA_MOVE_RIGHT_FRAMES = []
+	POPPY_IDLE_TEXTURE = null
+	POPPY_SLEEP_TEXTURE = null
+	POPPY_SLEEP_FACE_RUB_FRAMES = []
+	POPPY_TEASER_PLAY_FRAMES = []
+	POPPY_MOVE_LEFT_FRAMES = []
+	POPPY_MOVE_RIGHT_FRAMES = []
+	BLACK_CAT_IDLE_TEXTURE = null
+	BLACK_CAT_SLEEP_TEXTURE = null
+	BLACK_CAT_FALL_ASLEEP_FRAMES = []
+	BLACK_CAT_LICK_PAW_FRAMES = []
+	BLACK_CAT_MOVE_LEFT_FRAMES = []
+	BLACK_CAT_MOVE_RIGHT_FRAMES = []
+	MAINE_COON_IDLE_TEXTURE = null
+	MAINE_COON_SLEEP_TEXTURE = null
+	MAINE_COON_SLEEP_PAW_LICK_FRAMES = []
+	MAINE_COON_NUZZLE_FRAMES = []
+	MAINE_COON_MOVE_LEFT_FRAMES = []
+	MAINE_COON_MOVE_RIGHT_FRAMES = []
+	GOLDEN_MUNCHKIN_IDLE_TEXTURE = null
+	GOLDEN_MUNCHKIN_SLEEP_TEXTURE = null
+	GOLDEN_MUNCHKIN_SLEEP_TAIL_FRAMES = []
+	GOLDEN_MUNCHKIN_FAILED_ROLL_FRAMES = []
+	GOLDEN_MUNCHKIN_MOVE_LEFT_FRAMES = []
+	GOLDEN_MUNCHKIN_MOVE_RIGHT_FRAMES = []
+	SIAMESE_IDLE_TEXTURE = null
+	SIAMESE_SLEEP_TEXTURE = null
+	SIAMESE_TREAT_FRAMES = []
+	SIAMESE_MOVE_LEFT_FRAMES = []
+	SIAMESE_MOVE_RIGHT_FRAMES = []
+	SLEEP_BUBBLE_FRAMES = []
+	MOVE_LEFT_FRAMES = []
+	MOVE_RIGHT_FRAMES = []
+	SHY_FRAMES = []
+	DESKTOP_WINK_FRAMES = []
+	DESKTOP_BELLY_FRAMES = []
+
+
 func _ready() -> void:
+	_load_pet_assets(pet_id)
 	mouse_filter = Control.MOUSE_FILTER_IGNORE
 	clip_contents = false
 	cat_sprite = Sprite2D.new()
-	cat_sprite.texture = PET_TEXTURE
+	cat_sprite.texture = _get_idle_texture()
 	cat_sprite.centered = true
 	add_child(cat_sprite)
 
@@ -674,9 +344,10 @@ func _ready() -> void:
 	sleep_bubble_sprite.name = "SleepBubble"
 	sleep_bubble_sprite.centered = false
 	sleep_bubble_sprite.texture_filter = CanvasItem.TEXTURE_FILTER_LINEAR
+	var sleeping_texture := _get_sleep_texture()
 	sleep_bubble_sprite.position = (
 		SLEEP_BUBBLE_NOSE_POSITION
-		- SLEEP_TEXTURE.get_size() * 0.5
+		- sleeping_texture.get_size() * 0.5
 		- SLEEP_BUBBLE_FRAME_ANCHOR
 	)
 	sleep_bubble_sprite.z_index = 1
@@ -701,6 +372,7 @@ func _ready() -> void:
 
 func set_pet(data: Dictionary) -> void:
 	pet_id = str(data.get("id", "default_orange_cat")).to_lower()
+	_load_pet_assets(pet_id)
 	# A PetAvatar can be reused while switching cats or rebuilding the Desktop
 	# companion. Never let the previous cat's walking state leak into the new
 	# cat's stationary pose.
@@ -1035,6 +707,26 @@ func _get_idle_texture() -> Texture2D:
 	return PET_TEXTURE
 
 
+func _get_sleep_texture() -> Texture2D:
+	if _uses_mochi_home_art():
+		return MOCHI_SLEEP_TEXTURE
+	if _uses_biscuit_home_art():
+		return BISCUIT_SLEEP_TEXTURE
+	if _uses_luna_home_art():
+		return LUNA_SLEEP_TEXTURE
+	if _uses_poppy_home_art():
+		return POPPY_SLEEP_TEXTURE
+	if _uses_black_cat_home_art():
+		return BLACK_CAT_SLEEP_TEXTURE
+	if _uses_maine_coon_home_art():
+		return MAINE_COON_SLEEP_TEXTURE
+	if _uses_golden_munchkin_home_art():
+		return GOLDEN_MUNCHKIN_SLEEP_TEXTURE
+	if _uses_siamese_home_art():
+		return SIAMESE_SLEEP_TEXTURE
+	return SLEEP_TEXTURE
+
+
 func _process_home_idle(delta: float) -> void:
 	if not home_idle_playing:
 		home_idle_wait_remaining = maxf(0.0, home_idle_wait_remaining - delta)
@@ -1214,17 +906,11 @@ func _schedule_next_desktop_idle() -> void:
 func _update_sleep_bubble() -> void:
 	if not is_instance_valid(sleep_bubble_sprite):
 		return
-	var sleeping_texture := (
-		SIAMESE_SLEEP_TEXTURE
-		if _uses_siamese_home_art()
-		else GOLDEN_MUNCHKIN_SLEEP_TEXTURE if _uses_golden_munchkin_home_art()
-		else MAINE_COON_SLEEP_TEXTURE if _uses_maine_coon_home_art()
-		else BLACK_CAT_SLEEP_TEXTURE if _uses_black_cat_home_art()
-		else LUNA_SLEEP_TEXTURE if _uses_luna_home_art()
-		else POPPY_SLEEP_TEXTURE if _uses_poppy_home_art()
-		else BISCUIT_SLEEP_TEXTURE if _uses_biscuit_home_art()
-		else SLEEP_TEXTURE
-	)
+	if SLEEP_BUBBLE_FRAMES.is_empty():
+		sleep_bubble_sprite.visible = false
+		sleep_bubble_sprite.texture = null
+		return
+	var sleeping_texture := _get_sleep_texture()
 	var nose_position := (
 		BISCUIT_SLEEP_BUBBLE_NOSE_POSITION
 		if _uses_biscuit_home_art()

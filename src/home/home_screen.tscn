@@ -1,0 +1,129 @@
+[gd_scene load_steps=3 format=3]
+
+[ext_resource type="Script" path="res://src/home/home_screen.gd" id="1_home"]
+[ext_resource type="Script" path="res://src/pet_avatar.gd" id="2_avatar"]
+
+[node name="HomeScreen" type="Control"]
+layout_mode = 3
+anchors_preset = 15
+anchor_right = 1.0
+anchor_bottom = 1.0
+grow_horizontal = 2
+grow_vertical = 2
+script = ExtResource("1_home")
+
+[node name="HomeBackground" type="TextureRect" parent="."]
+layout_mode = 1
+anchors_preset = 15
+anchor_right = 1.0
+anchor_bottom = 1.0
+grow_horizontal = 2
+grow_vertical = 2
+mouse_filter = 2
+expand_mode = 1
+stretch_mode = 0
+
+[node name="WelcomeLabel" type="Label" parent="."]
+layout_mode = 0
+offset_left = 213.0
+offset_top = 80.0
+offset_right = 603.0
+offset_bottom = 172.0
+text = "Welcome Home!!"
+horizontal_alignment = 1
+vertical_alignment = 1
+theme_override_font_sizes/font_size = 48
+
+[node name="PetAvatar" type="Control" parent="."]
+layout_mode = 0
+offset_left = 170.0
+offset_top = 205.0
+offset_right = 630.0
+offset_bottom = 595.0
+script = ExtResource("2_avatar")
+
+[node name="HomeXPRow" type="HBoxContainer" parent="."]
+layout_mode = 0
+offset_left = 776.0
+offset_top = 58.0
+offset_right = 1166.0
+offset_bottom = 128.0
+theme_override_constants/separation = 18
+
+[node name="HomeXPTitleLabel" type="Label" parent="HomeXPRow"]
+custom_minimum_size = Vector2(250, 70)
+layout_mode = 2
+theme_override_colors/font_color = Color(0.47451, 0.329412, 0.27451, 1)
+theme_override_font_sizes/font_size = 30
+text = "CURRENT XP"
+vertical_alignment = 1
+
+[node name="HomeXPValueLabel" type="Label" parent="HomeXPRow"]
+layout_mode = 2
+size_flags_horizontal = 3
+theme_override_colors/font_color = Color(0.741176, 0.333333, 0.247059, 1)
+theme_override_font_sizes/font_size = 40
+text = "0"
+horizontal_alignment = 2
+vertical_alignment = 1
+
+[node name="PetHeadingLabel" type="Label" parent="."]
+layout_mode = 0
+offset_left = 756.0
+offset_top = 200.0
+offset_right = 1184.0
+offset_bottom = 240.0
+theme_override_colors/font_color = Color(0.376471, 0.239216, 0.231373, 1)
+theme_override_font_sizes/font_size = 45
+text = "COMPANION IS HERE!"
+horizontal_alignment = 1
+vertical_alignment = 1
+
+[node name="HomeActionsLayer" type="Control" parent="."]
+layout_mode = 1
+anchors_preset = 15
+anchor_right = 1.0
+anchor_bottom = 1.0
+grow_horizontal = 2
+grow_vertical = 2
+mouse_filter = 2
+
+[node name="DesktopButton" type="Button" parent="HomeActionsLayer"]
+layout_mode = 0
+offset_left = 756.0
+offset_top = 265.0
+offset_right = 1184.0
+offset_bottom = 335.0
+text = "Keep as desktop companion"
+
+[node name="FishingButton" type="Button" parent="HomeActionsLayer"]
+layout_mode = 0
+offset_left = 756.0
+offset_top = 350.0
+offset_right = 1184.0
+offset_bottom = 420.0
+text = "Go fishing"
+
+[node name="AquariumButton" type="Button" parent="HomeActionsLayer"]
+layout_mode = 0
+offset_left = 756.0
+offset_top = 435.0
+offset_right = 1184.0
+offset_bottom = 505.0
+text = "My aquarium"
+
+[node name="StoreButton" type="Button" parent="HomeActionsLayer"]
+layout_mode = 0
+offset_left = 756.0
+offset_top = 520.0
+offset_right = 1184.0
+offset_bottom = 590.0
+text = "Adopt another cat"
+
+[node name="HomePetInteractionSurface" type="Control" parent="."]
+layout_mode = 0
+offset_left = 170.0
+offset_top = 205.0
+offset_right = 630.0
+offset_bottom = 595.0
+mouse_filter = 0

@@ -1,0 +1,119 @@
+[gd_scene load_steps=3 format=3]
+
+[ext_resource type="Texture2D" path="res://assets/ui/fishing/popups/processed/fishing_success_popup_base.png" id="1_background"]
+[ext_resource type="FontFile" path="res://assets/fonts/original_handwriting/yufan_original_handwriting.ttf" id="2_font"]
+
+[node name="FishingNewFishPopupOverlay" type="Button"]
+layout_mode = 3
+anchors_preset = 15
+anchor_right = 1.0
+anchor_bottom = 1.0
+grow_horizontal = 2
+grow_vertical = 2
+focus_mode = 0
+flat = true
+
+[node name="FishingCelebrationPopupDimmer" type="ColorRect" parent="."]
+layout_mode = 1
+anchors_preset = 15
+anchor_right = 1.0
+anchor_bottom = 1.0
+grow_horizontal = 2
+grow_vertical = 2
+mouse_filter = 2
+color = Color(0.09, 0.07, 0.06, 0.28)
+
+[node name="FishingNewFishPopupPanel" type="Control" parent="."]
+layout_mode = 0
+offset_left = 260.0
+offset_top = 34.0
+offset_right = 1020.0
+offset_bottom = 686.0
+mouse_filter = 2
+
+[node name="FishingNewFishPopupBackground" type="TextureRect" parent="FishingNewFishPopupPanel"]
+layout_mode = 1
+anchors_preset = 15
+anchor_right = 1.0
+anchor_bottom = 1.0
+grow_horizontal = 2
+grow_vertical = 2
+mouse_filter = 2
+texture = ExtResource("1_background")
+expand_mode = 1
+stretch_mode = 0
+
+[node name="FishingNewFishPopupTitle" type="Label" parent="FishingNewFishPopupPanel"]
+layout_mode = 0
+offset_left = 105.0
+offset_top = 65.0
+offset_right = 655.0
+offset_bottom = 147.0
+mouse_filter = 2
+theme_override_fonts/font = ExtResource("2_font")
+theme_override_font_sizes/font_size = 60
+text = "CONGRATULATIONS!"
+horizontal_alignment = 1
+vertical_alignment = 1
+
+[node name="FishingNewFishPopupSubtitle" type="Label" parent="FishingNewFishPopupPanel"]
+layout_mode = 0
+offset_left = 170.0
+offset_top = 128.0
+offset_right = 590.0
+offset_bottom = 186.0
+mouse_filter = 2
+theme_override_fonts/font = ExtResource("2_font")
+theme_override_font_sizes/font_size = 32
+text = "YOU UNLOCKED:"
+horizontal_alignment = 1
+vertical_alignment = 1
+
+[node name="FishingNewFishPopupFish" type="TextureRect" parent="FishingNewFishPopupPanel"]
+layout_mode = 0
+offset_left = 265.0
+offset_top = 190.0
+offset_right = 495.0
+offset_bottom = 385.0
+mouse_filter = 2
+expand_mode = 1
+stretch_mode = 5
+
+[node name="FishingNewFishPopupInfoLineOne" type="Label" parent="FishingNewFishPopupPanel"]
+layout_mode = 0
+offset_left = 110.0
+offset_top = 404.0
+offset_right = 650.0
+offset_bottom = 442.0
+mouse_filter = 2
+theme_override_fonts/font = ExtResource("2_font")
+theme_override_font_sizes/font_size = 25
+text = "FIND OUT MORE IN THE FISH"
+horizontal_alignment = 1
+vertical_alignment = 1
+
+[node name="FishingNewFishPopupInfoLineTwo" type="Label" parent="FishingNewFishPopupPanel"]
+layout_mode = 0
+offset_left = 205.0
+offset_top = 438.0
+offset_right = 555.0
+offset_bottom = 476.0
+mouse_filter = 2
+theme_override_fonts/font = ExtResource("2_font")
+theme_override_font_sizes/font_size = 25
+text = "ENCYCLOPEDIA"
+horizontal_alignment = 1
+vertical_alignment = 1
+
+[node name="FishingNewFishPopupFooter" type="Label" parent="FishingNewFishPopupPanel"]
+layout_mode = 0
+offset_left = 135.0
+offset_top = 525.0
+offset_right = 625.0
+offset_bottom = 567.0
+mouse_filter = 2
+theme_override_fonts/font = ExtResource("2_font")
+theme_override_font_sizes/font_size = 19
+text = "CLICK ANYWHERE TO CONTINUE"
+horizontal_alignment = 1
+vertical_alignment = 1

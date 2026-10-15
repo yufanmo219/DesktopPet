@@ -1,0 +1,45 @@
+[gd_scene load_steps=2 format=3]
+
+[ext_resource type="Texture2D" path="res://assets/ui/loading/aquarium_loading_hourglass_icon_v1.png" id="1_hourglass"]
+
+[node name="AquariumLoadingView" type="Control"]
+layout_mode = 3
+anchors_preset = 15
+anchor_right = 1.0
+anchor_bottom = 1.0
+grow_horizontal = 2
+grow_vertical = 2
+mouse_filter = 2
+
+[node name="AquariumLoadingBackground" type="ColorRect" parent="."]
+layout_mode = 1
+anchors_preset = 15
+anchor_right = 1.0
+anchor_bottom = 1.0
+grow_horizontal = 2
+grow_vertical = 2
+mouse_filter = 0
+color = Color(0.176471, 0.164706, 0.160784, 1)
+
+[node name="AquariumLoadingHourglass" type="TextureRect" parent="."]
+layout_mode = 0
+offset_left = 576.0
+offset_top = 214.0
+offset_right = 704.0
+offset_bottom = 342.0
+pivot_offset = Vector2(64, 64)
+mouse_filter = 2
+texture_filter = 1
+texture = ExtResource("1_hourglass")
+expand_mode = 1
+stretch_mode = 5
+
+[node name="AquariumLoadingMessage" type="Label" parent="."]
+layout_mode = 0
+offset_top = 492.0
+offset_right = 1280.0
+offset_bottom = 554.0
+mouse_filter = 2
+text = "PREPARING THE AQUARIUM..."
+horizontal_alignment = 1
+vertical_alignment = 1

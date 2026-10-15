@@ -54,7 +54,7 @@ func _run_tests() -> void:
 	_check_silent("HOME button entry")
 	await create_timer(1.6).timeout
 	_check_silent("After HOME's old fade-in would have completed")
-	_press_text(game.desktop_station, "GO HOME")
+	_press_text(game.desktop_controller.desktop_station, "GO HOME")
 	_check(music_manager.is_home_music_active(), "GO HOME should resume HOME music")
 
 	# Every track and both active fades must be stopped, not just HOME's track.

@@ -1,0 +1,197 @@
+[gd_scene load_steps=6 format=3]
+
+[ext_resource type="Texture2D" path="res://assets/ui/fishing/panels/processed/stats_panel_frame.png" id="1_stats"]
+[ext_resource type="Texture2D" path="res://assets/ui/fishing/panels/processed/heart_panel_frame.png" id="2_heart_panel"]
+[ext_resource type="Texture2D" path="res://assets/ui/fishing/panels/processed/fish_types_panel_frame.png" id="3_goals"]
+[ext_resource type="Texture2D" path="res://assets/ui/fishing/hearts/heart_sprite_256.png" id="4_heart"]
+[ext_resource type="FontFile" path="res://assets/fonts/original_handwriting/yufan_original_handwriting.ttf" id="5_font"]
+
+[node name="FishingHUD" type="Control"]
+layout_mode = 3
+anchors_preset = 15
+anchor_right = 1.0
+anchor_bottom = 1.0
+grow_horizontal = 2
+grow_vertical = 2
+mouse_filter = 2
+
+[node name="FishingStatsPanel" type="Control" parent="."]
+layout_mode = 0
+offset_left = 50.0
+offset_top = 130.0
+offset_right = 348.0
+offset_bottom = 266.0
+mouse_filter = 2
+
+[node name="StatsPanelFrame" type="TextureRect" parent="FishingStatsPanel"]
+layout_mode = 1
+anchors_preset = 15
+anchor_right = 1.0
+anchor_bottom = 1.0
+grow_horizontal = 2
+grow_vertical = 2
+mouse_filter = 2
+texture = ExtResource("1_stats")
+expand_mode = 1
+stretch_mode = 0
+
+[node name="FishingLevelTimeLabel" type="Label" parent="FishingStatsPanel"]
+layout_mode = 0
+offset_left = 45.0
+offset_top = 26.0
+offset_right = 291.0
+offset_bottom = 110.0
+mouse_filter = 2
+theme_override_colors/font_color = Color(0.329412, 0.211765, 0.168627, 1)
+theme_override_fonts/font = ExtResource("5_font")
+theme_override_font_sizes/font_size = 27
+vertical_alignment = 1
+
+[node name="FishingHeartPanel" type="Control" parent="."]
+layout_mode = 0
+offset_left = 50.0
+offset_top = 50.0
+offset_right = 364.0
+offset_bottom = 133.0
+mouse_filter = 2
+
+[node name="HeartPanelFrame" type="TextureRect" parent="FishingHeartPanel"]
+layout_mode = 1
+anchors_preset = 15
+anchor_right = 1.0
+anchor_bottom = 1.0
+grow_horizontal = 2
+grow_vertical = 2
+mouse_filter = 2
+texture = ExtResource("2_heart_panel")
+expand_mode = 1
+stretch_mode = 0
+
+[node name="FishingHeart1" type="TextureRect" parent="FishingHeartPanel"]
+layout_mode = 0
+offset_right = 34.0
+offset_bottom = 34.0
+mouse_filter = 2
+texture = ExtResource("4_heart")
+expand_mode = 1
+stretch_mode = 5
+
+[node name="FishingHeart2" type="TextureRect" parent="FishingHeartPanel"]
+layout_mode = 0
+offset_right = 34.0
+offset_bottom = 34.0
+mouse_filter = 2
+texture = ExtResource("4_heart")
+expand_mode = 1
+stretch_mode = 5
+
+[node name="FishingHeart3" type="TextureRect" parent="FishingHeartPanel"]
+layout_mode = 0
+offset_right = 34.0
+offset_bottom = 34.0
+mouse_filter = 2
+texture = ExtResource("4_heart")
+expand_mode = 1
+stretch_mode = 5
+
+[node name="FishingHeart4" type="TextureRect" parent="FishingHeartPanel"]
+layout_mode = 0
+offset_right = 34.0
+offset_bottom = 34.0
+mouse_filter = 2
+texture = ExtResource("4_heart")
+expand_mode = 1
+stretch_mode = 5
+
+[node name="FishingHeart5" type="TextureRect" parent="FishingHeartPanel"]
+layout_mode = 0
+offset_right = 34.0
+offset_bottom = 34.0
+mouse_filter = 2
+texture = ExtResource("4_heart")
+expand_mode = 1
+stretch_mode = 5
+
+[node name="HeartTimerLabel" type="Label" parent="FishingHeartPanel"]
+layout_mode = 0
+offset_left = 14.0
+offset_top = 18.0
+offset_right = 296.0
+offset_bottom = 62.0
+mouse_filter = 2
+theme_override_colors/font_color = Color(0.329412, 0.227451, 0.196078, 1)
+theme_override_fonts/font = ExtResource("5_font")
+theme_override_font_sizes/font_size = 24
+horizontal_alignment = 1
+vertical_alignment = 1
+
+[node name="FishingFishTypesPanel" type="Control" parent="."]
+layout_mode = 0
+offset_left = 892.0
+offset_top = 50.0
+offset_right = 1219.0
+offset_bottom = 300.0
+mouse_filter = 2
+
+[node name="FishTypesPanelFrame" type="TextureRect" parent="FishingFishTypesPanel"]
+layout_mode = 1
+anchors_preset = 15
+anchor_right = 1.0
+anchor_bottom = 1.0
+grow_horizontal = 2
+grow_vertical = 2
+mouse_filter = 2
+texture = ExtResource("3_goals")
+expand_mode = 1
+stretch_mode = 0
+
+[node name="FishingGoalTrackerTitle" type="Label" parent="FishingFishTypesPanel"]
+layout_mode = 0
+offset_left = 22.0
+offset_top = 17.0
+offset_right = 300.0
+offset_bottom = 55.0
+mouse_filter = 2
+theme_override_colors/font_color = Color(0.321569, 0.207843, 0.172549, 1)
+theme_override_fonts/font = ExtResource("5_font")
+theme_override_font_sizes/font_size = 32
+text = "GOALS"
+horizontal_alignment = 1
+vertical_alignment = 1
+
+[node name="DynamicGoals" type="Control" parent="FishingFishTypesPanel"]
+layout_mode = 1
+anchors_preset = 15
+anchor_right = 1.0
+anchor_bottom = 1.0
+grow_horizontal = 2
+grow_vertical = 2
+mouse_filter = 2
+
+[node name="FishingHomeButton" type="Button" parent="."]
+layout_mode = 0
+offset_left = 30.0
+offset_top = 620.0
+offset_right = 184.0
+offset_bottom = 664.0
+focus_mode = 0
+theme_override_colors/font_color = Color(0.352941, 0.231373, 0.192157, 1)
+theme_override_colors/font_hover_color = Color(0.352941, 0.231373, 0.192157, 1)
+theme_override_fonts/font = ExtResource("5_font")
+theme_override_font_sizes/font_size = 28
+text = "← HOME"
+
+[node name="FishingCatchButton" type="Button" parent="."]
+layout_mode = 0
+offset_left = 966.0
+offset_top = 562.0
+offset_right = 1238.0
+offset_bottom = 680.0
+focus_mode = 0
+theme_override_colors/font_color = Color(1, 1, 1, 1)
+theme_override_colors/font_hover_color = Color(1, 1, 1, 1)
+theme_override_colors/font_pressed_color = Color(1, 1, 1, 1)
+theme_override_colors/font_disabled_color = Color(1, 0.956863, 0.901961, 1)
+theme_override_fonts/font = ExtResource("5_font")
+theme_override_font_sizes/font_size = 50
+text = "CATCH!"

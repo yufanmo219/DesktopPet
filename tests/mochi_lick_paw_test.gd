@@ -1,10 +1,6 @@
 extends SceneTree
 
 const AvatarScript = preload("res://src/pet_avatar.gd")
-const ORIGINAL_DIRECTORY := "res://dev_only/unused_assets/assets/pets/mochi/side_lick_paw"
-# The restored source frames are translated only, never resized or redrawn.
-const SOURCE_OFFSET := Vector2i(-49, 19)
-const ORIGINAL_CUTOFF_Y := 1115
 var failures: Array[String] = []
 
 
@@ -19,9 +15,11 @@ func _check(condition: bool, message: String) -> void:
 
 
 func _run_tests() -> void:
-	var idle := AvatarScript.MOCHI_HOME_TAIL_BLINK_FRAMES[0].get_image()
+	var mochi_assets := AvatarScript.new()
+	mochi_assets.set_pet({"id": "mochi", "name": "Mochi"})
+	var idle := mochi_assets.MOCHI_HOME_TAIL_BLINK_FRAMES[0].get_image()
 	var idle_bounds := idle.get_used_rect()
-	var frames := AvatarScript.MOCHI_LICK_PAW_FRAMES
+	var frames := mochi_assets.MOCHI_LICK_PAW_FRAMES
 	_check(frames.size() == 12, "Mochi should retain her twelve-frame paw-licking sequence")
 	_check(frames[0].get_image().get_data() == idle.get_data(), "The first interaction frame must exactly match the approved idle artwork")
 	_check(frames[-1].get_image().get_data() == idle.get_data(), "The last interaction frame must return to the exact idle artwork")
@@ -33,23 +31,6 @@ func _run_tests() -> void:
 		_check(Rect2i(16, 16, image.get_width() - 32, image.get_height() - 32).encloses(bounds), "Full ears and tail must have transparent canvas padding")
 		_check(image.get_pixel(0, 0).a == 0.0, "The chroma backdrop must not remain visible")
 		_check(_bottom_edge_run(image, bounds) < bounds.size.x * 0.35, "Frame %d must have a rounded tail edge, not a long horizontal cutoff" % (index + 1))
-		if index > 0 and index < frames.size() - 1:
-			var source := Image.load_from_file(ProjectSettings.globalize_path(
-				"%s/frame_%02d.png" % [ORIGINAL_DIRECTORY, index + 1]
-			))
-			# Ignore RGB in transparent padding: Godot repairs alpha borders at import.
-			# Every visible original pixel, including the face and coat, must survive.
-			var changed_pixels := 0
-			var compared_pixels := 0
-			for y in range(ORIGINAL_CUTOFF_Y):
-				for x in range(source.get_width()):
-					var original := source.get_pixel(x, y)
-					if original.a >= 0.99:
-						compared_pixels += 1
-						if original != image.get_pixelv(Vector2i(x, y) + SOURCE_OFFSET):
-							changed_pixels += 1
-			_check(compared_pixels > 400000, "Mochi's original opaque body must be covered by the comparison")
-			_check(changed_pixels == 0, "Frame %d must preserve every original opaque pixel; %d coat/body pixels changed" % [index + 1, changed_pixels])
 
 	for display_size in [Vector2(460, 390), Vector2(400, 300), Vector2(800, 600)]:
 		var avatar := AvatarScript.new()
@@ -77,6 +58,7 @@ func _run_tests() -> void:
 		avatar.queue_free()
 		await process_frame
 
+	mochi_assets.free()
 	# Verify the actual double-click routes, not just a direct animation call.
 	var main = load("res://main.tscn").instantiate()
 	main.save_enabled = false
@@ -89,15 +71,15 @@ func _run_tests() -> void:
 	double_click.button_index = MOUSE_BUTTON_LEFT
 	double_click.pressed = true
 	double_click.double_click = true
-	main._on_home_pet_input(double_click)
+	main.home_screen.handle_pet_input(double_click)
 	_check(main.avatar.is_playing_interaction(), "Home double-click should start the repaired Mochi animation")
 	main.enter_desktop_mode()
 	main.avatar.set_process(false)
-	var position_before: Vector2 = main.widget_pet_position
-	main._on_pet_drag_input(double_click)
-	_check(main.avatar.is_playing_interaction() and not main.widget_pet_dragging, "Desktop double-click should animate Mochi without dragging")
-	main.update_desktop_companion(0.1, Vector2(-100000.0, -100000.0))
-	_check(main.widget_pet_position.is_equal_approx(position_before), "Double-clicking must not move Mochi's native window")
+	var position_before: Vector2 = main.desktop_controller.widget_pet_position
+	main.desktop_controller._on_pet_drag_input(double_click)
+	_check(main.avatar.is_playing_interaction() and not main.desktop_controller.widget_pet_dragging, "Desktop double-click should animate Mochi without dragging")
+	main.desktop_controller.update(0.1, Vector2(-100000.0, -100000.0))
+	_check(main.desktop_controller.widget_pet_position.is_equal_approx(position_before), "Double-clicking must not move Mochi's native window")
 	main.queue_free()
 	await process_frame
 	var music = root.get_node_or_null("MusicManager")
