@@ -54,7 +54,7 @@ func run_tests() -> void:
 	)
 	_check(
 		fish_book.get_script().resource_path == "res://src/fish_book_screen.gd"
-		and not fish_book is StoreScreen,
+		and fish_book.get_script() != store.get_script(),
 		"Fish Book must remain an independent feature type"
 	)
 

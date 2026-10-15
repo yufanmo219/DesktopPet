@@ -26,8 +26,8 @@ func _run() -> void:
 		and session.round_spawn_sequence.size() == session.round_total_spawn_count,
 		"Loading a level should build its goals and complete deterministic spawn plan"
 	)
-	var first_plan := session.round_spawn_sequence.duplicate()
-	var first_times := session.round_spawn_times.duplicate()
+	var first_plan: Array[String] = session.round_spawn_sequence.duplicate()
+	var first_times: Array[float] = session.round_spawn_times.duplicate()
 	var repeated = FishingSessionScript.new()
 	repeated.rng.seed = 12345
 	repeated.load_level(1, 0)
@@ -44,7 +44,7 @@ func _run() -> void:
 	)
 
 	session.start_round()
-	var before := session.round_time_remaining
+	var before: float = session.round_time_remaining
 	_check(
 		not session.advance_time(1.25)
 		and is_equal_approx(session.round_time_remaining, before - 1.25),
@@ -77,7 +77,7 @@ func _run() -> void:
 	failed.rng.seed = 9
 	failed.load_level(1, 0)
 	failed.reset_goal_progress()
-	var base_chance := failed.round_catch_success_chance
+	var base_chance: float = failed.round_catch_success_chance
 	_check(not failed.finish_round(), "Missing goals should fail the round")
 	_check(
 		failed.current_level_retry_count == 1
