@@ -34,19 +34,21 @@ func _run() -> void:
 		avatar._update_layout()
 		var idle_position: Vector2 = avatar.cat_sprite.position
 		var original_scale: Vector2 = avatar.cat_sprite.scale
+		var interaction_frames := avatar.animation_frames("interaction")
+		var interaction_clip := avatar.animation_clip("interaction")
 		avatar.play_belly_roll()
-		for index in range(16):
+		for index in range(interaction_frames.size()):
 			_check(avatar.interaction_frame == index, "Biscuit must retain all sixteen frames and their timing")
-			_check(avatar.cat_sprite.texture == avatar.BISCUIT_BUTTERFLY_FRAMES[index], "Biscuit must use her unchanged original butterfly textures")
+			_check(avatar.cat_sprite.texture == interaction_frames[index], "Biscuit must use her unchanged original butterfly textures")
 			_check(avatar.cat_sprite.scale.is_equal_approx(original_scale), "Biscuit must not change size")
 			_check(avatar.cat_sprite.position.is_equal_approx(_unshifted_position(avatar) + Vector2(0, -8)), "Every double-click frame must move exactly eight pixels up, never horizontally")
 			_check(avatar.cat_sprite.modulate == Color.WHITE and avatar.cat_sprite.self_modulate == Color.WHITE, "No tint may change Biscuit's coat")
 			var position_before: Vector2 = avatar.cat_sprite.position
 			avatar._update_layout()
 			_check(avatar.cat_sprite.position.is_equal_approx(position_before), "Repeated layout must not accumulate the offset")
-			avatar._process(float(AvatarScript.BISCUIT_BUTTERFLY_FRAME_DURATIONS[index]) + 0.00001)
+			avatar._process(interaction_clip.frame_duration(index) + 0.00001)
 		_check(not avatar.is_playing_interaction() and avatar.cat_sprite.position.is_equal_approx(idle_position), "The offset must clear when returning to idle")
-		avatar._start_desktop_idle_animation("biscuit_butterfly")
+		avatar._start_desktop_idle_animation("interaction")
 		avatar._update_layout()
 		_check(avatar.cat_sprite.position.is_equal_approx(_unshifted_position(avatar)), "The automatic butterfly animation must remain at its previous position")
 		avatar.queue_free()

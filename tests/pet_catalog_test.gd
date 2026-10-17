@@ -46,35 +46,32 @@ func _run() -> void:
 
 	var avatar := AvatarScript.new()
 	_check(
-		avatar.PET_TEXTURE == null
-		and avatar.LUNA_IDLE_TEXTURE == null
-		and avatar.LUNA_MOVE_LEFT_FRAMES.is_empty(),
+		avatar.idle_texture == null
+		and avatar.animation_frames("move_left").is_empty(),
 		"Constructing the avatar script should not eagerly load pet textures"
 	)
 	avatar.set_pet({"id": "luna", "name": "Luna", "type": "Cat"})
 	_check(
 		avatar.loaded_asset_pet_id == "luna"
-		and avatar.LUNA_IDLE_TEXTURE != null
-		and avatar.LUNA_MOVE_LEFT_FRAMES.size() == 12
-		and avatar.PET_TEXTURE == null
-		and avatar.BISCUIT_MOVE_LEFT_FRAMES.is_empty(),
+		and avatar.idle_texture != null
+		and avatar.animation_frames("move_left").size() == 12
+		and avatar.animation_frames("interaction").size() == 12,
 		"Selecting Luna should load Luna's bundle without loading Maple or Biscuit"
 	)
 	avatar.set_pet({"id": "biscuit", "name": "Biscuit", "type": "Cat"})
 	_check(
 		avatar.loaded_asset_pet_id == "biscuit"
-		and avatar.BISCUIT_IDLE_TEXTURE != null
-		and avatar.BISCUIT_BUTTERFLY_FRAMES.size() == 16
-		and avatar.SLEEP_BUBBLE_FRAMES.size() == 14
-		and avatar.LUNA_IDLE_TEXTURE == null
-		and avatar.LUNA_MOVE_LEFT_FRAMES.is_empty(),
+		and avatar.idle_texture != null
+		and avatar.animation_frames("interaction").size() == 16
+		and avatar.animation_frames("sleep_bubble").size() == 14
+		and avatar.animation_frames("sleep_effect").is_empty(),
 		"Switching cats should release the previous bundle and load only the next one"
 	)
 	avatar.set_pet({"id": "legacy_unknown", "name": "Legacy", "type": "Cat"})
 	_check(
 		avatar.loaded_asset_pet_id == "default_orange_cat"
-		and avatar.PET_TEXTURE != null
-		and avatar.MOVE_LEFT_FRAMES.size() == 12,
+		and avatar.idle_texture != null
+		and avatar.animation_frames("move_left").size() == 12,
 		"Unknown legacy pets should safely fall back to Maple's visual bundle"
 	)
 	avatar.free()

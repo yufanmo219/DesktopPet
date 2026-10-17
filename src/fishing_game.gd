@@ -51,153 +51,6 @@ const FISHING_SUCCESS_SOUND: AudioStreamWAV = preload(
 const NET_HANDS_TEXTURE: Texture2D = preload(
 	"res://assets/ui/fishing/animations/cooperative_v3/processed/net_hands.png"
 )
-const DEFAULT_FISHING_PET_FRAMES: Array[Texture2D] = [
-	preload("res://assets/ui/fishing/animations/cooperative_v4/pet_frames/frame_01.png"),
-	preload("res://assets/ui/fishing/animations/cooperative_v4/pet_frames/frame_02.png"),
-	preload("res://assets/ui/fishing/animations/cooperative_v4/pet_frames/frame_03.png"),
-	preload("res://assets/ui/fishing/animations/cooperative_v4/pet_frames/frame_04.png"),
-	preload("res://assets/ui/fishing/animations/cooperative_v4/pet_frames/frame_05.png"),
-	preload("res://assets/ui/fishing/animations/cooperative_v4/pet_frames/frame_06.png")
-]
-const MOCHI_FISHING_DEFAULT_TEXTURE: Texture2D = preload(
-	"res://assets/pets/mochi/fishing/default/mochi_fishing_default.png"
-)
-const MOCHI_FISHING_CRY_FRAMES: Array[Texture2D] = [
-	MOCHI_FISHING_DEFAULT_TEXTURE,
-	preload("res://assets/pets/mochi/fishing/cry_v2/frame_02.png"),
-	preload("res://assets/pets/mochi/fishing/cry_v2/frame_03.png"),
-	preload("res://assets/pets/mochi/fishing/cry_v2/frame_04.png"),
-	preload("res://assets/pets/mochi/fishing/cry_v2/frame_05.png"),
-	preload("res://assets/pets/mochi/fishing/cry_v2/frame_06.png"),
-	preload("res://assets/pets/mochi/fishing/cry_v2/frame_07.png"),
-	preload("res://assets/pets/mochi/fishing/cry_v2/frame_08.png")
-]
-const MOCHI_FISHING_SUCCESS_FRAMES: Array[Texture2D] = [
-	MOCHI_FISHING_DEFAULT_TEXTURE,
-	preload("res://assets/pets/mochi/fishing/success/frame_02.png"),
-	preload("res://assets/pets/mochi/fishing/success/frame_03.png"),
-	preload("res://assets/pets/mochi/fishing/success/frame_04.png"),
-	preload("res://assets/pets/mochi/fishing/success/frame_05.png"),
-	preload("res://assets/pets/mochi/fishing/success/frame_06.png"),
-	preload("res://assets/pets/mochi/fishing/success/frame_07.png"),
-	MOCHI_FISHING_DEFAULT_TEXTURE
-]
-const MOCHI_FISHING_FAILURE_STATIC_TEXTURE: Texture2D = preload(
-	"res://assets/pets/mochi/fishing/failure/mochi_fishing_failure_static.png"
-)
-const BISCUIT_FISHING_DEFAULT_TEXTURE: Texture2D = preload(
-	"res://assets/pets/biscuit/fishing/default/biscuit_fishing_default.png"
-)
-const BISCUIT_FISHING_WINK_FRAMES: Array[Texture2D] = [
-	BISCUIT_FISHING_DEFAULT_TEXTURE,
-	preload("res://assets/pets/biscuit/fishing/success_wink_v3/frame_02.png"),
-	preload("res://assets/pets/biscuit/fishing/success_wink_v3/frame_03.png"),
-	preload("res://assets/pets/biscuit/fishing/success_wink_v3/frame_04.png"),
-	preload("res://assets/pets/biscuit/fishing/success_wink_v3/frame_05.png"),
-	preload("res://assets/pets/biscuit/fishing/success_wink_v3/frame_06.png"),
-	preload("res://assets/pets/biscuit/fishing/success_wink_v3/frame_07.png"),
-	BISCUIT_FISHING_DEFAULT_TEXTURE
-]
-const BISCUIT_FISHING_FAILURE_TEXTURE: Texture2D = preload(
-	"res://assets/pets/biscuit/fishing/failure/biscuit_fishing_failure.png"
-)
-const LUNA_FISHING_DEFAULT_TEXTURE: Texture2D = preload(
-	"res://assets/pets/russian_blue/fishing/default/luna_fishing_default.png"
-)
-const LUNA_FISHING_SUCCESS_FRAMES: Array[Texture2D] = [
-	LUNA_FISHING_DEFAULT_TEXTURE,
-	preload("res://assets/pets/russian_blue/fishing/success/frame_02.png"),
-	preload("res://assets/pets/russian_blue/fishing/success/frame_03.png"),
-	preload("res://assets/pets/russian_blue/fishing/success/frame_04.png"),
-	preload("res://assets/pets/russian_blue/fishing/success/frame_05.png"),
-	preload("res://assets/pets/russian_blue/fishing/success/frame_06.png"),
-	preload("res://assets/pets/russian_blue/fishing/success/frame_07.png"),
-	LUNA_FISHING_DEFAULT_TEXTURE
-]
-const LUNA_FISHING_FAILURE_TEXTURE: Texture2D = preload(
-	"res://assets/pets/russian_blue/fishing/failure/luna_fishing_failure.png"
-)
-const POPPY_FISHING_DEFAULT_TEXTURE: Texture2D = preload(
-	"res://assets/pets/blue_british/fishing/default/poppy_fishing_default.png"
-)
-const POPPY_FISHING_SUCCESS_FRAMES: Array[Texture2D] = [
-	preload("res://assets/pets/blue_british/fishing/success/frame_01.png"),
-	preload("res://assets/pets/blue_british/fishing/success/frame_02.png"),
-	preload("res://assets/pets/blue_british/fishing/success/frame_03.png"),
-	preload("res://assets/pets/blue_british/fishing/success/frame_04.png"),
-	preload("res://assets/pets/blue_british/fishing/success/frame_05.png"),
-	preload("res://assets/pets/blue_british/fishing/success/frame_06.png"),
-	preload("res://assets/pets/blue_british/fishing/success/frame_07.png"),
-	preload("res://assets/pets/blue_british/fishing/success/frame_08.png")
-]
-const POPPY_FISHING_FAILURE_TEXTURE: Texture2D = preload(
-	"res://assets/pets/blue_british/fishing/failure/poppy_fishing_failure.png"
-)
-const BLACK_CAT_FISHING_DEFAULT_TEXTURE: Texture2D = preload(
-	"res://assets/pets/black_cat/fishing/default/black_cat_fishing_default.png"
-)
-const BLACK_CAT_FISHING_SUCCESS_FRAMES: Array[Texture2D] = [
-	preload("res://assets/pets/black_cat/fishing/success/frame_01.png"),
-	preload("res://assets/pets/black_cat/fishing/success/frame_02.png"),
-	preload("res://assets/pets/black_cat/fishing/success/frame_03.png"),
-	preload("res://assets/pets/black_cat/fishing/success/frame_04.png"),
-	preload("res://assets/pets/black_cat/fishing/success/frame_05.png"),
-	preload("res://assets/pets/black_cat/fishing/success/frame_06.png"),
-	preload("res://assets/pets/black_cat/fishing/success/frame_07.png"),
-	preload("res://assets/pets/black_cat/fishing/success/frame_08.png")
-]
-const BLACK_CAT_FISHING_FAILURE_TEXTURE: Texture2D = preload(
-	"res://assets/pets/black_cat/fishing/failure/black_cat_fishing_failure.png"
-)
-const MAINE_COON_FISHING_DEFAULT_TEXTURE: Texture2D = preload(
-	"res://assets/pets/maine_coon/fishing/default/maine_coon_fishing_default.png"
-)
-const MAINE_COON_FISHING_SUCCESS_FRAMES: Array[Texture2D] = [
-	preload("res://assets/pets/maine_coon/fishing/success/frame_01.png"),
-	preload("res://assets/pets/maine_coon/fishing/success/frame_02.png"),
-	preload("res://assets/pets/maine_coon/fishing/success/frame_03.png"),
-	preload("res://assets/pets/maine_coon/fishing/success/frame_04.png"),
-	preload("res://assets/pets/maine_coon/fishing/success/frame_05.png"),
-	preload("res://assets/pets/maine_coon/fishing/success/frame_06.png"),
-	preload("res://assets/pets/maine_coon/fishing/success/frame_07.png"),
-	preload("res://assets/pets/maine_coon/fishing/success/frame_08.png")
-]
-const MAINE_COON_FISHING_FAILURE_TEXTURE: Texture2D = preload(
-	"res://assets/pets/maine_coon/fishing/failure/maine_coon_fishing_failure.png"
-)
-const GOLDEN_MUNCHKIN_FISHING_DEFAULT_TEXTURE: Texture2D = preload(
-	"res://assets/pets/golden_munchkin/fishing/default/golden_munchkin_fishing_default.png"
-)
-const GOLDEN_MUNCHKIN_FISHING_SUCCESS_FRAMES: Array[Texture2D] = [
-	preload("res://assets/pets/golden_munchkin/fishing/success/frame_01.png"),
-	preload("res://assets/pets/golden_munchkin/fishing/success/frame_02.png"),
-	preload("res://assets/pets/golden_munchkin/fishing/success/frame_03.png"),
-	preload("res://assets/pets/golden_munchkin/fishing/success/frame_04.png"),
-	preload("res://assets/pets/golden_munchkin/fishing/success/frame_05.png"),
-	preload("res://assets/pets/golden_munchkin/fishing/success/frame_06.png"),
-	preload("res://assets/pets/golden_munchkin/fishing/success/frame_07.png"),
-	preload("res://assets/pets/golden_munchkin/fishing/success/frame_08.png")
-]
-const GOLDEN_MUNCHKIN_FISHING_FAILURE_TEXTURE: Texture2D = preload(
-	"res://assets/pets/golden_munchkin/fishing/failure/golden_munchkin_fishing_failure.png"
-)
-const SIAMESE_FISHING_DEFAULT_TEXTURE: Texture2D = preload(
-	"res://assets/pets/siamese/fishing/default/siamese_fishing_default.png"
-)
-const SIAMESE_FISHING_SUCCESS_FRAMES: Array[Texture2D] = [
-	preload("res://assets/pets/siamese/fishing/success/frame_01.png"),
-	preload("res://assets/pets/siamese/fishing/success/frame_02.png"),
-	preload("res://assets/pets/siamese/fishing/success/frame_03.png"),
-	preload("res://assets/pets/siamese/fishing/success/frame_04.png"),
-	preload("res://assets/pets/siamese/fishing/success/frame_05.png"),
-	preload("res://assets/pets/siamese/fishing/success/frame_06.png"),
-	preload("res://assets/pets/siamese/fishing/success/frame_07.png"),
-	preload("res://assets/pets/siamese/fishing/success/frame_08.png")
-]
-const SIAMESE_FISHING_FAILURE_TEXTURE: Texture2D = preload(
-	"res://assets/pets/siamese/fishing/failure/siamese_fishing_failure.png"
-)
-
 const GREEN_FISH_TEXTURE: Texture2D = preload(
 	"res://assets/ui/fishing/fish/processed/green_fish_v2.png"
 )
@@ -207,9 +60,6 @@ const CORAL_ANGELFISH_TEXTURE: Texture2D = preload(
 const GOLDEN_RIBBONFISH_TEXTURE: Texture2D = preload(
 	"res://assets/ui/fishing/fish/processed/golden_ribbonfish_v2.png"
 )
-const CRYING_CAT_TEXTURE: Texture2D = preload(
-	"res://assets/pets/current/sprites/orange_cat_cry.png"
-)
 const HEART_TEXTURE: Texture2D = preload(
 	"res://assets/ui/fishing/hearts/heart_sprite_256.png"
 )
@@ -217,6 +67,10 @@ const GameFontStylesScript = preload("res://src/game_font_styles.gd")
 const FishCatalogScript = preload("res://src/fish_catalog.gd")
 const FishingLevelCatalogScript = preload("res://src/fishing_level_catalog.gd")
 const FishingSessionScript = preload("res://src/fishing/fishing_session.gd")
+const PetCatalogScript = preload("res://src/pets/pet_catalog.gd")
+const FishingPetPresentationScript = preload(
+	"res://src/fishing/fishing_pet_presentation.gd"
+)
 const GameStateStoreScript = preload("res://src/progression/game_state_store.gd")
 const HeartServiceScript = preload("res://src/progression/heart_service.gd")
 const FishingViewScene = preload("res://src/fishing/ui/fishing_view.tscn")
@@ -471,6 +325,7 @@ enum GameState {
 var state := GameState.WAITING_FOR_FISH
 var pet_id := "default_orange_cat"
 var pet_name := "Companion"
+var pet_presentation: FishingPetPresentation
 var fishing_session = FishingSessionScript.new()
 var current_level: int:
 	get:
@@ -659,6 +514,9 @@ func configure(
 ) -> void:
 	pet_id = str(pet.get("id", "default_orange_cat")).to_lower()
 	pet_name = str(pet.get("name", "Companion"))
+	pet_presentation = FishingPetPresentationScript.new(
+		PetCatalogScript.definition_or_default(pet_id)
+	)
 	if progress_store.progress_changed.is_connected(_on_progress_store_changed):
 		progress_store.progress_changed.disconnect(_on_progress_store_changed)
 	if configured_progress_store == null:
@@ -696,6 +554,10 @@ func _on_progress_store_changed(snapshot: Dictionary) -> void:
 
 
 func _ready() -> void:
+	if pet_presentation == null:
+		pet_presentation = FishingPetPresentationScript.new(
+			PetCatalogScript.definition_or_default(pet_id)
+		)
 	set_anchors_and_offsets_preset(Control.PRESET_FULL_RECT)
 	rng.randomize()
 	_load_round_configuration()
@@ -1304,27 +1166,9 @@ func _play_lift_animation(
 	var fish_start_positions: Array[Vector2] = []
 	for view in caught_fish_visuals:
 		fish_start_positions.append(view.position if is_instance_valid(view) else Vector2.ZERO)
-	var pet_reaction_frames: Array[Texture2D] = []
-	if _uses_mochi_fishing_art():
-		pet_reaction_frames = (
-			MOCHI_FISHING_SUCCESS_FRAMES
-			if caught_any_fish
-			else MOCHI_FISHING_CRY_FRAMES
-		)
-	elif _uses_biscuit_fishing_art() and caught_any_fish:
-		pet_reaction_frames = BISCUIT_FISHING_WINK_FRAMES
-	elif _uses_luna_fishing_art() and caught_any_fish:
-		pet_reaction_frames = LUNA_FISHING_SUCCESS_FRAMES
-	elif _uses_poppy_fishing_art() and caught_any_fish:
-		pet_reaction_frames = POPPY_FISHING_SUCCESS_FRAMES
-	elif _uses_black_cat_fishing_art() and caught_any_fish:
-		pet_reaction_frames = BLACK_CAT_FISHING_SUCCESS_FRAMES
-	elif _uses_maine_coon_fishing_art() and caught_any_fish:
-		pet_reaction_frames = MAINE_COON_FISHING_SUCCESS_FRAMES
-	elif _uses_golden_munchkin_fishing_art() and caught_any_fish:
-		pet_reaction_frames = GOLDEN_MUNCHKIN_FISHING_SUCCESS_FRAMES
-	elif _uses_siamese_fishing_art() and caught_any_fish:
-		pet_reaction_frames = SIAMESE_FISHING_SUCCESS_FRAMES
+	var pet_reaction_frames: Array[Texture2D] = pet_presentation.reaction_frames(
+		caught_any_fish
+	)
 	for index in range(FRAME_DURATIONS.size()):
 		if not is_inside_tree() or returning_home:
 			return
@@ -1822,96 +1666,15 @@ func _apply_animation_frame(index: int) -> void:
 	net_view.size = NET_FRAME_SIZES[animation_frame_index]
 	pet_view.position = PET_FRAME_POSITIONS[animation_frame_index]
 	pet_view.size = PET_FRAME_SIZES[animation_frame_index]
-	if _uses_mochi_fishing_art():
-		pet_view.texture = MOCHI_FISHING_DEFAULT_TEXTURE
-	elif _uses_biscuit_fishing_art():
-		pet_view.texture = BISCUIT_FISHING_DEFAULT_TEXTURE
-	elif _uses_luna_fishing_art():
-		pet_view.texture = LUNA_FISHING_DEFAULT_TEXTURE
-	elif _uses_poppy_fishing_art():
-		pet_view.texture = POPPY_FISHING_DEFAULT_TEXTURE
-	elif _uses_black_cat_fishing_art():
-		pet_view.texture = BLACK_CAT_FISHING_DEFAULT_TEXTURE
-	elif _uses_maine_coon_fishing_art():
-		pet_view.texture = MAINE_COON_FISHING_DEFAULT_TEXTURE
-	elif _uses_golden_munchkin_fishing_art():
-		pet_view.texture = GOLDEN_MUNCHKIN_FISHING_DEFAULT_TEXTURE
-	elif _uses_siamese_fishing_art():
-		pet_view.texture = SIAMESE_FISHING_DEFAULT_TEXTURE
-	else:
-		pet_view.texture = DEFAULT_FISHING_PET_FRAMES[animation_frame_index]
-
-
-func _uses_mochi_fishing_art() -> bool:
-	return pet_id == "mochi"
-
-
-func _uses_biscuit_fishing_art() -> bool:
-	return pet_id == "biscuit"
-
-
-func _uses_luna_fishing_art() -> bool:
-	return pet_id == "luna"
-
-
-func _uses_poppy_fishing_art() -> bool:
-	return pet_id == "poppy"
-
-
-func _uses_black_cat_fishing_art() -> bool:
-	return pet_id == "black_cat"
-
-
-func _uses_maine_coon_fishing_art() -> bool:
-	return pet_id == "maine_coon"
-
-
-func _uses_golden_munchkin_fishing_art() -> bool:
-	return pet_id == "golden_munchkin"
-
-
-func _uses_siamese_fishing_art() -> bool:
-	return pet_id == "siamese"
+	pet_view.texture = pet_presentation.default_frame(animation_frame_index)
 
 
 func _failure_cat_texture() -> Texture2D:
-	if _uses_mochi_fishing_art():
-		return MOCHI_FISHING_CRY_FRAMES.back()
-	if _uses_biscuit_fishing_art():
-		return BISCUIT_FISHING_FAILURE_TEXTURE
-	if _uses_luna_fishing_art():
-		return LUNA_FISHING_FAILURE_TEXTURE
-	if _uses_poppy_fishing_art():
-		return POPPY_FISHING_FAILURE_TEXTURE
-	if _uses_black_cat_fishing_art():
-		return BLACK_CAT_FISHING_FAILURE_TEXTURE
-	if _uses_maine_coon_fishing_art():
-		return MAINE_COON_FISHING_FAILURE_TEXTURE
-	if _uses_golden_munchkin_fishing_art():
-		return GOLDEN_MUNCHKIN_FISHING_FAILURE_TEXTURE
-	if _uses_siamese_fishing_art():
-		return SIAMESE_FISHING_FAILURE_TEXTURE
-	return CRYING_CAT_TEXTURE
+	return pet_presentation.catch_failure_texture
 
 
 func _round_failure_cat_texture() -> Texture2D:
-	if _uses_mochi_fishing_art():
-		return MOCHI_FISHING_FAILURE_STATIC_TEXTURE
-	if _uses_biscuit_fishing_art():
-		return BISCUIT_FISHING_FAILURE_TEXTURE
-	if _uses_luna_fishing_art():
-		return LUNA_FISHING_FAILURE_TEXTURE
-	if _uses_poppy_fishing_art():
-		return POPPY_FISHING_FAILURE_TEXTURE
-	if _uses_black_cat_fishing_art():
-		return BLACK_CAT_FISHING_FAILURE_TEXTURE
-	if _uses_maine_coon_fishing_art():
-		return MAINE_COON_FISHING_FAILURE_TEXTURE
-	if _uses_golden_munchkin_fishing_art():
-		return GOLDEN_MUNCHKIN_FISHING_FAILURE_TEXTURE
-	if _uses_siamese_fishing_art():
-		return SIAMESE_FISHING_FAILURE_TEXTURE
-	return CRYING_CAT_TEXTURE
+	return pet_presentation.round_failure_texture
 
 
 func _make_fish_visual(

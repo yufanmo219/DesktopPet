@@ -56,8 +56,8 @@ func _initialize() -> void:
 	var avatar := AvatarScript.new()
 	avatar.set_pet({"id": "maine_coon", "name": "Cedar"})
 	var directions := {
-		"left": avatar.MAINE_COON_MOVE_LEFT_FRAMES,
-		"right": avatar.MAINE_COON_MOVE_RIGHT_FRAMES,
+		"left": avatar.animation_frames("move_left"),
+		"right": avatar.animation_frames("move_right"),
 	}
 	for direction in directions:
 		var frames: Array = directions[direction]

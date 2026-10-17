@@ -38,11 +38,17 @@ func _check(condition: bool, message: String) -> void:
 
 
 func _run() -> void:
-	var frames := FishingScript.BISCUIT_FISHING_WINK_FRAMES
-	var base := FishingScript.BISCUIT_FISHING_DEFAULT_TEXTURE.get_image()
+	var game := FishingHarness.new()
+	game.capture_frames = OS.get_cmdline_user_args().has("--capture-wink")
+	if game.capture_frames:
+		root.size = Vector2i(1280, 720)
+	game.configure({"id": "biscuit", "name": "Biscuit"}, {"hearts": 5})
+	var presentation: FishingPetPresentation = game.pet_presentation
+	var frames := presentation.success_frames
+	var base := presentation.default_texture.get_image()
 	base.convert(Image.FORMAT_RGBA8)
 	_check(frames.size() == 8, "Biscuit must retain the eight-frame fishing reaction")
-	_check(frames[0] == FishingScript.BISCUIT_FISHING_DEFAULT_TEXTURE and frames[-1] == frames[0], "The wink must start and finish on the approved default texture")
+	_check(frames[0] == presentation.default_texture and frames[-1] == frames[0], "The wink must start and finish on the approved default texture")
 	var open_pupil_count := _left_eye_dark_pixels(base)
 	var neutral_foot_anchor := _foot_anchor(base)
 	for index in range(frames.size()):
@@ -79,11 +85,6 @@ func _run() -> void:
 			_check(left_pupil > open_pupil_count * 0.65, "The yellow-side eye must start open and reopen before the reaction ends")
 	_check(frames[1].get_image().get_data() != frames[6].get_image().get_data(), "Anticipation and settling must use distinct generated head poses")
 
-	var game := FishingHarness.new()
-	game.capture_frames = OS.get_cmdline_user_args().has("--capture-wink")
-	if game.capture_frames:
-		root.size = Vector2i(1280, 720)
-	game.configure({"id": "biscuit", "name": "Biscuit"}, {"hearts": 5})
 	root.add_child(game)
 	await process_frame
 	game.set_process(false)
@@ -102,13 +103,13 @@ func _run() -> void:
 	_check(game.observed_durations == expected_durations, "The existing net-lift and reaction timing must remain unchanged")
 	_check(game.observed_positions.all(func(value): return value == initial_position) and game.observed_sizes.all(func(value): return value == initial_size), "The actual riverbank cat must not shift or resize during the wink")
 	_check(caught_visual.position == Vector2(400, 210), "Caught fish must still rise with the original net motion")
-	_check(game.pet_view.texture == FishingScript.BISCUIT_FISHING_DEFAULT_TEXTURE, "The successful reaction must end with both eyes open")
+	_check(game.pet_view.texture == presentation.default_texture, "The successful reaction must end with both eyes open")
 	game.capture_frames = false
 	game.observed_frames.clear()
 	var empty_catch: Array[TextureRect] = []
 	await game._play_lift_animation(empty_catch, false)
-	_check(game.observed_frames.size() == 6 and game.observed_frames.all(func(value): return value == FishingScript.BISCUIT_FISHING_DEFAULT_TEXTURE), "An empty net must not trigger the success wink")
-	_check(game._failure_cat_texture() == FishingScript.BISCUIT_FISHING_FAILURE_TEXTURE, "Biscuit's failure artwork must remain unchanged")
+	_check(game.observed_frames.size() == 6 and game.observed_frames.all(func(value): return value == presentation.default_texture), "An empty net must not trigger the success wink")
+	_check(game._failure_cat_texture() == presentation.catch_failure_texture, "Biscuit's failure artwork must remain unchanged")
 	game.queue_free()
 	await process_frame
 	if failures.is_empty():

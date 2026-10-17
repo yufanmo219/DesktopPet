@@ -17,9 +17,10 @@ func _check(condition: bool, message: String) -> void:
 func _run_tests() -> void:
 	var mochi_assets := AvatarScript.new()
 	mochi_assets.set_pet({"id": "mochi", "name": "Mochi"})
-	var idle := mochi_assets.MOCHI_HOME_TAIL_BLINK_FRAMES[0].get_image()
+	var idle := mochi_assets.animation_frames("home_idle")[0].get_image()
 	var idle_bounds := idle.get_used_rect()
-	var frames := mochi_assets.MOCHI_LICK_PAW_FRAMES
+	var frames := mochi_assets.animation_frames("interaction")
+	var interaction_clip := mochi_assets.animation_clip("interaction")
 	_check(frames.size() == 12, "Mochi should retain her twelve-frame paw-licking sequence")
 	_check(frames[0].get_image().get_data() == idle.get_data(), "The first interaction frame must exactly match the approved idle artwork")
 	_check(frames[-1].get_image().get_data() == idle.get_data(), "The last interaction frame must return to the exact idle artwork")
@@ -52,7 +53,7 @@ func _run_tests() -> void:
 				bounds.size * idle_scale
 			)
 			_check(Rect2(Vector2.ZERO, display_size).encloses(visible_rect), "The complete animated tail must fit inside the Home/desktop viewport")
-			avatar._process(float(avatar.MOCHI_LICK_PAW_FRAME_DURATIONS[index]) + 0.00001)
+			avatar._process(interaction_clip.frame_duration(index) + 0.00001)
 		_check(not avatar.is_playing_interaction(), "Mochi's interaction should finish once")
 		_check(avatar.cat_sprite.position.is_equal_approx(idle_position) and avatar.cat_sprite.scale.is_equal_approx(idle_scale), "Returning to idle must not shift Mochi")
 		avatar.queue_free()

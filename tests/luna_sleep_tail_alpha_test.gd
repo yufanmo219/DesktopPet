@@ -36,7 +36,7 @@ func _run() -> void:
 			if after.a > 0.0 and after.g > maxf(after.r, after.b) + 2.0 / 255.0:
 				remaining_green += 1
 	_check(remaining_green == 0, "No visible green may remain in the tail gap")
-	_check(luna_assets.LUNA_SLEEP_TEXTURE.resource_path == REPAIRED_PATH, "Luna's static sleeping pose must use the repaired local asset")
+	_check(luna_assets.sleep_texture.resource_path == REPAIRED_PATH, "Luna's static sleeping pose must use the repaired local asset")
 	for display_size in [Vector2(460, 390), Vector2(400, 300), Vector2(800, 600)]:
 		var avatar := AvatarScript.new()
 		avatar.size = display_size
@@ -45,7 +45,7 @@ func _run() -> void:
 		avatar.set_process(false)
 		avatar.set_mood("sleep")
 		avatar._update_layout()
-		_check(avatar.cat_sprite.texture == avatar.LUNA_SLEEP_TEXTURE, "Home/Desktop sleep must display the fixed static sprite")
+		_check(avatar.cat_sprite.texture == avatar.sleep_texture, "Home/Desktop sleep must display the fixed static sprite")
 		var texture_size := Vector2(repaired.get_size())
 		var expected_scale := minf(display_size.x / texture_size.x, display_size.y / texture_size.y) * 0.95
 		var bounds := Rect2(repaired_bounds)
@@ -54,9 +54,9 @@ func _run() -> void:
 			display_size.y * avatar.SHADOW_CENTER_Y_RATIO - (bounds.end.y - texture_size.y * 0.5) * expected_scale
 		)
 		_check(avatar.cat_sprite.scale.is_equal_approx(Vector2.ONE * expected_scale) and avatar.cat_sprite.position.is_equal_approx(expected_position), "Transparency-only repair must not shift or resize Luna")
-		avatar.luna_sleep_idle_wait_remaining = 0.0
+		avatar.sleep_effect_wait_remaining = 0.0
 		avatar._process(0.01)
-		_check(avatar.cat_sprite.texture == avatar.LUNA_SLEEP_IDLE_FRAMES[0] and avatar.LUNA_SLEEP_IDLE_FRAMES.size() == 12, "The twelve-frame sleep animation must still start from the repaired static pose")
+		_check(avatar.cat_sprite.texture == avatar.animation_frames("sleep_effect")[0] and avatar.animation_frames("sleep_effect").size() == 12, "The twelve-frame sleep animation must still start from the repaired static pose")
 		avatar.queue_free()
 		await process_frame
 	luna_assets.free()

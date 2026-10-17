@@ -2,201 +2,67 @@ class_name PetAvatar
 extends Control
 
 const PetCatalogScript = preload("res://src/pets/pet_catalog.gd")
+const GameFontStylesScript = preload("res://src/game_font_styles.gd")
 
-# Compatibility names remain instance-scoped for existing animation code and
-# tests. Unlike the former constants, these hold only the active pet's assets.
-var PET_TEXTURE: Texture2D
-var SLEEP_TEXTURE: Texture2D
-var MOCHI_HOME_TAIL_BLINK_FRAMES: Array[Texture2D] = []
-var MOCHI_SLEEP_TEXTURE: Texture2D
-var MOCHI_SLEEP_EAR_TWITCH_FRAMES: Array[Texture2D] = []
-var MOCHI_LICK_PAW_FRAMES: Array[Texture2D] = []
-var MOCHI_MOVE_LEFT_FRAMES: Array[Texture2D] = []
-var MOCHI_MOVE_RIGHT_FRAMES: Array[Texture2D] = []
-var BISCUIT_IDLE_TEXTURE: Texture2D
-var BISCUIT_SLEEP_TEXTURE: Texture2D
-var BISCUIT_BUTTERFLY_FRAMES: Array[Texture2D] = []
-var BISCUIT_MOVE_LEFT_FRAMES: Array[Texture2D] = []
-var BISCUIT_MOVE_RIGHT_FRAMES: Array[Texture2D] = []
-var LUNA_IDLE_TEXTURE: Texture2D
-var LUNA_SLEEP_TEXTURE: Texture2D
-var LUNA_SLEEP_IDLE_FRAMES: Array[Texture2D] = []
-var LUNA_STRETCH_YAWN_FRAMES: Array[Texture2D] = []
-var LUNA_MOVE_LEFT_FRAMES: Array[Texture2D] = []
-var LUNA_MOVE_RIGHT_FRAMES: Array[Texture2D] = []
-var POPPY_IDLE_TEXTURE: Texture2D
-var POPPY_SLEEP_TEXTURE: Texture2D
-var POPPY_SLEEP_FACE_RUB_FRAMES: Array[Texture2D] = []
-var POPPY_TEASER_PLAY_FRAMES: Array[Texture2D] = []
-var POPPY_MOVE_LEFT_FRAMES: Array[Texture2D] = []
-var POPPY_MOVE_RIGHT_FRAMES: Array[Texture2D] = []
-var BLACK_CAT_IDLE_TEXTURE: Texture2D
-var BLACK_CAT_SLEEP_TEXTURE: Texture2D
-var BLACK_CAT_FALL_ASLEEP_FRAMES: Array[Texture2D] = []
-var BLACK_CAT_LICK_PAW_FRAMES: Array[Texture2D] = []
-var BLACK_CAT_MOVE_LEFT_FRAMES: Array[Texture2D] = []
-var BLACK_CAT_MOVE_RIGHT_FRAMES: Array[Texture2D] = []
-var MAINE_COON_IDLE_TEXTURE: Texture2D
-var MAINE_COON_SLEEP_TEXTURE: Texture2D
-var MAINE_COON_SLEEP_PAW_LICK_FRAMES: Array[Texture2D] = []
-var MAINE_COON_NUZZLE_FRAMES: Array[Texture2D] = []
-var MAINE_COON_MOVE_LEFT_FRAMES: Array[Texture2D] = []
-var MAINE_COON_MOVE_RIGHT_FRAMES: Array[Texture2D] = []
-var GOLDEN_MUNCHKIN_IDLE_TEXTURE: Texture2D
-var GOLDEN_MUNCHKIN_SLEEP_TEXTURE: Texture2D
-var GOLDEN_MUNCHKIN_SLEEP_TAIL_FRAMES: Array[Texture2D] = []
-var GOLDEN_MUNCHKIN_FAILED_ROLL_FRAMES: Array[Texture2D] = []
-var GOLDEN_MUNCHKIN_MOVE_LEFT_FRAMES: Array[Texture2D] = []
-var GOLDEN_MUNCHKIN_MOVE_RIGHT_FRAMES: Array[Texture2D] = []
-var SIAMESE_IDLE_TEXTURE: Texture2D
-var SIAMESE_SLEEP_TEXTURE: Texture2D
-var SIAMESE_TREAT_FRAMES: Array[Texture2D] = []
-var SIAMESE_MOVE_LEFT_FRAMES: Array[Texture2D] = []
-var SIAMESE_MOVE_RIGHT_FRAMES: Array[Texture2D] = []
-var SLEEP_BUBBLE_FRAMES: Array[Texture2D] = []
-var MOVE_LEFT_FRAMES: Array[Texture2D] = []
-var MOVE_RIGHT_FRAMES: Array[Texture2D] = []
-var SHY_FRAMES: Array[Texture2D] = []
-var DESKTOP_WINK_FRAMES: Array[Texture2D] = []
-var DESKTOP_BELLY_FRAMES: Array[Texture2D] = []
-
-
-const MOVE_FPS := 7.0
-const LUNA_MOVE_FPS := 12.0
-const BLACK_CAT_MOVE_FPS := 10.0
-# Fixed canvas/foot line for the freshly authored mirrored Luna walk cycle.
-const LUNA_MOVE_LAYOUT_BOUNDS := Rect2(0.0, 0.0, 704.0, 500.0)
-# Sable's new side-profile cycle shares one canvas and planted-paw baseline.
-const BLACK_CAT_MOVE_LAYOUT_BOUNDS := Rect2(0.0, 0.0, 704.0, 500.0)
-const MOVE_LOOP_START_FRAME := 3
-const MOVEMENT_SCALE_MULTIPLIER := 0.98
-const BLACK_CAT_SLEEP_SCALE_MULTIPLIER := 0.76
-const SHY_FPS := 6.0
-const DESKTOP_WINK_FPS := 6.0
-const DESKTOP_BELLY_FPS := 4.5
+const MOVE_SECONDS := 1.15
+const DEFAULT_INTERACTION_FPS := 4.5
 const DESKTOP_IDLE_MIN_WAIT := 7.0
 const DESKTOP_IDLE_MAX_WAIT := 15.0
-const SLEEP_BUBBLE_FPS := 5.0
 const SLEEP_BUBBLE_MIN_WAIT := 3.0
 const SLEEP_BUBBLE_MAX_WAIT := 8.0
-const SLEEP_BUBBLE_NOSE_POSITION := Vector2(374.0, 338.0)
-const BISCUIT_SLEEP_BUBBLE_NOSE_POSITION := Vector2(218.0, 398.0)
 const SLEEP_BUBBLE_FRAME_ANCHOR := Vector2(10.0, 70.0)
 const SHADOW_CENTER_Y_RATIO := 0.91
-const MOCHI_HOME_IDLE_MIN_WAIT := 4.0
-const MOCHI_HOME_IDLE_MAX_WAIT := 8.0
-const MOCHI_HOME_IDLE_FRAME_DURATIONS := [0.30, 0.10, 0.10, 0.15, 0.15, 0.10, 0.10, 0.40]
-const MOCHI_SLEEP_EAR_TWITCH_MIN_WAIT := 3.5
-const MOCHI_SLEEP_EAR_TWITCH_MAX_WAIT := 9.0
-const MOCHI_SLEEP_EAR_TWITCH_FRAME_DURATIONS: Array[float] = [0.40, 0.10, 0.10, 0.12, 0.12, 0.10, 0.10, 0.45]
-const MOCHI_LICK_PAW_FRAME_DURATIONS: Array[float] = [0.45, 0.10, 0.10, 0.11, 0.14, 0.10, 0.14, 0.11, 0.10, 0.10, 0.11, 0.60]
-const BISCUIT_BUTTERFLY_FRAME_DURATIONS: Array[float] = [
-	0.35, 0.14, 0.14, 0.14, 0.14, 0.14, 0.14, 0.14,
-	0.14, 0.14, 0.14, 0.14, 0.14, 0.14, 0.14, 0.55
-]
-const BISCUIT_DOUBLE_CLICK_OFFSET := Vector2(0.0, -8.0)
-const LUNA_STRETCH_YAWN_FRAME_DURATIONS: Array[float] = [
-	0.40, 0.14, 0.14, 0.16, 0.18, 0.22,
-	0.24, 0.18, 0.16, 0.16, 0.20, 0.55
-]
-const LUNA_SLEEP_IDLE_FRAME_DURATIONS: Array[float] = [
-	0.30, 0.18, 0.16, 0.18, 0.22, 0.35,
-	0.30, 0.22, 0.18, 0.16, 0.18, 0.40
-]
-const LUNA_SLEEP_IDLE_MIN_WAIT := 4.0
-const LUNA_SLEEP_IDLE_MAX_WAIT := 10.0
-const POPPY_SLEEP_FACE_RUB_FRAME_DURATIONS: Array[float] = [
-	0.22, 0.14, 0.14, 0.17, 0.16, 0.16, 0.18, 0.16, 0.16, 0.17, 0.18, 0.30
-]
-const POPPY_TEASER_PLAY_FRAME_DURATIONS: Array[float] = [
-	0.75, 0.50, 0.36, 0.60,
-	0.44, 0.52, 0.42, 0.42,
-	0.32, 0.27, 0.27, 0.32,
-	0.45, 0.50, 0.65, 0.90
-]
-const BLACK_CAT_FALL_ASLEEP_FRAME_DURATIONS: Array[float] = [
-	0.48, 0.18, 0.22, 0.30, 0.34, 0.44, 0.50, 0.70
-]
-const BLACK_CAT_LICK_PAW_FRAME_DURATIONS: Array[float] = [
-	0.34, 0.18, 0.22, 0.26, 0.24, 0.24, 0.30, 0.58
-]
-const MAINE_COON_SLEEP_PAW_LICK_FRAME_DURATIONS: Array[float] = [
-	0.70, 0.28, 0.32, 0.40, 0.32, 0.26, 0.30, 0.95
-]
-const MAINE_COON_NUZZLE_FRAME_DURATIONS: Array[float] = [
-	0.42, 0.18, 0.22, 0.25, 0.24, 0.35, 0.22, 0.68
-]
-const GOLDEN_MUNCHKIN_SLEEP_TAIL_FRAME_DURATIONS: Array[float] = [
-	0.26, 0.17, 0.17, 0.17, 0.52,
-	0.17, 0.17, 0.17, 0.24, 0.17,
-	0.17, 0.55, 0.18, 0.18, 0.30
-]
-const GOLDEN_MUNCHKIN_FAILED_ROLL_FRAME_DURATIONS: Array[float] = [
-	0.60, 0.24, 0.22, 0.24, 0.22, 0.15,
-	0.20, 0.52, 0.26, 0.24, 0.24, 0.75
-]
-const SIAMESE_TREAT_FRAME_DURATIONS: Array[float] = [
-	0.36, 0.22, 0.27, 0.10, 0.125, 0.09,
-	0.125, 0.09, 0.125, 0.13, 0.25, 0.65
-]
-const POPPY_SLEEP_FACE_RUB_MIN_WAIT := 4.0
-const POPPY_SLEEP_FACE_RUB_MAX_WAIT := 10.0
-const GameFontStylesScript = preload("res://src/game_font_styles.gd")
 
 var mood := "idle"
 var pet_id := "default_orange_cat"
 var pet_definition: PetDefinition
 var loaded_asset_pet_id := ""
+var idle_texture: Texture2D
+var sleep_texture: Texture2D
+var loaded_animation_frames: Dictionary = {}
+
 var home_idle_enabled := false
 var home_idle_playing := false
 var home_idle_frame := 0
 var home_idle_frame_elapsed := 0.0
 var home_idle_wait_remaining := 0.0
+
 var cat_sprite: Sprite2D
 var sleep_bubble_sprite: Sprite2D
 var mood_badge: Label
+
 var move_direction := "right"
 var move_frame := 0
 var move_frame_elapsed := 0.0
 var move_time_remaining := 0.0
+
 var interaction_animation_active := false
 var interaction_frames: Array[Texture2D] = []
-var interaction_frame_durations: Array[float] = []
 var interaction_frame := 0
 var interaction_frame_elapsed := 0.0
+
 var shy_frame := 0
 var shy_frame_elapsed := 0.0
+
 var desktop_idle_enabled := false
 var desktop_idle_animation := ""
 var desktop_idle_frames: Array[Texture2D] = []
 var desktop_idle_frame := 0
 var desktop_idle_frame_elapsed := 0.0
 var desktop_idle_wait_remaining := 0.0
+
 var sleep_bubble_frame := 0
 var sleep_bubble_frame_elapsed := 0.0
 var sleep_bubble_active := false
 var sleep_bubble_wait_remaining := 0.0
-var mochi_sleep_ear_twitch_playing := false
-var mochi_sleep_ear_twitch_frame := 0
-var mochi_sleep_ear_twitch_frame_elapsed := 0.0
-var mochi_sleep_ear_twitch_wait_remaining := 0.0
-var luna_sleep_idle_playing := false
-var luna_sleep_idle_frame := 0
-var luna_sleep_idle_frame_elapsed := 0.0
-var luna_sleep_idle_wait_remaining := 0.0
-var poppy_sleep_face_rub_playing := false
-var poppy_sleep_face_rub_frame := 0
-var poppy_sleep_face_rub_frame_elapsed := 0.0
-var poppy_sleep_face_rub_wait_remaining := 0.0
-var black_cat_fall_asleep_playing := false
-var black_cat_fall_asleep_frame := 0
-var black_cat_fall_asleep_frame_elapsed := 0.0
-var maine_coon_sleep_paw_lick_playing := false
-var maine_coon_sleep_paw_lick_frame := 0
-var maine_coon_sleep_paw_lick_frame_elapsed := 0.0
-var golden_munchkin_sleep_tail_playing := false
-var golden_munchkin_sleep_tail_frame := 0
-var golden_munchkin_sleep_tail_frame_elapsed := 0.0
+
+var sleep_effect_playing := false
+var sleep_effect_visible := false
+var sleep_effect_frame := 0
+var sleep_effect_frame_elapsed := 0.0
+var sleep_effect_wait_remaining := 0.0
+
+var active_clip_key := ""
 static var texture_visual_bounds_cache: Dictionary = {}
 
 
@@ -206,129 +72,33 @@ func _load_pet_assets(requested_pet_id: String) -> void:
 		return
 	_clear_pet_assets()
 	pet_definition = definition
+	pet_id = definition.pet_id
 	loaded_asset_pet_id = definition.pet_id
-	match definition.pet_id:
-		"mochi":
-			MOCHI_HOME_TAIL_BLINK_FRAMES = definition.load_animation("home_idle")
-			MOCHI_SLEEP_TEXTURE = definition.load_texture("sleep")
-			MOCHI_SLEEP_EAR_TWITCH_FRAMES = definition.load_animation("sleep_effect")
-			MOCHI_LICK_PAW_FRAMES = definition.load_animation("interaction")
-			MOCHI_MOVE_LEFT_FRAMES = definition.load_animation("move_left")
-			MOCHI_MOVE_RIGHT_FRAMES = definition.load_animation("move_right")
-		"biscuit":
-			BISCUIT_IDLE_TEXTURE = definition.load_texture("idle")
-			BISCUIT_SLEEP_TEXTURE = definition.load_texture("sleep")
-			BISCUIT_BUTTERFLY_FRAMES = definition.load_animation("interaction")
-			BISCUIT_MOVE_LEFT_FRAMES = definition.load_animation("move_left")
-			BISCUIT_MOVE_RIGHT_FRAMES = definition.load_animation("move_right")
-			SLEEP_BUBBLE_FRAMES = definition.load_animation("sleep_bubble")
-		"luna":
-			LUNA_IDLE_TEXTURE = definition.load_texture("idle")
-			LUNA_SLEEP_TEXTURE = definition.load_texture("sleep")
-			LUNA_SLEEP_IDLE_FRAMES = definition.load_animation("sleep_effect")
-			LUNA_STRETCH_YAWN_FRAMES = definition.load_animation("interaction")
-			LUNA_MOVE_LEFT_FRAMES = definition.load_animation("move_left")
-			LUNA_MOVE_RIGHT_FRAMES = definition.load_animation("move_right")
-		"poppy":
-			POPPY_IDLE_TEXTURE = definition.load_texture("idle")
-			POPPY_SLEEP_TEXTURE = definition.load_texture("sleep")
-			POPPY_SLEEP_FACE_RUB_FRAMES = definition.load_animation("sleep_effect")
-			POPPY_TEASER_PLAY_FRAMES = definition.load_animation("interaction")
-			POPPY_MOVE_LEFT_FRAMES = definition.load_animation("move_left")
-			POPPY_MOVE_RIGHT_FRAMES = definition.load_animation("move_right")
-		"black_cat":
-			BLACK_CAT_IDLE_TEXTURE = definition.load_texture("idle")
-			BLACK_CAT_SLEEP_TEXTURE = definition.load_texture("sleep")
-			BLACK_CAT_FALL_ASLEEP_FRAMES = definition.load_animation("sleep_effect")
-			BLACK_CAT_LICK_PAW_FRAMES = definition.load_animation("interaction")
-			BLACK_CAT_MOVE_LEFT_FRAMES = definition.load_animation("move_left")
-			BLACK_CAT_MOVE_RIGHT_FRAMES = definition.load_animation("move_right")
-		"maine_coon":
-			MAINE_COON_IDLE_TEXTURE = definition.load_texture("idle")
-			MAINE_COON_SLEEP_TEXTURE = definition.load_texture("sleep")
-			MAINE_COON_SLEEP_PAW_LICK_FRAMES = definition.load_animation("sleep_effect")
-			MAINE_COON_NUZZLE_FRAMES = definition.load_animation("interaction")
-			MAINE_COON_MOVE_LEFT_FRAMES = definition.load_animation("move_left")
-			MAINE_COON_MOVE_RIGHT_FRAMES = definition.load_animation("move_right")
-		"golden_munchkin":
-			GOLDEN_MUNCHKIN_IDLE_TEXTURE = definition.load_texture("idle")
-			GOLDEN_MUNCHKIN_SLEEP_TEXTURE = definition.load_texture("sleep")
-			GOLDEN_MUNCHKIN_SLEEP_TAIL_FRAMES = definition.load_animation("sleep_effect")
-			GOLDEN_MUNCHKIN_FAILED_ROLL_FRAMES = definition.load_animation("interaction")
-			GOLDEN_MUNCHKIN_MOVE_LEFT_FRAMES = definition.load_animation("move_left")
-			GOLDEN_MUNCHKIN_MOVE_RIGHT_FRAMES = definition.load_animation("move_right")
-		"siamese":
-			SIAMESE_IDLE_TEXTURE = definition.load_texture("idle")
-			SIAMESE_SLEEP_TEXTURE = definition.load_texture("sleep")
-			SIAMESE_TREAT_FRAMES = definition.load_animation("interaction")
-			SIAMESE_MOVE_LEFT_FRAMES = definition.load_animation("move_left")
-			SIAMESE_MOVE_RIGHT_FRAMES = definition.load_animation("move_right")
-		_:
-			PET_TEXTURE = definition.load_texture("idle")
-			SLEEP_TEXTURE = definition.load_texture("sleep")
-			MOVE_LEFT_FRAMES = definition.load_animation("move_left")
-			MOVE_RIGHT_FRAMES = definition.load_animation("move_right")
-			SHY_FRAMES = definition.load_animation("shy")
-			DESKTOP_WINK_FRAMES = definition.load_animation("desktop_wink")
-			DESKTOP_BELLY_FRAMES = definition.load_animation("desktop_belly")
-			SLEEP_BUBBLE_FRAMES = definition.load_animation("sleep_bubble")
+	idle_texture = definition.load_texture("idle")
+	sleep_texture = definition.load_texture("sleep")
+	for animation_key in definition.animation_keys():
+		loaded_animation_frames[animation_key] = definition.load_animation(animation_key)
 
 
 func _clear_pet_assets() -> void:
-	PET_TEXTURE = null
-	SLEEP_TEXTURE = null
-	MOCHI_HOME_TAIL_BLINK_FRAMES = []
-	MOCHI_SLEEP_TEXTURE = null
-	MOCHI_SLEEP_EAR_TWITCH_FRAMES = []
-	MOCHI_LICK_PAW_FRAMES = []
-	MOCHI_MOVE_LEFT_FRAMES = []
-	MOCHI_MOVE_RIGHT_FRAMES = []
-	BISCUIT_IDLE_TEXTURE = null
-	BISCUIT_SLEEP_TEXTURE = null
-	BISCUIT_BUTTERFLY_FRAMES = []
-	BISCUIT_MOVE_LEFT_FRAMES = []
-	BISCUIT_MOVE_RIGHT_FRAMES = []
-	LUNA_IDLE_TEXTURE = null
-	LUNA_SLEEP_TEXTURE = null
-	LUNA_SLEEP_IDLE_FRAMES = []
-	LUNA_STRETCH_YAWN_FRAMES = []
-	LUNA_MOVE_LEFT_FRAMES = []
-	LUNA_MOVE_RIGHT_FRAMES = []
-	POPPY_IDLE_TEXTURE = null
-	POPPY_SLEEP_TEXTURE = null
-	POPPY_SLEEP_FACE_RUB_FRAMES = []
-	POPPY_TEASER_PLAY_FRAMES = []
-	POPPY_MOVE_LEFT_FRAMES = []
-	POPPY_MOVE_RIGHT_FRAMES = []
-	BLACK_CAT_IDLE_TEXTURE = null
-	BLACK_CAT_SLEEP_TEXTURE = null
-	BLACK_CAT_FALL_ASLEEP_FRAMES = []
-	BLACK_CAT_LICK_PAW_FRAMES = []
-	BLACK_CAT_MOVE_LEFT_FRAMES = []
-	BLACK_CAT_MOVE_RIGHT_FRAMES = []
-	MAINE_COON_IDLE_TEXTURE = null
-	MAINE_COON_SLEEP_TEXTURE = null
-	MAINE_COON_SLEEP_PAW_LICK_FRAMES = []
-	MAINE_COON_NUZZLE_FRAMES = []
-	MAINE_COON_MOVE_LEFT_FRAMES = []
-	MAINE_COON_MOVE_RIGHT_FRAMES = []
-	GOLDEN_MUNCHKIN_IDLE_TEXTURE = null
-	GOLDEN_MUNCHKIN_SLEEP_TEXTURE = null
-	GOLDEN_MUNCHKIN_SLEEP_TAIL_FRAMES = []
-	GOLDEN_MUNCHKIN_FAILED_ROLL_FRAMES = []
-	GOLDEN_MUNCHKIN_MOVE_LEFT_FRAMES = []
-	GOLDEN_MUNCHKIN_MOVE_RIGHT_FRAMES = []
-	SIAMESE_IDLE_TEXTURE = null
-	SIAMESE_SLEEP_TEXTURE = null
-	SIAMESE_TREAT_FRAMES = []
-	SIAMESE_MOVE_LEFT_FRAMES = []
-	SIAMESE_MOVE_RIGHT_FRAMES = []
-	SLEEP_BUBBLE_FRAMES = []
-	MOVE_LEFT_FRAMES = []
-	MOVE_RIGHT_FRAMES = []
-	SHY_FRAMES = []
-	DESKTOP_WINK_FRAMES = []
-	DESKTOP_BELLY_FRAMES = []
+	idle_texture = null
+	sleep_texture = null
+	loaded_animation_frames.clear()
+	active_clip_key = ""
+
+
+func animation_clip(key: String) -> PetAnimationClip:
+	return pet_definition.animation_clip(key) if pet_definition != null else null
+
+
+func animation_frames(key: String) -> Array[Texture2D]:
+	var frames: Array[Texture2D] = []
+	var raw_frames: Variant = loaded_animation_frames.get(key, [])
+	if raw_frames is Array:
+		for frame in raw_frames:
+			if frame is Texture2D:
+				frames.append(frame)
+	return frames
 
 
 func _ready() -> void:
@@ -336,7 +106,7 @@ func _ready() -> void:
 	mouse_filter = Control.MOUSE_FILTER_IGNORE
 	clip_contents = false
 	cat_sprite = Sprite2D.new()
-	cat_sprite.texture = _get_idle_texture()
+	cat_sprite.texture = idle_texture
 	cat_sprite.centered = true
 	add_child(cat_sprite)
 
@@ -344,12 +114,6 @@ func _ready() -> void:
 	sleep_bubble_sprite.name = "SleepBubble"
 	sleep_bubble_sprite.centered = false
 	sleep_bubble_sprite.texture_filter = CanvasItem.TEXTURE_FILTER_LINEAR
-	var sleeping_texture := _get_sleep_texture()
-	sleep_bubble_sprite.position = (
-		SLEEP_BUBBLE_NOSE_POSITION
-		- sleeping_texture.get_size() * 0.5
-		- SLEEP_BUBBLE_FRAME_ANCHOR
-	)
 	sleep_bubble_sprite.z_index = 1
 	cat_sprite.add_child(sleep_bubble_sprite)
 
@@ -369,31 +133,23 @@ func _ready() -> void:
 	_update_visuals()
 
 
-
 func set_pet(data: Dictionary) -> void:
-	pet_id = str(data.get("id", "default_orange_cat")).to_lower()
-	_load_pet_assets(pet_id)
-	# A PetAvatar can be reused while switching cats or rebuilding the Desktop
-	# companion. Never let the previous cat's walking state leak into the new
-	# cat's stationary pose.
+	var requested_id := str(data.get("id", "default_orange_cat")).to_lower()
+	_load_pet_assets(requested_id)
 	move_time_remaining = 0.0
 	move_frame = 0
 	move_frame_elapsed = 0.0
 	_stop_home_idle_animation()
 	_stop_desktop_idle_animation()
-	_stop_mochi_sleep_ear_twitch()
-	_stop_luna_sleep_idle()
-	_stop_poppy_sleep_face_rub()
-	_stop_black_cat_fall_asleep()
-	_stop_maine_coon_sleep_paw_lick()
-	_stop_golden_munchkin_sleep_tail()
+	_reset_sleep_effect()
 	interaction_animation_active = false
 	interaction_frames = []
-	interaction_frame_durations = []
+	interaction_frame = 0
+	interaction_frame_elapsed = 0.0
 	if home_idle_enabled:
 		_schedule_next_home_idle()
 	if mood == "sleep":
-		_schedule_next_sleep_effect()
+		_schedule_sleep_behavior()
 	_update_visuals()
 
 
@@ -413,16 +169,10 @@ func set_mood(value: String) -> void:
 	if mood == "sleep":
 		move_time_remaining = 0.0
 		if mood_changed:
-			_schedule_next_sleep_effect()
+			_schedule_sleep_behavior()
 	elif mood_changed:
-		sleep_bubble_active = false
-		sleep_bubble_wait_remaining = 0.0
-		_stop_mochi_sleep_ear_twitch()
-		_stop_luna_sleep_idle()
-		_stop_poppy_sleep_face_rub()
-		_stop_black_cat_fall_asleep()
-		_stop_maine_coon_sleep_paw_lick()
-		_stop_golden_munchkin_sleep_tail()
+		_reset_sleep_effect()
+		_reset_sleep_bubble()
 	if mood == "blush" and mood_changed:
 		shy_frame = 0
 		shy_frame_elapsed = 0.0
@@ -442,7 +192,7 @@ func play_move(movement: Vector2) -> void:
 		move_frame = 0
 		move_frame_elapsed = 0.0
 	move_direction = next_direction
-	move_time_remaining = 1.15
+	move_time_remaining = MOVE_SECONDS
 	_apply_current_texture()
 
 
@@ -455,36 +205,10 @@ func stop_move() -> void:
 func play_belly_roll() -> void:
 	stop_move()
 	_stop_desktop_idle_animation()
+	interaction_frames = animation_frames("interaction")
+	if interaction_frames.is_empty():
+		return
 	interaction_animation_active = true
-	interaction_frames = (
-		MOCHI_LICK_PAW_FRAMES
-		if _uses_mochi_home_art()
-		else BISCUIT_BUTTERFLY_FRAMES if _uses_biscuit_home_art()
-		else LUNA_STRETCH_YAWN_FRAMES if _uses_luna_home_art()
-		else POPPY_TEASER_PLAY_FRAMES if _uses_poppy_home_art()
-		else BLACK_CAT_LICK_PAW_FRAMES if _uses_black_cat_home_art()
-		else MAINE_COON_NUZZLE_FRAMES if _uses_maine_coon_home_art()
-		else GOLDEN_MUNCHKIN_FAILED_ROLL_FRAMES if _uses_golden_munchkin_home_art()
-		else SIAMESE_TREAT_FRAMES if _uses_siamese_home_art()
-		else DESKTOP_BELLY_FRAMES
-	)
-	interaction_frame_durations.clear()
-	if _uses_mochi_home_art():
-		interaction_frame_durations.assign(MOCHI_LICK_PAW_FRAME_DURATIONS)
-	elif _uses_biscuit_home_art():
-		interaction_frame_durations.assign(BISCUIT_BUTTERFLY_FRAME_DURATIONS)
-	elif _uses_luna_home_art():
-		interaction_frame_durations.assign(LUNA_STRETCH_YAWN_FRAME_DURATIONS)
-	elif _uses_poppy_home_art():
-		interaction_frame_durations.assign(POPPY_TEASER_PLAY_FRAME_DURATIONS)
-	elif _uses_black_cat_home_art():
-		interaction_frame_durations.assign(BLACK_CAT_LICK_PAW_FRAME_DURATIONS)
-	elif _uses_maine_coon_home_art():
-		interaction_frame_durations.assign(MAINE_COON_NUZZLE_FRAME_DURATIONS)
-	elif _uses_golden_munchkin_home_art():
-		interaction_frame_durations.assign(GOLDEN_MUNCHKIN_FAILED_ROLL_FRAME_DURATIONS)
-	elif _uses_siamese_home_art():
-		interaction_frame_durations.assign(SIAMESE_TREAT_FRAME_DURATIONS)
 	interaction_frame = 0
 	interaction_frame_elapsed = 0.0
 	_apply_current_texture()
@@ -499,50 +223,51 @@ func _process(delta: float) -> void:
 	if interaction_animation_active:
 		_process_interaction_animation(delta)
 	elif mood == "sleep":
-		if _uses_golden_munchkin_home_art() or _uses_siamese_home_art():
-			pass
-		elif _uses_maine_coon_home_art():
-			_process_maine_coon_sleep_paw_lick(delta)
-		elif _uses_black_cat_home_art():
-			_process_black_cat_fall_asleep(delta)
-		elif _uses_luna_home_art():
-			_process_luna_sleep_idle(delta)
-		elif _uses_poppy_home_art():
-			_process_poppy_sleep_face_rub(delta)
-		elif _uses_mochi_home_art():
-			_process_mochi_sleep_ear_twitch(delta)
-		else:
-			_process_sleep_bubble(delta)
+		_process_sleep_behavior(delta)
 	elif mood == "blush":
-		shy_frame_elapsed += delta
-		if shy_frame_elapsed >= 1.0 / SHY_FPS:
-			shy_frame_elapsed = fmod(shy_frame_elapsed, 1.0 / SHY_FPS)
-			shy_frame = (shy_frame + 1) % SHY_FRAMES.size()
-			_apply_current_texture()
-	elif move_time_remaining > 0.0 and mood != "sleep":
-		move_time_remaining = maxf(0.0, move_time_remaining - delta)
-		move_frame_elapsed += delta
-		var move_fps := (
-			LUNA_MOVE_FPS
-			if _uses_luna_home_art()
-			else BLACK_CAT_MOVE_FPS if _uses_black_cat_home_art()
-			else MOVE_FPS
-		)
-		var move_frame_duration := 1.0 / move_fps
-		while move_frame_elapsed >= move_frame_duration:
-			move_frame_elapsed -= move_frame_duration
-			move_frame += 1
-			if move_frame >= _get_move_frames().size():
-				move_frame = _get_move_loop_start_frame()
-		_apply_current_texture()
+		_process_shy_animation(delta)
+	elif move_time_remaining > 0.0:
+		_process_move_animation(delta)
 	elif desktop_idle_enabled and mood == "idle":
 		_process_desktop_idle(delta)
-	elif home_idle_enabled and mood == "idle" and _uses_mochi_home_art():
+	elif home_idle_enabled and mood == "idle":
 		_process_home_idle(delta)
-	elif cat_sprite.texture != _get_idle_texture() and mood != "sleep":
+	elif is_instance_valid(cat_sprite) and cat_sprite.texture != idle_texture:
 		_apply_current_texture()
 	_update_layout()
 	queue_redraw()
+
+
+func _process_shy_animation(delta: float) -> void:
+	var frames := animation_frames("shy")
+	if frames.is_empty():
+		return
+	var clip := animation_clip("shy")
+	shy_frame_elapsed += delta
+	var frame_duration := clip.frame_duration(shy_frame, 6.0)
+	while shy_frame_elapsed >= frame_duration:
+		shy_frame_elapsed -= frame_duration
+		shy_frame = (shy_frame + 1) % frames.size()
+		frame_duration = clip.frame_duration(shy_frame, 6.0)
+	_apply_current_texture()
+
+
+func _process_move_animation(delta: float) -> void:
+	move_time_remaining = maxf(0.0, move_time_remaining - delta)
+	var clip_key := _move_clip_key()
+	var frames := animation_frames(clip_key)
+	var clip := animation_clip(clip_key)
+	if frames.is_empty() or clip == null:
+		return
+	move_frame_elapsed += delta
+	var frame_duration := clip.frame_duration(move_frame, 7.0)
+	while move_frame_elapsed >= frame_duration:
+		move_frame_elapsed -= frame_duration
+		move_frame += 1
+		if move_frame >= frames.size():
+			move_frame = clampi(clip.loop_start_frame, 0, frames.size() - 1)
+		frame_duration = clip.frame_duration(move_frame, 7.0)
+	_apply_current_texture()
 
 
 func _update_visuals() -> void:
@@ -551,23 +276,14 @@ func _update_visuals() -> void:
 	cat_sprite.modulate = Color.WHITE
 	cat_sprite.rotation = 0.0
 	match mood:
-		"sleep":
-			mood_badge.text = ""
-		"blush":
-			mood_badge.text = "FEELING SHY..."
-		"roll_eyes":
-			mood_badge.text = "...REALLY?"
-		"blink":
-			mood_badge.text = "BLINK!"
-		"follow":
-			mood_badge.text = ""
-		"happy":
-			mood_badge.text = "HAPPY!"
-		_:
-			mood_badge.text = ""
+		"blush": mood_badge.text = "FEELING SHY..."
+		"roll_eyes": mood_badge.text = "...REALLY?"
+		"blink": mood_badge.text = "BLINK!"
+		"happy": mood_badge.text = "HAPPY!"
+		_: mood_badge.text = ""
 	mood_badge.visible = (
 		mood != "follow"
-		and mood_badge.text != ""
+		and not mood_badge.text.is_empty()
 		and not interaction_animation_active
 	)
 	_apply_current_texture()
@@ -577,157 +293,48 @@ func _update_visuals() -> void:
 func _apply_current_texture() -> void:
 	if not is_instance_valid(cat_sprite):
 		return
-	if interaction_animation_active:
+	active_clip_key = ""
+	if interaction_animation_active and not interaction_frames.is_empty():
+		active_clip_key = "interaction"
 		cat_sprite.texture = interaction_frames[interaction_frame]
 	elif mood == "sleep":
-		if _uses_siamese_home_art():
-			cat_sprite.texture = SIAMESE_SLEEP_TEXTURE
-		elif _uses_golden_munchkin_home_art():
-			cat_sprite.texture = GOLDEN_MUNCHKIN_SLEEP_TEXTURE
-		elif _uses_maine_coon_home_art():
-			cat_sprite.texture = (
-				MAINE_COON_SLEEP_PAW_LICK_FRAMES[maine_coon_sleep_paw_lick_frame]
-				if maine_coon_sleep_paw_lick_playing
-				else MAINE_COON_SLEEP_TEXTURE
-			)
-		elif _uses_black_cat_home_art():
-			cat_sprite.texture = (
-				BLACK_CAT_FALL_ASLEEP_FRAMES[black_cat_fall_asleep_frame]
-				if black_cat_fall_asleep_playing
-				else BLACK_CAT_SLEEP_TEXTURE
-			)
-		elif _uses_luna_home_art():
-			cat_sprite.texture = (
-				LUNA_SLEEP_IDLE_FRAMES[luna_sleep_idle_frame]
-				if luna_sleep_idle_playing
-				else LUNA_SLEEP_TEXTURE
-			)
-		elif _uses_poppy_home_art():
-			cat_sprite.texture = (
-				POPPY_SLEEP_FACE_RUB_FRAMES[poppy_sleep_face_rub_frame]
-				if poppy_sleep_face_rub_playing
-				else POPPY_SLEEP_TEXTURE
-			)
-		elif _uses_mochi_home_art():
-			cat_sprite.texture = (
-				MOCHI_SLEEP_EAR_TWITCH_FRAMES[mochi_sleep_ear_twitch_frame]
-				if mochi_sleep_ear_twitch_playing
-				else MOCHI_SLEEP_TEXTURE
-			)
-		elif _uses_biscuit_home_art():
-			cat_sprite.texture = BISCUIT_SLEEP_TEXTURE
+		var effect_frames := animation_frames("sleep_effect")
+		if sleep_effect_visible and not effect_frames.is_empty():
+			active_clip_key = "sleep_effect"
+			cat_sprite.texture = effect_frames[sleep_effect_frame]
 		else:
-			cat_sprite.texture = SLEEP_TEXTURE
-	elif mood == "blush":
-		cat_sprite.texture = _get_idle_texture() if _uses_custom_home_art() else SHY_FRAMES[shy_frame]
-	elif move_time_remaining > 0.0:
-		cat_sprite.texture = _get_move_frames()[move_frame]
-	elif desktop_idle_animation != "" and not desktop_idle_frames.is_empty():
+			cat_sprite.texture = sleep_texture
+	elif mood == "blush" and not animation_frames("shy").is_empty():
+		active_clip_key = "shy"
+		cat_sprite.texture = animation_frames("shy")[shy_frame]
+	elif move_time_remaining > 0.0 and not animation_frames(_move_clip_key()).is_empty():
+		active_clip_key = _move_clip_key()
+		cat_sprite.texture = animation_frames(active_clip_key)[move_frame]
+	elif not desktop_idle_animation.is_empty() and not desktop_idle_frames.is_empty():
+		active_clip_key = desktop_idle_animation
 		cat_sprite.texture = desktop_idle_frames[desktop_idle_frame]
-	elif home_idle_playing and _uses_mochi_home_art():
-		cat_sprite.texture = MOCHI_HOME_TAIL_BLINK_FRAMES[home_idle_frame]
+	elif home_idle_playing and not animation_frames("home_idle").is_empty():
+		active_clip_key = "home_idle"
+		cat_sprite.texture = animation_frames("home_idle")[home_idle_frame]
 	else:
-		cat_sprite.texture = _get_idle_texture()
+		cat_sprite.texture = idle_texture
 	cat_sprite.texture_filter = (
 		CanvasItem.TEXTURE_FILTER_LINEAR
-		if (
-			cat_sprite.texture == BLACK_CAT_IDLE_TEXTURE
-			or cat_sprite.texture == BLACK_CAT_SLEEP_TEXTURE
-			or cat_sprite.texture in BLACK_CAT_FALL_ASLEEP_FRAMES
-			or cat_sprite.texture in BLACK_CAT_MOVE_LEFT_FRAMES
-			or cat_sprite.texture in BLACK_CAT_MOVE_RIGHT_FRAMES
-		)
+		if pet_definition != null and pet_definition.linear_texture_filter
 		else CanvasItem.TEXTURE_FILTER_PARENT_NODE
 	)
 	_update_sleep_bubble()
 
 
-func _uses_mochi_home_art() -> bool:
-	return pet_id == "mochi"
-
-
-func _uses_biscuit_home_art() -> bool:
-	return pet_id == "biscuit"
-
-
-func _uses_luna_home_art() -> bool:
-	return pet_id == "luna"
-
-
-func _uses_poppy_home_art() -> bool:
-	return pet_id == "poppy"
-
-
-func _uses_black_cat_home_art() -> bool:
-	return pet_id == "black_cat"
-
-
-func _uses_maine_coon_home_art() -> bool:
-	return pet_id == "maine_coon"
-
-
-func _uses_golden_munchkin_home_art() -> bool:
-	return pet_id == "golden_munchkin"
-
-
-func _uses_siamese_home_art() -> bool:
-	return pet_id == "siamese"
-
-
-func _uses_custom_home_art() -> bool:
-	return (
-		_uses_mochi_home_art()
-		or _uses_biscuit_home_art()
-		or _uses_luna_home_art()
-		or _uses_poppy_home_art()
-		or _uses_black_cat_home_art()
-		or _uses_maine_coon_home_art()
-		or _uses_golden_munchkin_home_art()
-		or _uses_siamese_home_art()
-	)
-
-
-func _get_idle_texture() -> Texture2D:
-	if _uses_mochi_home_art():
-		return MOCHI_HOME_TAIL_BLINK_FRAMES[0]
-	if _uses_biscuit_home_art():
-		return BISCUIT_IDLE_TEXTURE
-	if _uses_luna_home_art():
-		return LUNA_IDLE_TEXTURE
-	if _uses_poppy_home_art():
-		return POPPY_IDLE_TEXTURE
-	if _uses_black_cat_home_art():
-		return BLACK_CAT_IDLE_TEXTURE
-	if _uses_maine_coon_home_art():
-		return MAINE_COON_IDLE_TEXTURE
-	if _uses_golden_munchkin_home_art():
-		return GOLDEN_MUNCHKIN_IDLE_TEXTURE
-	if _uses_siamese_home_art():
-		return SIAMESE_IDLE_TEXTURE
-	return PET_TEXTURE
-
-
-func _get_sleep_texture() -> Texture2D:
-	if _uses_mochi_home_art():
-		return MOCHI_SLEEP_TEXTURE
-	if _uses_biscuit_home_art():
-		return BISCUIT_SLEEP_TEXTURE
-	if _uses_luna_home_art():
-		return LUNA_SLEEP_TEXTURE
-	if _uses_poppy_home_art():
-		return POPPY_SLEEP_TEXTURE
-	if _uses_black_cat_home_art():
-		return BLACK_CAT_SLEEP_TEXTURE
-	if _uses_maine_coon_home_art():
-		return MAINE_COON_SLEEP_TEXTURE
-	if _uses_golden_munchkin_home_art():
-		return GOLDEN_MUNCHKIN_SLEEP_TEXTURE
-	if _uses_siamese_home_art():
-		return SIAMESE_SLEEP_TEXTURE
-	return SLEEP_TEXTURE
+func _move_clip_key() -> String:
+	return "move_left" if move_direction == "left" else "move_right"
 
 
 func _process_home_idle(delta: float) -> void:
+	var frames := animation_frames("home_idle")
+	var clip := animation_clip("home_idle")
+	if frames.is_empty() or clip == null:
+		return
 	if not home_idle_playing:
 		home_idle_wait_remaining = maxf(0.0, home_idle_wait_remaining - delta)
 		if home_idle_wait_remaining <= 0.0:
@@ -737,15 +344,17 @@ func _process_home_idle(delta: float) -> void:
 			_apply_current_texture()
 		return
 	home_idle_frame_elapsed += delta
-	while home_idle_frame_elapsed >= float(MOCHI_HOME_IDLE_FRAME_DURATIONS[home_idle_frame]):
-		home_idle_frame_elapsed -= float(MOCHI_HOME_IDLE_FRAME_DURATIONS[home_idle_frame])
-		if home_idle_frame >= MOCHI_HOME_TAIL_BLINK_FRAMES.size() - 1:
+	var frame_duration := clip.frame_duration(home_idle_frame, 6.0)
+	while home_idle_frame_elapsed >= frame_duration:
+		home_idle_frame_elapsed -= frame_duration
+		if home_idle_frame >= frames.size() - 1:
 			_stop_home_idle_animation()
 			_schedule_next_home_idle()
 			_apply_current_texture()
 			return
 		home_idle_frame += 1
-		_apply_current_texture()
+		frame_duration = clip.frame_duration(home_idle_frame, 6.0)
+	_apply_current_texture()
 
 
 func _stop_home_idle_animation() -> void:
@@ -755,18 +364,25 @@ func _stop_home_idle_animation() -> void:
 
 
 func _schedule_next_home_idle() -> void:
-	home_idle_wait_remaining = randf_range(MOCHI_HOME_IDLE_MIN_WAIT, MOCHI_HOME_IDLE_MAX_WAIT)
+	var clip := animation_clip("home_idle")
+	if clip == null:
+		home_idle_wait_remaining = 0.0
+		return
+	home_idle_wait_remaining = randf_range(clip.wait_min, clip.wait_max)
 
 
 func _process_interaction_animation(delta: float) -> void:
+	var clip := animation_clip("interaction")
+	if clip == null or interaction_frames.is_empty():
+		interaction_animation_active = false
+		return
 	interaction_frame_elapsed += delta
-	var frame_duration := _get_interaction_frame_duration()
+	var frame_duration := clip.frame_duration(interaction_frame, DEFAULT_INTERACTION_FPS)
 	while interaction_frame_elapsed >= frame_duration:
 		interaction_frame_elapsed -= frame_duration
 		if interaction_frame >= interaction_frames.size() - 1:
 			interaction_animation_active = false
 			interaction_frames = []
-			interaction_frame_durations = []
 			interaction_frame = 0
 			interaction_frame_elapsed = 0.0
 			if desktop_idle_enabled and mood == "idle":
@@ -774,38 +390,8 @@ func _process_interaction_animation(delta: float) -> void:
 			_update_visuals()
 			return
 		interaction_frame += 1
-		frame_duration = _get_interaction_frame_duration()
+		frame_duration = clip.frame_duration(interaction_frame, DEFAULT_INTERACTION_FPS)
 	_apply_current_texture()
-
-
-func _get_interaction_frame_duration() -> float:
-	if interaction_frame < interaction_frame_durations.size():
-		return interaction_frame_durations[interaction_frame]
-	return 1.0 / DESKTOP_BELLY_FPS
-
-
-func _get_move_frames() -> Array[Texture2D]:
-	if _uses_mochi_home_art():
-		return MOCHI_MOVE_LEFT_FRAMES if move_direction == "left" else MOCHI_MOVE_RIGHT_FRAMES
-	if _uses_biscuit_home_art():
-		return BISCUIT_MOVE_LEFT_FRAMES if move_direction == "left" else BISCUIT_MOVE_RIGHT_FRAMES
-	if _uses_luna_home_art():
-		return LUNA_MOVE_LEFT_FRAMES if move_direction == "left" else LUNA_MOVE_RIGHT_FRAMES
-	if _uses_poppy_home_art():
-		return POPPY_MOVE_LEFT_FRAMES if move_direction == "left" else POPPY_MOVE_RIGHT_FRAMES
-	if _uses_black_cat_home_art():
-		return BLACK_CAT_MOVE_LEFT_FRAMES if move_direction == "left" else BLACK_CAT_MOVE_RIGHT_FRAMES
-	if _uses_maine_coon_home_art():
-		return MAINE_COON_MOVE_LEFT_FRAMES if move_direction == "left" else MAINE_COON_MOVE_RIGHT_FRAMES
-	if _uses_golden_munchkin_home_art():
-		return GOLDEN_MUNCHKIN_MOVE_LEFT_FRAMES if move_direction == "left" else GOLDEN_MUNCHKIN_MOVE_RIGHT_FRAMES
-	if _uses_siamese_home_art():
-		return SIAMESE_MOVE_LEFT_FRAMES if move_direction == "left" else SIAMESE_MOVE_RIGHT_FRAMES
-	return MOVE_LEFT_FRAMES if move_direction == "left" else MOVE_RIGHT_FRAMES
-
-
-func _get_move_loop_start_frame() -> int:
-	return 0 if _uses_custom_home_art() else MOVE_LOOP_START_FRAME
 
 
 func set_desktop_idle_enabled(enabled: bool) -> void:
@@ -821,27 +407,21 @@ func set_desktop_idle_enabled(enabled: bool) -> void:
 
 
 func _process_desktop_idle(delta: float) -> void:
-	if desktop_idle_animation == "":
+	if desktop_idle_animation.is_empty():
 		desktop_idle_wait_remaining = maxf(0.0, desktop_idle_wait_remaining - delta)
 		if desktop_idle_wait_remaining <= 0.0:
-			if _uses_golden_munchkin_home_art() or _uses_siamese_home_art():
+			var clip_key := _choose_desktop_idle_clip()
+			if clip_key.is_empty():
 				_schedule_next_desktop_idle()
 				return
-			_start_desktop_idle_animation(
-				"mochi_tail_blink"
-				if _uses_mochi_home_art()
-				else "biscuit_butterfly" if _uses_biscuit_home_art()
-				else "luna_stretch_yawn" if _uses_luna_home_art()
-				else "poppy_face_rub" if _uses_poppy_home_art()
-				else "black_cat_lick_paw" if _uses_black_cat_home_art()
-				else "maine_coon_nuzzle" if _uses_maine_coon_home_art()
-				else "wink" if randf() < 0.68
-				else "belly"
-			)
+			_start_desktop_idle_animation(clip_key)
 		return
-
+	var clip := animation_clip(desktop_idle_animation)
+	if clip == null or desktop_idle_frames.is_empty():
+		_stop_desktop_idle_animation()
+		return
 	desktop_idle_frame_elapsed += delta
-	var frame_duration := _get_desktop_idle_frame_duration()
+	var frame_duration := clip.frame_duration(desktop_idle_frame, 6.0)
 	while desktop_idle_frame_elapsed >= frame_duration:
 		desktop_idle_frame_elapsed -= frame_duration
 		if desktop_idle_frame >= desktop_idle_frames.size() - 1:
@@ -850,46 +430,36 @@ func _process_desktop_idle(delta: float) -> void:
 			_apply_current_texture()
 			return
 		desktop_idle_frame += 1
-		frame_duration = _get_desktop_idle_frame_duration()
+		frame_duration = clip.frame_duration(desktop_idle_frame, 6.0)
 	_apply_current_texture()
+
+
+func _choose_desktop_idle_clip() -> String:
+	if pet_definition == null or pet_definition.desktop_idle_weights.is_empty():
+		return ""
+	var total_weight := 0.0
+	for raw_weight in pet_definition.desktop_idle_weights.values():
+		total_weight += maxf(float(raw_weight), 0.0)
+	if total_weight <= 0.0:
+		return ""
+	var roll := randf() * total_weight
+	for raw_key in pet_definition.desktop_idle_weights:
+		var key := str(raw_key)
+		roll -= maxf(float(pet_definition.desktop_idle_weights[raw_key]), 0.0)
+		if roll <= 0.0:
+			return key
+	return str(pet_definition.desktop_idle_weights.keys().back())
 
 
 func _start_desktop_idle_animation(animation_name: String) -> void:
+	var frames := animation_frames(animation_name)
+	if frames.is_empty():
+		return
 	desktop_idle_animation = animation_name
-	if animation_name == "mochi_tail_blink":
-		desktop_idle_frames = MOCHI_HOME_TAIL_BLINK_FRAMES
-	elif animation_name == "biscuit_butterfly":
-		desktop_idle_frames = BISCUIT_BUTTERFLY_FRAMES
-	elif animation_name == "luna_stretch_yawn":
-		desktop_idle_frames = LUNA_STRETCH_YAWN_FRAMES
-	elif animation_name == "poppy_face_rub":
-		desktop_idle_frames = POPPY_SLEEP_FACE_RUB_FRAMES
-	elif animation_name == "black_cat_lick_paw":
-		desktop_idle_frames = BLACK_CAT_LICK_PAW_FRAMES
-	elif animation_name == "maine_coon_nuzzle":
-		desktop_idle_frames = MAINE_COON_NUZZLE_FRAMES
-	else:
-		desktop_idle_frames = DESKTOP_WINK_FRAMES if animation_name == "wink" else DESKTOP_BELLY_FRAMES
+	desktop_idle_frames = frames
 	desktop_idle_frame = 0
 	desktop_idle_frame_elapsed = 0.0
 	_apply_current_texture()
-
-
-func _get_desktop_idle_frame_duration() -> float:
-	if desktop_idle_animation == "mochi_tail_blink":
-		return float(MOCHI_HOME_IDLE_FRAME_DURATIONS[desktop_idle_frame])
-	if desktop_idle_animation == "biscuit_butterfly":
-		return float(BISCUIT_BUTTERFLY_FRAME_DURATIONS[desktop_idle_frame])
-	if desktop_idle_animation == "luna_stretch_yawn":
-		return float(LUNA_STRETCH_YAWN_FRAME_DURATIONS[desktop_idle_frame])
-	if desktop_idle_animation == "poppy_face_rub":
-		return float(POPPY_SLEEP_FACE_RUB_FRAME_DURATIONS[desktop_idle_frame])
-	if desktop_idle_animation == "black_cat_lick_paw":
-		return float(BLACK_CAT_LICK_PAW_FRAME_DURATIONS[desktop_idle_frame])
-	if desktop_idle_animation == "maine_coon_nuzzle":
-		return float(MAINE_COON_NUZZLE_FRAME_DURATIONS[desktop_idle_frame])
-	var fps := DESKTOP_WINK_FPS if desktop_idle_animation == "wink" else DESKTOP_BELLY_FPS
-	return 1.0 / fps
 
 
 func _stop_desktop_idle_animation() -> void:
@@ -903,40 +473,111 @@ func _schedule_next_desktop_idle() -> void:
 	desktop_idle_wait_remaining = randf_range(DESKTOP_IDLE_MIN_WAIT, DESKTOP_IDLE_MAX_WAIT)
 
 
+func _process_sleep_behavior(delta: float) -> void:
+	if pet_definition == null:
+		return
+	match pet_definition.sleep_effect_mode:
+		"bubble": _process_sleep_bubble(delta)
+		"repeat", "once_hold": _process_sleep_effect(delta)
+
+
+func _schedule_sleep_behavior() -> void:
+	_reset_sleep_effect()
+	_reset_sleep_bubble()
+	if pet_definition == null:
+		return
+	match pet_definition.sleep_effect_mode:
+		"bubble": _schedule_next_sleep_bubble()
+		"repeat": _schedule_next_sleep_effect()
+		"once_hold": _start_sleep_effect()
+
+
+func _process_sleep_effect(delta: float) -> void:
+	var frames := animation_frames("sleep_effect")
+	var clip := animation_clip("sleep_effect")
+	if frames.is_empty() or clip == null:
+		return
+	if not sleep_effect_playing:
+		if pet_definition.sleep_effect_mode != "repeat":
+			return
+		sleep_effect_wait_remaining = maxf(0.0, sleep_effect_wait_remaining - delta)
+		if sleep_effect_wait_remaining <= 0.0:
+			_start_sleep_effect()
+		return
+	sleep_effect_frame_elapsed += delta
+	var frame_duration := clip.frame_duration(sleep_effect_frame, 6.0)
+	while sleep_effect_frame_elapsed >= frame_duration:
+		sleep_effect_frame_elapsed -= frame_duration
+		if sleep_effect_frame >= frames.size() - 1:
+			sleep_effect_playing = false
+			sleep_effect_visible = false
+			sleep_effect_frame = 0
+			sleep_effect_frame_elapsed = 0.0
+			if pet_definition.sleep_effect_mode == "repeat":
+				_schedule_next_sleep_effect()
+			_apply_current_texture()
+			return
+		sleep_effect_frame += 1
+		frame_duration = clip.frame_duration(sleep_effect_frame, 6.0)
+	_apply_current_texture()
+
+
+func _start_sleep_effect() -> void:
+	if animation_frames("sleep_effect").is_empty():
+		return
+	sleep_effect_playing = true
+	sleep_effect_visible = true
+	sleep_effect_frame = 0
+	sleep_effect_frame_elapsed = 0.0
+	_apply_current_texture()
+
+
+func _schedule_next_sleep_effect() -> void:
+	var clip := animation_clip("sleep_effect")
+	if clip == null:
+		return
+	sleep_effect_playing = false
+	sleep_effect_visible = false
+	sleep_effect_frame = 0
+	sleep_effect_frame_elapsed = 0.0
+	sleep_effect_wait_remaining = randf_range(clip.wait_min, clip.wait_max)
+
+
+func _reset_sleep_effect() -> void:
+	sleep_effect_playing = false
+	sleep_effect_visible = false
+	sleep_effect_frame = 0
+	sleep_effect_frame_elapsed = 0.0
+	sleep_effect_wait_remaining = 0.0
+
+
 func _update_sleep_bubble() -> void:
 	if not is_instance_valid(sleep_bubble_sprite):
 		return
-	if SLEEP_BUBBLE_FRAMES.is_empty():
+	var frames := animation_frames("sleep_bubble")
+	if frames.is_empty() or pet_definition == null:
 		sleep_bubble_sprite.visible = false
 		sleep_bubble_sprite.texture = null
 		return
-	var sleeping_texture := _get_sleep_texture()
-	var nose_position := (
-		BISCUIT_SLEEP_BUBBLE_NOSE_POSITION
-		if _uses_biscuit_home_art()
-		else SLEEP_BUBBLE_NOSE_POSITION
-	)
 	sleep_bubble_sprite.position = (
-		nose_position
-		- sleeping_texture.get_size() * 0.5
+		pet_definition.sleep_bubble_nose_position
+		- sleep_texture.get_size() * 0.5
 		- SLEEP_BUBBLE_FRAME_ANCHOR
 	)
 	sleep_bubble_sprite.visible = (
 		mood == "sleep"
 		and sleep_bubble_active
 		and not interaction_animation_active
-		and not _uses_mochi_home_art()
-		and not _uses_luna_home_art()
-		and not _uses_poppy_home_art()
-		and not _uses_black_cat_home_art()
-		and not _uses_maine_coon_home_art()
-		and not _uses_golden_munchkin_home_art()
-		and not _uses_siamese_home_art()
+		and pet_definition.sleep_effect_mode == "bubble"
 	)
-	sleep_bubble_sprite.texture = SLEEP_BUBBLE_FRAMES[sleep_bubble_frame]
+	sleep_bubble_sprite.texture = frames[sleep_bubble_frame]
 
 
 func _process_sleep_bubble(delta: float) -> void:
+	var frames := animation_frames("sleep_bubble")
+	var clip := animation_clip("sleep_bubble")
+	if frames.is_empty() or clip == null:
+		return
 	if not sleep_bubble_active:
 		sleep_bubble_wait_remaining = maxf(0.0, sleep_bubble_wait_remaining - delta)
 		if sleep_bubble_wait_remaining <= 0.0:
@@ -945,15 +586,15 @@ func _process_sleep_bubble(delta: float) -> void:
 			sleep_bubble_frame_elapsed = 0.0
 			_update_sleep_bubble()
 		return
-
 	sleep_bubble_frame_elapsed += delta
-	var frame_duration := 1.0 / SLEEP_BUBBLE_FPS
+	var frame_duration := clip.frame_duration(sleep_bubble_frame, 5.0)
 	while sleep_bubble_frame_elapsed >= frame_duration:
 		sleep_bubble_frame_elapsed -= frame_duration
-		if sleep_bubble_frame >= SLEEP_BUBBLE_FRAMES.size() - 1:
+		if sleep_bubble_frame >= frames.size() - 1:
 			_schedule_next_sleep_bubble()
 			return
 		sleep_bubble_frame += 1
+		frame_duration = clip.frame_duration(sleep_bubble_frame, 5.0)
 	_update_sleep_bubble()
 
 
@@ -965,425 +606,37 @@ func _schedule_next_sleep_bubble() -> void:
 	_update_sleep_bubble()
 
 
-func _schedule_next_sleep_effect() -> void:
-	if _uses_golden_munchkin_home_art() or _uses_siamese_home_art():
-		sleep_bubble_active = false
-		sleep_bubble_wait_remaining = 0.0
-		_stop_mochi_sleep_ear_twitch()
-		_stop_luna_sleep_idle()
-		_stop_poppy_sleep_face_rub()
-		_stop_black_cat_fall_asleep()
-		_stop_maine_coon_sleep_paw_lick()
-		_stop_golden_munchkin_sleep_tail()
-	elif _uses_maine_coon_home_art():
-		sleep_bubble_active = false
-		sleep_bubble_wait_remaining = 0.0
-		_stop_mochi_sleep_ear_twitch()
-		_stop_luna_sleep_idle()
-		_stop_poppy_sleep_face_rub()
-		_stop_black_cat_fall_asleep()
-		_start_maine_coon_sleep_paw_lick()
-	elif _uses_black_cat_home_art():
-		sleep_bubble_active = false
-		sleep_bubble_wait_remaining = 0.0
-		_stop_mochi_sleep_ear_twitch()
-		_stop_luna_sleep_idle()
-		_stop_poppy_sleep_face_rub()
-		_start_black_cat_fall_asleep()
-	elif _uses_poppy_home_art():
-		sleep_bubble_active = false
-		sleep_bubble_wait_remaining = 0.0
-		_stop_mochi_sleep_ear_twitch()
-		_stop_luna_sleep_idle()
-		_schedule_next_poppy_sleep_face_rub()
-	elif _uses_luna_home_art():
-		sleep_bubble_active = false
-		sleep_bubble_wait_remaining = 0.0
-		_stop_mochi_sleep_ear_twitch()
-		_stop_poppy_sleep_face_rub()
-		_schedule_next_luna_sleep_idle()
-	elif _uses_mochi_home_art():
-		sleep_bubble_active = false
-		sleep_bubble_wait_remaining = 0.0
-		_stop_luna_sleep_idle()
-		_stop_poppy_sleep_face_rub()
-		_schedule_next_mochi_sleep_ear_twitch()
-	else:
-		_stop_mochi_sleep_ear_twitch()
-		_stop_luna_sleep_idle()
-		_stop_poppy_sleep_face_rub()
-		_stop_black_cat_fall_asleep()
-		_stop_maine_coon_sleep_paw_lick()
-		_stop_golden_munchkin_sleep_tail()
-		_schedule_next_sleep_bubble()
-
-
-func _process_mochi_sleep_ear_twitch(delta: float) -> void:
-	if not mochi_sleep_ear_twitch_playing:
-		mochi_sleep_ear_twitch_wait_remaining = maxf(
-			0.0,
-			mochi_sleep_ear_twitch_wait_remaining - delta
-		)
-		if mochi_sleep_ear_twitch_wait_remaining <= 0.0:
-			mochi_sleep_ear_twitch_playing = true
-			mochi_sleep_ear_twitch_frame = 0
-			mochi_sleep_ear_twitch_frame_elapsed = 0.0
-			_apply_current_texture()
-		return
-	mochi_sleep_ear_twitch_frame_elapsed += delta
-	var frame_duration := float(
-		MOCHI_SLEEP_EAR_TWITCH_FRAME_DURATIONS[mochi_sleep_ear_twitch_frame]
-	)
-	while mochi_sleep_ear_twitch_frame_elapsed >= frame_duration:
-		mochi_sleep_ear_twitch_frame_elapsed -= frame_duration
-		if mochi_sleep_ear_twitch_frame >= MOCHI_SLEEP_EAR_TWITCH_FRAMES.size() - 1:
-			_schedule_next_mochi_sleep_ear_twitch()
-			_apply_current_texture()
-			return
-		mochi_sleep_ear_twitch_frame += 1
-		frame_duration = float(
-			MOCHI_SLEEP_EAR_TWITCH_FRAME_DURATIONS[mochi_sleep_ear_twitch_frame]
-		)
-	_apply_current_texture()
-
-
-func _schedule_next_mochi_sleep_ear_twitch() -> void:
-	mochi_sleep_ear_twitch_playing = false
-	mochi_sleep_ear_twitch_frame = 0
-	mochi_sleep_ear_twitch_frame_elapsed = 0.0
-	mochi_sleep_ear_twitch_wait_remaining = randf_range(
-		MOCHI_SLEEP_EAR_TWITCH_MIN_WAIT,
-		MOCHI_SLEEP_EAR_TWITCH_MAX_WAIT
-	)
-
-
-func _stop_mochi_sleep_ear_twitch() -> void:
-	mochi_sleep_ear_twitch_playing = false
-	mochi_sleep_ear_twitch_frame = 0
-	mochi_sleep_ear_twitch_frame_elapsed = 0.0
-	mochi_sleep_ear_twitch_wait_remaining = 0.0
-
-
-func _process_luna_sleep_idle(delta: float) -> void:
-	if not luna_sleep_idle_playing:
-		luna_sleep_idle_wait_remaining = maxf(
-			0.0,
-			luna_sleep_idle_wait_remaining - delta
-		)
-		if luna_sleep_idle_wait_remaining <= 0.0:
-			luna_sleep_idle_playing = true
-			luna_sleep_idle_frame = 0
-			luna_sleep_idle_frame_elapsed = 0.0
-			_apply_current_texture()
-		return
-	luna_sleep_idle_frame_elapsed += delta
-	var frame_duration := float(
-		LUNA_SLEEP_IDLE_FRAME_DURATIONS[luna_sleep_idle_frame]
-	)
-	while luna_sleep_idle_frame_elapsed >= frame_duration:
-		luna_sleep_idle_frame_elapsed -= frame_duration
-		if luna_sleep_idle_frame >= LUNA_SLEEP_IDLE_FRAMES.size() - 1:
-			_schedule_next_luna_sleep_idle()
-			_apply_current_texture()
-			return
-		luna_sleep_idle_frame += 1
-		frame_duration = float(
-			LUNA_SLEEP_IDLE_FRAME_DURATIONS[luna_sleep_idle_frame]
-		)
-	_apply_current_texture()
-
-
-func _schedule_next_luna_sleep_idle() -> void:
-	luna_sleep_idle_playing = false
-	luna_sleep_idle_frame = 0
-	luna_sleep_idle_frame_elapsed = 0.0
-	luna_sleep_idle_wait_remaining = randf_range(
-		LUNA_SLEEP_IDLE_MIN_WAIT,
-		LUNA_SLEEP_IDLE_MAX_WAIT
-	)
-
-
-func _stop_luna_sleep_idle() -> void:
-	luna_sleep_idle_playing = false
-	luna_sleep_idle_frame = 0
-	luna_sleep_idle_frame_elapsed = 0.0
-	luna_sleep_idle_wait_remaining = 0.0
-
-
-func _process_poppy_sleep_face_rub(delta: float) -> void:
-	if not poppy_sleep_face_rub_playing:
-		poppy_sleep_face_rub_wait_remaining = maxf(0.0, poppy_sleep_face_rub_wait_remaining - delta)
-		if poppy_sleep_face_rub_wait_remaining <= 0.0:
-			poppy_sleep_face_rub_playing = true
-			poppy_sleep_face_rub_frame = 0
-			poppy_sleep_face_rub_frame_elapsed = 0.0
-			_apply_current_texture()
-		return
-	poppy_sleep_face_rub_frame_elapsed += delta
-	var frame_duration := float(POPPY_SLEEP_FACE_RUB_FRAME_DURATIONS[poppy_sleep_face_rub_frame])
-	while poppy_sleep_face_rub_frame_elapsed >= frame_duration:
-		poppy_sleep_face_rub_frame_elapsed -= frame_duration
-		if poppy_sleep_face_rub_frame >= POPPY_SLEEP_FACE_RUB_FRAMES.size() - 1:
-			_schedule_next_poppy_sleep_face_rub()
-			_apply_current_texture()
-			return
-		poppy_sleep_face_rub_frame += 1
-		frame_duration = float(POPPY_SLEEP_FACE_RUB_FRAME_DURATIONS[poppy_sleep_face_rub_frame])
-	_apply_current_texture()
-
-
-func _schedule_next_poppy_sleep_face_rub() -> void:
-	poppy_sleep_face_rub_playing = false
-	poppy_sleep_face_rub_frame = 0
-	poppy_sleep_face_rub_frame_elapsed = 0.0
-	poppy_sleep_face_rub_wait_remaining = randf_range(
-		POPPY_SLEEP_FACE_RUB_MIN_WAIT,
-		POPPY_SLEEP_FACE_RUB_MAX_WAIT
-	)
-
-
-func _stop_poppy_sleep_face_rub() -> void:
-	poppy_sleep_face_rub_playing = false
-	poppy_sleep_face_rub_frame = 0
-	poppy_sleep_face_rub_frame_elapsed = 0.0
-	poppy_sleep_face_rub_wait_remaining = 0.0
-
-
-func _start_black_cat_fall_asleep() -> void:
-	black_cat_fall_asleep_playing = true
-	black_cat_fall_asleep_frame = 0
-	black_cat_fall_asleep_frame_elapsed = 0.0
-	_apply_current_texture()
-
-
-func _process_black_cat_fall_asleep(delta: float) -> void:
-	if not black_cat_fall_asleep_playing:
-		return
-	black_cat_fall_asleep_frame_elapsed += delta
-	var frame_duration := float(
-		BLACK_CAT_FALL_ASLEEP_FRAME_DURATIONS[black_cat_fall_asleep_frame]
-	)
-	while black_cat_fall_asleep_frame_elapsed >= frame_duration:
-		black_cat_fall_asleep_frame_elapsed -= frame_duration
-		if black_cat_fall_asleep_frame >= BLACK_CAT_FALL_ASLEEP_FRAMES.size() - 1:
-			black_cat_fall_asleep_playing = false
-			black_cat_fall_asleep_frame = BLACK_CAT_FALL_ASLEEP_FRAMES.size() - 1
-			black_cat_fall_asleep_frame_elapsed = 0.0
-			_apply_current_texture()
-			return
-		black_cat_fall_asleep_frame += 1
-		frame_duration = float(
-			BLACK_CAT_FALL_ASLEEP_FRAME_DURATIONS[black_cat_fall_asleep_frame]
-		)
-	_apply_current_texture()
-
-
-func _stop_black_cat_fall_asleep() -> void:
-	black_cat_fall_asleep_playing = false
-	black_cat_fall_asleep_frame = 0
-	black_cat_fall_asleep_frame_elapsed = 0.0
-
-
-func _start_maine_coon_sleep_paw_lick() -> void:
-	maine_coon_sleep_paw_lick_playing = true
-	maine_coon_sleep_paw_lick_frame = 0
-	maine_coon_sleep_paw_lick_frame_elapsed = 0.0
-	_apply_current_texture()
-
-
-func _process_maine_coon_sleep_paw_lick(delta: float) -> void:
-	if not maine_coon_sleep_paw_lick_playing:
-		return
-	maine_coon_sleep_paw_lick_frame_elapsed += delta
-	var frame_duration := float(
-		MAINE_COON_SLEEP_PAW_LICK_FRAME_DURATIONS[maine_coon_sleep_paw_lick_frame]
-	)
-	while maine_coon_sleep_paw_lick_frame_elapsed >= frame_duration:
-		maine_coon_sleep_paw_lick_frame_elapsed -= frame_duration
-		if maine_coon_sleep_paw_lick_frame >= MAINE_COON_SLEEP_PAW_LICK_FRAMES.size() - 1:
-			maine_coon_sleep_paw_lick_playing = false
-			maine_coon_sleep_paw_lick_frame = MAINE_COON_SLEEP_PAW_LICK_FRAMES.size() - 1
-			maine_coon_sleep_paw_lick_frame_elapsed = 0.0
-			_apply_current_texture()
-			return
-		maine_coon_sleep_paw_lick_frame += 1
-		frame_duration = float(
-			MAINE_COON_SLEEP_PAW_LICK_FRAME_DURATIONS[maine_coon_sleep_paw_lick_frame]
-		)
-	_apply_current_texture()
-
-
-func _stop_maine_coon_sleep_paw_lick() -> void:
-	maine_coon_sleep_paw_lick_playing = false
-	maine_coon_sleep_paw_lick_frame = 0
-	maine_coon_sleep_paw_lick_frame_elapsed = 0.0
-
-
-func _start_golden_munchkin_sleep_tail() -> void:
-	golden_munchkin_sleep_tail_playing = true
-	golden_munchkin_sleep_tail_frame = 0
-	golden_munchkin_sleep_tail_frame_elapsed = 0.0
-	_apply_current_texture()
-
-
-func _process_golden_munchkin_sleep_tail(delta: float) -> void:
-	if not golden_munchkin_sleep_tail_playing:
-		_start_golden_munchkin_sleep_tail()
-		return
-	golden_munchkin_sleep_tail_frame_elapsed += delta
-	var frame_duration := float(
-		GOLDEN_MUNCHKIN_SLEEP_TAIL_FRAME_DURATIONS[golden_munchkin_sleep_tail_frame]
-	)
-	while golden_munchkin_sleep_tail_frame_elapsed >= frame_duration:
-		golden_munchkin_sleep_tail_frame_elapsed -= frame_duration
-		golden_munchkin_sleep_tail_frame = (
-			golden_munchkin_sleep_tail_frame + 1
-		) % GOLDEN_MUNCHKIN_SLEEP_TAIL_FRAMES.size()
-		frame_duration = float(
-			GOLDEN_MUNCHKIN_SLEEP_TAIL_FRAME_DURATIONS[golden_munchkin_sleep_tail_frame]
-		)
-	_apply_current_texture()
-
-
-func _stop_golden_munchkin_sleep_tail() -> void:
-	golden_munchkin_sleep_tail_playing = false
-	golden_munchkin_sleep_tail_frame = 0
-	golden_munchkin_sleep_tail_frame_elapsed = 0.0
+func _reset_sleep_bubble() -> void:
+	sleep_bubble_active = false
+	sleep_bubble_frame = 0
+	sleep_bubble_frame_elapsed = 0.0
+	sleep_bubble_wait_remaining = 0.0
+	_update_sleep_bubble()
 
 
 func _update_layout() -> void:
-	if not is_instance_valid(cat_sprite):
+	if not is_instance_valid(cat_sprite) or cat_sprite.texture == null:
 		return
 	var safe_size := Vector2(maxf(size.x, 1.0), maxf(size.y, 1.0))
 	var texture_size := cat_sprite.texture.get_size()
-	# Luna's stretch sheet uses a wider fixed canvas than her seated sprite. Base
-	# its display scale on the seated canvas so double-clicking does not make her
-	# shrink at Home and then pop back to full size when the animation finishes.
-	var layout_texture_size := (
-		LUNA_IDLE_TEXTURE.get_size()
-		if cat_sprite.texture in LUNA_STRETCH_YAWN_FRAMES
-		else POPPY_IDLE_TEXTURE.get_size()
-		if cat_sprite.texture in POPPY_SLEEP_FACE_RUB_FRAMES or cat_sprite.texture in POPPY_TEASER_PLAY_FRAMES
-		else BLACK_CAT_IDLE_TEXTURE.get_size()
-		if cat_sprite.texture in BLACK_CAT_LICK_PAW_FRAMES
-		else MAINE_COON_IDLE_TEXTURE.get_size()
-		if cat_sprite.texture in MAINE_COON_NUZZLE_FRAMES
-		else GOLDEN_MUNCHKIN_IDLE_TEXTURE.get_size()
-		if cat_sprite.texture in GOLDEN_MUNCHKIN_FAILED_ROLL_FRAMES
-		else GOLDEN_MUNCHKIN_SLEEP_TEXTURE.get_size()
-		if cat_sprite.texture in GOLDEN_MUNCHKIN_SLEEP_TAIL_FRAMES
-		else SIAMESE_IDLE_TEXTURE.get_size()
-		if cat_sprite.texture in SIAMESE_TREAT_FRAMES
-		else texture_size
-	)
+	var clip := animation_clip(active_clip_key) if not active_clip_key.is_empty() else null
+	var layout_texture := cat_sprite.texture
 	var scale_multiplier := 0.82
-	if cat_sprite.texture == PET_TEXTURE or cat_sprite.texture in SHY_FRAMES:
-		scale_multiplier = 0.95
-	elif cat_sprite.texture in MOCHI_HOME_TAIL_BLINK_FRAMES:
-		scale_multiplier = 0.95
-	elif cat_sprite.texture == BISCUIT_IDLE_TEXTURE:
-		scale_multiplier = 0.95
-	elif cat_sprite.texture == LUNA_IDLE_TEXTURE:
-		scale_multiplier = 0.95
-	elif cat_sprite.texture == POPPY_IDLE_TEXTURE:
-		scale_multiplier = 0.95
-	elif cat_sprite.texture == BLACK_CAT_IDLE_TEXTURE:
-		scale_multiplier = 0.95
-	elif cat_sprite.texture == MAINE_COON_IDLE_TEXTURE:
-		scale_multiplier = 0.95
-	elif cat_sprite.texture == GOLDEN_MUNCHKIN_IDLE_TEXTURE:
-		scale_multiplier = 0.95
-	elif cat_sprite.texture == SIAMESE_IDLE_TEXTURE:
-		scale_multiplier = 0.95
-	elif cat_sprite.texture == MOCHI_SLEEP_TEXTURE or cat_sprite.texture in MOCHI_SLEEP_EAR_TWITCH_FRAMES:
-		scale_multiplier = 0.95
-	elif cat_sprite.texture == BISCUIT_SLEEP_TEXTURE:
-		scale_multiplier = 0.95
-	elif cat_sprite.texture == LUNA_SLEEP_TEXTURE or cat_sprite.texture in LUNA_SLEEP_IDLE_FRAMES:
-		scale_multiplier = 0.95
-	elif cat_sprite.texture == POPPY_SLEEP_TEXTURE:
-		scale_multiplier = 0.95
-	elif cat_sprite.texture == BLACK_CAT_SLEEP_TEXTURE or cat_sprite.texture in BLACK_CAT_FALL_ASLEEP_FRAMES:
-		# The authored lying pose fills much more of its wide canvas than the seated
-		# pose. Reduce the complete sleep sequence by twenty percent so every frame
-		# keeps one consistent, appropriately smaller visual size.
-		scale_multiplier = BLACK_CAT_SLEEP_SCALE_MULTIPLIER
-	elif cat_sprite.texture == MAINE_COON_SLEEP_TEXTURE or cat_sprite.texture in MAINE_COON_SLEEP_PAW_LICK_FRAMES:
-		scale_multiplier = 0.95
-	elif cat_sprite.texture == GOLDEN_MUNCHKIN_SLEEP_TEXTURE or cat_sprite.texture in GOLDEN_MUNCHKIN_SLEEP_TAIL_FRAMES:
-		scale_multiplier = 0.95
-	elif cat_sprite.texture == SIAMESE_SLEEP_TEXTURE:
-		scale_multiplier = 0.95
-	elif (
-		cat_sprite.texture in MOVE_LEFT_FRAMES
-		or cat_sprite.texture in MOVE_RIGHT_FRAMES
-		or cat_sprite.texture in MOCHI_MOVE_LEFT_FRAMES
-		or cat_sprite.texture in MOCHI_MOVE_RIGHT_FRAMES
-		or cat_sprite.texture in BISCUIT_MOVE_LEFT_FRAMES
-		or cat_sprite.texture in BISCUIT_MOVE_RIGHT_FRAMES
-		or cat_sprite.texture in LUNA_MOVE_LEFT_FRAMES
-		or cat_sprite.texture in LUNA_MOVE_RIGHT_FRAMES
-		or cat_sprite.texture in POPPY_MOVE_LEFT_FRAMES
-		or cat_sprite.texture in POPPY_MOVE_RIGHT_FRAMES
-		or cat_sprite.texture in BLACK_CAT_MOVE_LEFT_FRAMES
-		or cat_sprite.texture in BLACK_CAT_MOVE_RIGHT_FRAMES
-		or cat_sprite.texture in MAINE_COON_MOVE_LEFT_FRAMES
-		or cat_sprite.texture in MAINE_COON_MOVE_RIGHT_FRAMES
-		or cat_sprite.texture in GOLDEN_MUNCHKIN_MOVE_LEFT_FRAMES
-		or cat_sprite.texture in GOLDEN_MUNCHKIN_MOVE_RIGHT_FRAMES
-		or cat_sprite.texture in SIAMESE_MOVE_LEFT_FRAMES
-		or cat_sprite.texture in SIAMESE_MOVE_RIGHT_FRAMES
-	):
-		scale_multiplier = MOVEMENT_SCALE_MULTIPLIER
-	elif cat_sprite.texture in MOCHI_LICK_PAW_FRAMES:
-		# The repaired sequence shares Mochi's seated canvas and silhouette height.
-		# Keep its scale identical so double-clicking cannot shrink/sink the cat.
-		scale_multiplier = 0.95
-	elif cat_sprite.texture in BISCUIT_BUTTERFLY_FRAMES:
-		# Biscuit's interaction begins from the same side-sitting pose as her
-		# default sprite, so keep both at one visual scale to prevent a size pop.
-		scale_multiplier = 0.95
-	elif cat_sprite.texture in LUNA_STRETCH_YAWN_FRAMES:
-		scale_multiplier = 0.95
-	elif cat_sprite.texture in POPPY_SLEEP_FACE_RUB_FRAMES:
-		scale_multiplier = 0.95
-	elif cat_sprite.texture in POPPY_TEASER_PLAY_FRAMES:
-		scale_multiplier = 0.95
-	elif cat_sprite.texture in BLACK_CAT_LICK_PAW_FRAMES:
-		scale_multiplier = 0.95
-	elif cat_sprite.texture in MAINE_COON_NUZZLE_FRAMES:
-		scale_multiplier = 0.95
-	elif cat_sprite.texture in GOLDEN_MUNCHKIN_FAILED_ROLL_FRAMES:
-		scale_multiplier = 0.95
-	elif cat_sprite.texture in SIAMESE_TREAT_FRAMES:
-		scale_multiplier = 0.95
-	elif cat_sprite.texture in DESKTOP_WINK_FRAMES or cat_sprite.texture in DESKTOP_BELLY_FRAMES:
-		scale_multiplier = 0.87
+	if clip != null:
+		layout_texture = _reference_texture(clip.layout_size_reference, active_clip_key)
+		scale_multiplier = clip.layout_scale
+	elif mood == "sleep":
+		layout_texture = sleep_texture
+		scale_multiplier = pet_definition.sleep_scale
+	else:
+		layout_texture = idle_texture
+		scale_multiplier = pet_definition.idle_scale
+	var layout_texture_size := layout_texture.get_size()
 	var scale_value := minf(
 		safe_size.x / layout_texture_size.x,
 		safe_size.y / layout_texture_size.y
 	) * scale_multiplier
-	# These animations share fixed authored canvases. Anchor every frame from its
-	# first frame so moving tails or wider poses never recenter the cat's body.
-	var visual_bounds := (
-		LUNA_MOVE_LAYOUT_BOUNDS
-		if cat_sprite.texture in LUNA_MOVE_LEFT_FRAMES or cat_sprite.texture in LUNA_MOVE_RIGHT_FRAMES
-		else BLACK_CAT_MOVE_LAYOUT_BOUNDS
-		if cat_sprite.texture in BLACK_CAT_MOVE_LEFT_FRAMES or cat_sprite.texture in BLACK_CAT_MOVE_RIGHT_FRAMES
-		else _get_texture_visual_bounds(LUNA_SLEEP_TEXTURE)
-		if cat_sprite.texture in LUNA_SLEEP_IDLE_FRAMES
-		else _get_texture_visual_bounds(MOCHI_LICK_PAW_FRAMES[0])
-		if cat_sprite.texture in MOCHI_LICK_PAW_FRAMES
-		else _get_texture_visual_bounds(POPPY_TEASER_PLAY_FRAMES[0])
-		if cat_sprite.texture in POPPY_TEASER_PLAY_FRAMES
-		else _get_texture_visual_bounds(MAINE_COON_NUZZLE_FRAMES[0])
-		if cat_sprite.texture in MAINE_COON_NUZZLE_FRAMES
-		else _get_texture_visual_bounds(GOLDEN_MUNCHKIN_FAILED_ROLL_FRAMES[0])
-		if cat_sprite.texture in GOLDEN_MUNCHKIN_FAILED_ROLL_FRAMES
-		else _get_texture_visual_bounds(SIAMESE_TREAT_FRAMES[-1])
-		if cat_sprite.texture in SIAMESE_TREAT_FRAMES
-		else _get_texture_visual_bounds(cat_sprite.texture)
-	)
+	var visual_bounds := _visual_bounds_for_clip(clip, active_clip_key)
 	var texture_center := texture_size * 0.5
 	var visual_center_x := visual_bounds.position.x + visual_bounds.size.x * 0.5
 	var visual_bottom := visual_bounds.position.y + visual_bounds.size.y
@@ -1392,13 +645,34 @@ func _update_layout() -> void:
 		safe_size.x * 0.5 - (visual_center_x - texture_center.x) * scale_value,
 		safe_size.y * SHADOW_CENTER_Y_RATIO - (visual_bottom - texture_center.y) * scale_value
 	)
-	# Translation only: preserve Biscuit's original frames, coat and scale.
-	# Leave idle, walking, and the automatic butterfly animation unchanged.
-	if interaction_animation_active and cat_sprite.texture in BISCUIT_BUTTERFLY_FRAMES:
-		cat_sprite.position += BISCUIT_DOUBLE_CLICK_OFFSET
+	if clip != null and interaction_animation_active:
+		cat_sprite.position += clip.position_offset
 	var badge_width := minf(184.0, safe_size.x * 0.90)
 	mood_badge.position = Vector2(safe_size.x * 0.5 - badge_width * 0.5, 4.0)
 	mood_badge.size = Vector2(badge_width, 40.0)
+
+
+func _reference_texture(reference: String, clip_key: String) -> Texture2D:
+	match reference:
+		"idle": return idle_texture
+		"sleep": return sleep_texture
+		"first":
+			var first_frames := animation_frames(clip_key)
+			return first_frames.front() if not first_frames.is_empty() else cat_sprite.texture
+		"last":
+			var last_frames := animation_frames(clip_key)
+			return last_frames.back() if not last_frames.is_empty() else cat_sprite.texture
+	return cat_sprite.texture
+
+
+func _visual_bounds_for_clip(clip: PetAnimationClip, clip_key: String) -> Rect2:
+	if clip == null:
+		return _get_texture_visual_bounds(cat_sprite.texture)
+	if clip.uses_fixed_visual_bounds:
+		return clip.fixed_visual_bounds
+	return _get_texture_visual_bounds(
+		_reference_texture(clip.visual_bounds_reference, clip_key)
+	)
 
 
 func _get_texture_visual_bounds(texture: Texture2D) -> Rect2:
@@ -1415,16 +689,15 @@ func _get_texture_visual_bounds(texture: Texture2D) -> Rect2:
 
 
 func _draw() -> void:
-	if not _should_draw_ground_shadow():
+	if pet_definition == null or not pet_definition.draw_ground_shadow:
 		return
 	var shadow_center := Vector2(size.x * 0.5, size.y * SHADOW_CENTER_Y_RATIO)
 	var shadow_radius := Vector2(size.x * 0.28, maxf(8.0, size.y * 0.035))
 	var points := PackedVector2Array()
 	for index in range(36):
 		var angle := TAU * float(index) / 36.0
-		points.append(shadow_center + Vector2(cos(angle) * shadow_radius.x, sin(angle) * shadow_radius.y))
+		points.append(shadow_center + Vector2(
+			cos(angle) * shadow_radius.x,
+			sin(angle) * shadow_radius.y
+		))
 	draw_colored_polygon(points, Color(0.20, 0.12, 0.16, 0.16))
-
-
-func _should_draw_ground_shadow() -> bool:
-	return not _uses_maine_coon_home_art() and not _uses_golden_munchkin_home_art()

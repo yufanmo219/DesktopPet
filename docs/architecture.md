@@ -48,12 +48,15 @@ legacy-migration, and unknown-field-preservation tests.
 `PetCatalog` resolves stable catalog and save IDs. Each `PetDefinition` stores
 metadata and resource paths without eagerly loading every texture.
 
-`PetAvatar` renders the active pet. Screens and controllers should request a
-pet by stable ID rather than referencing pet-specific files themselves.
+`PetAnimationClip` describes frame paths, timing, looping, wait ranges, and
+layout anchors. `PetAvatar` is a generic runtime player for those clips; it has
+no branches for concrete pet IDs. Screens and controllers request a pet by
+stable ID rather than referencing pet-specific files themselves.
 
-The remaining architectural direction is to move pet-specific animation timing
-and layout metadata into definitions so `PetAvatar` can become a generic
-animation renderer.
+Fishing uses `FishingPetPresentation` to lazily load the active pet's default,
+success, empty-catch, and failure visuals from the same definition. Adding a
+normal pet therefore changes catalog data and assets, not the Home, Desktop, or
+Fishing renderers.
 
 ## Desktop companion
 
@@ -76,7 +79,8 @@ spending and time-based recovery. Neither depends on the scene tree.
 
 `FishingGame` is the Godot adapter: it binds the composed fishing view, renders
 actors and progress, forwards player input, plays presentation effects, and
-publishes updated state.
+publishes updated state. Pet-specific presentation is delegated to
+`FishingPetPresentation`.
 
 Future work should continue moving presentation-only responsibilities into
 fish actor, popup, pet-reaction, and audio collaborators while keeping session

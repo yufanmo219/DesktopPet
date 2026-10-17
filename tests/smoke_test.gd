@@ -952,21 +952,21 @@ func run_tests() -> void:
 	await process_frame
 	check(game.current_screen == "home", "The Store Home button should return to Home")
 	check(game.avatar.mood == "idle", "The Home cat should begin awake and standing after entering the page")
-	check(game.avatar.cat_sprite.texture == game.avatar.BISCUIT_IDLE_TEXTURE, "Purchased Biscuit should arrive Home in her approved side-sitting pose")
+	check(game.avatar.cat_sprite.texture == game.avatar.idle_texture, "Purchased Biscuit should arrive Home in her approved side-sitting pose")
 	check(game.avatar.home_idle_enabled, "Home should enable the active pet's occasional idle animation")
 	game.avatar.set_desktop_idle_enabled(true)
 	game.avatar.desktop_idle_wait_remaining = 0.0
 	game.avatar._process(0.01)
 	check(
-		game.avatar.desktop_idle_animation == "biscuit_butterfly"
-		and game.avatar.cat_sprite.texture == game.avatar.BISCUIT_BUTTERFLY_FRAMES[0]
-		and game.avatar.BISCUIT_BUTTERFLY_FRAMES.size() == 16,
+		game.avatar.desktop_idle_animation == "interaction"
+		and game.avatar.cat_sprite.texture == game.avatar.animation_frames("interaction")[0]
+		and game.avatar.animation_frames("interaction").size() == 16,
 		"An active Desktop Biscuit should occasionally follow and reach for the pink butterfly"
 	)
 	game.avatar.set_desktop_idle_enabled(false)
 	game.avatar.set_mood("sleep")
 	check(
-		game.avatar.cat_sprite.texture == game.avatar.BISCUIT_SLEEP_TEXTURE
+		game.avatar.cat_sprite.texture == game.avatar.sleep_texture
 		and not game.avatar.sleep_bubble_sprite.visible,
 		"Inactive Biscuit should use her fixed side-sleep pose with the nose bubble initially hidden"
 	)
@@ -980,37 +980,37 @@ func run_tests() -> void:
 	check(
 		game.avatar.sleep_bubble_active
 		and game.avatar.sleep_bubble_sprite.visible
-		and game.avatar.sleep_bubble_sprite.texture == game.avatar.SLEEP_BUBBLE_FRAMES[0],
+		and game.avatar.sleep_bubble_sprite.texture == game.avatar.animation_frames("sleep_bubble")[0],
 		"Biscuit should reuse Maple's animated sleeping nose bubble"
 	)
 	check(
 		(
 			game.avatar.sleep_bubble_sprite.position
 			+ game.avatar.SLEEP_BUBBLE_FRAME_ANCHOR
-			+ game.avatar.BISCUIT_SLEEP_TEXTURE.get_size() * 0.5
-		).is_equal_approx(game.avatar.BISCUIT_SLEEP_BUBBLE_NOSE_POSITION),
+			+ game.avatar.sleep_texture.get_size() * 0.5
+		).is_equal_approx(game.avatar.pet_definition.sleep_bubble_nose_position),
 		"Biscuit's bubble point should stay anchored directly to her own nostril"
 	)
 	game.avatar.set_mood("idle")
 	game.avatar.play_move(Vector2.LEFT)
-	game.avatar._process(1.0 / game.avatar.MOVE_FPS + 0.01)
+	game.avatar._process(1.0 / game.avatar.animation_clip(game.avatar._move_clip_key()).fps + 0.01)
 	check(
-		game.avatar.cat_sprite.texture in game.avatar.BISCUIT_MOVE_LEFT_FRAMES
-		and game.avatar.BISCUIT_MOVE_LEFT_FRAMES.size() == 12,
+		game.avatar.cat_sprite.texture in game.avatar.animation_frames("move_left")
+		and game.avatar.animation_frames("move_left").size() == 12,
 		"Biscuit should use her approved playful left-walk animation"
 	)
 	game.avatar.stop_move()
 	game.avatar.play_move(Vector2.RIGHT)
-	game.avatar._process(1.0 / game.avatar.MOVE_FPS + 0.01)
+	game.avatar._process(1.0 / game.avatar.animation_clip(game.avatar._move_clip_key()).fps + 0.01)
 	check(
-		game.avatar.cat_sprite.texture in game.avatar.BISCUIT_MOVE_RIGHT_FRAMES
-		and game.avatar.BISCUIT_MOVE_RIGHT_FRAMES.size() == 12,
+		game.avatar.cat_sprite.texture in game.avatar.animation_frames("move_right")
+		and game.avatar.animation_frames("move_right").size() == 12,
 		"Biscuit should use her approved playful right-walk animation"
 	)
 	game.avatar.play_belly_roll()
 	check(
 		game.avatar.is_playing_interaction()
-		and game.avatar.cat_sprite.texture == game.avatar.BISCUIT_BUTTERFLY_FRAMES[0],
+		and game.avatar.cat_sprite.texture == game.avatar.animation_frames("interaction")[0],
 		"Double-clicking Biscuit should replay her own butterfly interaction instead of Maple's art"
 	)
 	var biscuit_interaction_scale: Vector2 = game.avatar.cat_sprite.scale
@@ -1018,7 +1018,7 @@ func run_tests() -> void:
 	game.avatar._apply_current_texture()
 	game.avatar._update_layout()
 	check(
-		game.avatar.cat_sprite.texture == game.avatar.BISCUIT_IDLE_TEXTURE
+		game.avatar.cat_sprite.texture == game.avatar.idle_texture
 		and game.avatar.cat_sprite.scale.is_equal_approx(biscuit_interaction_scale),
 		"Biscuit's butterfly interaction should stay the same size as her default side-sitting pose"
 	)
@@ -1040,67 +1040,67 @@ func run_tests() -> void:
 	game.avatar.set_mood("idle")
 	var luna_idle_scale: Vector2 = game.avatar.cat_sprite.scale
 	check(
-		game.avatar.cat_sprite.texture == game.avatar.LUNA_IDLE_TEXTURE,
+		game.avatar.cat_sprite.texture == game.avatar.idle_texture,
 		"Luna should use her approved slim side-sitting pose at Home and on Desktop"
 	)
 	check(
-		not _texture_lower_half_has_green_chroma(game.avatar.LUNA_IDLE_TEXTURE),
+		not _texture_lower_half_has_green_chroma(game.avatar.idle_texture),
 		"Luna's side-sitting feet and tail should not retain green-screen pixels"
 	)
 	game.avatar.set_desktop_idle_enabled(true)
 	game.avatar.desktop_idle_wait_remaining = 0.0
 	game.avatar._process(0.01)
 	check(
-		game.avatar.desktop_idle_animation == "luna_stretch_yawn"
-		and game.avatar.cat_sprite.texture == game.avatar.LUNA_STRETCH_YAWN_FRAMES[0]
-		and game.avatar.LUNA_STRETCH_YAWN_FRAMES.size() == 12,
+		game.avatar.desktop_idle_animation == "interaction"
+		and game.avatar.cat_sprite.texture == game.avatar.animation_frames("interaction")[0]
+		and game.avatar.animation_frames("interaction").size() == 12,
 		"An active Desktop Luna should occasionally play her stretch-and-yawn animation"
 	)
 	game.avatar.set_desktop_idle_enabled(false)
 	game.avatar.set_mood("sleep")
 	check(
-		game.avatar.cat_sprite.texture == game.avatar.LUNA_SLEEP_TEXTURE
+		game.avatar.cat_sprite.texture == game.avatar.sleep_texture
 		and not game.avatar.sleep_bubble_sprite.visible,
 		"Inactive Luna should use her own sleeping pose without another cat's nose bubble"
 	)
 	check(
-		game.avatar.luna_sleep_idle_wait_remaining >= game.avatar.LUNA_SLEEP_IDLE_MIN_WAIT
-		and game.avatar.luna_sleep_idle_wait_remaining <= game.avatar.LUNA_SLEEP_IDLE_MAX_WAIT,
+		game.avatar.sleep_effect_wait_remaining >= game.avatar.animation_clip("sleep_effect").wait_min
+		and game.avatar.sleep_effect_wait_remaining <= game.avatar.animation_clip("sleep_effect").wait_max,
 		"Sleeping Luna should schedule her subtle custom sleep animation"
 	)
-	game.avatar.luna_sleep_idle_wait_remaining = 0.0
+	game.avatar.sleep_effect_wait_remaining = 0.0
 	game.avatar._process(0.01)
 	check(
-		game.avatar.luna_sleep_idle_playing
-		and game.avatar.cat_sprite.texture == game.avatar.LUNA_SLEEP_IDLE_FRAMES[0]
-		and game.avatar.LUNA_SLEEP_IDLE_FRAMES.size() == 12,
+		game.avatar.sleep_effect_playing
+		and game.avatar.cat_sprite.texture == game.avatar.animation_frames("sleep_effect")[0]
+		and game.avatar.animation_frames("sleep_effect").size() == 12,
 		"Luna's random sleeping animation should begin on its first fixed-canvas frame"
 	)
 	game.avatar.set_mood("idle")
 	game.avatar.play_move(Vector2.LEFT)
-	game.avatar._process(1.0 / game.avatar.MOVE_FPS + 0.01)
+	game.avatar._process(1.0 / game.avatar.animation_clip(game.avatar._move_clip_key()).fps + 0.01)
 	check(
-		game.avatar.cat_sprite.texture in game.avatar.LUNA_MOVE_LEFT_FRAMES
-		and game.avatar.LUNA_MOVE_LEFT_FRAMES.size() == 12,
+		game.avatar.cat_sprite.texture in game.avatar.animation_frames("move_left")
+		and game.avatar.animation_frames("move_left").size() == 12,
 		"Luna should use her approved slimmer left-walk animation"
 	)
 	game.avatar.stop_move()
 	game.avatar.play_move(Vector2.RIGHT)
-	game.avatar._process(1.0 / game.avatar.MOVE_FPS + 0.01)
+	game.avatar._process(1.0 / game.avatar.animation_clip(game.avatar._move_clip_key()).fps + 0.01)
 	check(
-		game.avatar.cat_sprite.texture in game.avatar.LUNA_MOVE_RIGHT_FRAMES
-		and game.avatar.LUNA_MOVE_RIGHT_FRAMES.size() == 12,
+		game.avatar.cat_sprite.texture in game.avatar.animation_frames("move_right")
+		and game.avatar.animation_frames("move_right").size() == 12,
 		"Luna should use her approved slimmer right-walk animation"
 	)
 	game.avatar.play_belly_roll()
 	check(
 		game.avatar.is_playing_interaction()
-		and game.avatar.cat_sprite.texture == game.avatar.LUNA_STRETCH_YAWN_FRAMES[0]
+		and game.avatar.cat_sprite.texture == game.avatar.animation_frames("interaction")[0]
 		and game.avatar.cat_sprite.scale.is_equal_approx(luna_idle_scale),
 		"Double-clicking Luna should replay her stretch without shrinking from her idle size"
 	)
 	check(
-		game.avatar.LUNA_STRETCH_YAWN_FRAMES.all(
+		game.avatar.animation_frames("interaction").all(
 			func(frame): return not _texture_bottom_band_has_green_chroma(frame)
 		),
 		"Every Luna stretch frame should be free of green-screen residue near her feet"
@@ -1122,22 +1122,22 @@ func run_tests() -> void:
 	game.avatar.set_pet({"id": "poppy", "name": "Poppy", "type": "Cat"})
 	game.avatar.set_mood("idle")
 	check(
-		game.avatar.cat_sprite.texture == game.avatar.POPPY_IDLE_TEXTURE,
+		game.avatar.cat_sprite.texture == game.avatar.idle_texture,
 		"Poppy should use her approved side-sitting pose at Home and on Desktop"
 	)
 	game.avatar.play_move(Vector2.LEFT)
-	game.avatar._process(1.0 / game.avatar.MOVE_FPS + 0.01)
+	game.avatar._process(1.0 / game.avatar.animation_clip(game.avatar._move_clip_key()).fps + 0.01)
 	check(
-		game.avatar.cat_sprite.texture in game.avatar.POPPY_MOVE_LEFT_FRAMES
-		and game.avatar.POPPY_MOVE_LEFT_FRAMES.size() == 12,
+		game.avatar.cat_sprite.texture in game.avatar.animation_frames("move_left")
+		and game.avatar.animation_frames("move_left").size() == 12,
 		"Poppy should use her fixed-canvas left-walk animation"
 	)
 	game.avatar.stop_move()
 	game.avatar.play_move(Vector2.RIGHT)
-	game.avatar._process(1.0 / game.avatar.MOVE_FPS + 0.01)
+	game.avatar._process(1.0 / game.avatar.animation_clip(game.avatar._move_clip_key()).fps + 0.01)
 	check(
-		game.avatar.cat_sprite.texture in game.avatar.POPPY_MOVE_RIGHT_FRAMES
-		and game.avatar.POPPY_MOVE_RIGHT_FRAMES.size() == 12,
+		game.avatar.cat_sprite.texture in game.avatar.animation_frames("move_right")
+		and game.avatar.animation_frames("move_right").size() == 12,
 		"Poppy should use her fixed-canvas right-walk animation"
 	)
 	game.avatar.stop_move()
@@ -1146,20 +1146,20 @@ func run_tests() -> void:
 	game.avatar.play_belly_roll()
 	check(
 		game.avatar.is_playing_interaction()
-		and game.avatar.cat_sprite.texture == game.avatar.POPPY_TEASER_PLAY_FRAMES[0]
-		and game.avatar.POPPY_TEASER_PLAY_FRAMES.size() == 16
-		and game.avatar.POPPY_TEASER_PLAY_FRAME_DURATIONS.size() == 16,
+		and game.avatar.cat_sprite.texture == game.avatar.animation_frames("interaction")[0]
+		and game.avatar.animation_frames("interaction").size() == 16
+		and game.avatar.animation_clip("interaction").frame_durations.size() == 16,
 		"Double-clicking Poppy should start her sixteen-frame teaser-wand interaction"
 	)
 	check(
 		game.avatar.cat_sprite.scale.is_equal_approx(poppy_idle_scale)
-		and game.avatar.POPPY_TEASER_PLAY_FRAMES.all(
+		and game.avatar.animation_frames("interaction").all(
 			func(frame): return frame.get_size() == Vector2(640, 640)
 		),
 		"Poppy's teaser interaction should keep her seated scale on one fixed canvas"
 	)
 	check(
-		game.avatar.POPPY_TEASER_PLAY_FRAMES.all(
+		game.avatar.animation_frames("interaction").all(
 			func(frame): return (
 				not _texture_has_green_chroma(frame)
 				and not _texture_top_band_has_blue_fragment(frame)
@@ -1167,27 +1167,27 @@ func run_tests() -> void:
 		),
 		"Poppy's teaser frames should contain no green spill or top-edge cat fragments"
 	)
-	for teaser_frame_index in range(game.avatar.POPPY_TEASER_PLAY_FRAMES.size()):
+	for teaser_frame_index in range(game.avatar.animation_frames("interaction").size()):
 		game.avatar._process(
-			float(game.avatar.POPPY_TEASER_PLAY_FRAME_DURATIONS[teaser_frame_index]) + 0.01
+			float(game.avatar.animation_clip("interaction").frame_durations[teaser_frame_index]) + 0.01
 		)
 	check(
 		not game.avatar.is_playing_interaction()
-		and game.avatar.cat_sprite.texture == game.avatar.POPPY_IDLE_TEXTURE,
+		and game.avatar.cat_sprite.texture == game.avatar.idle_texture,
 		"Poppy's teaser interaction should finish once and return to her side-sitting pose"
 	)
 	game.avatar.set_mood("sleep")
 	check(
-		game.avatar.cat_sprite.texture == game.avatar.POPPY_SLEEP_TEXTURE
+		game.avatar.cat_sprite.texture == game.avatar.sleep_texture
 		and not game.avatar.sleep_bubble_sprite.visible,
 		"Inactive Poppy should use her horizontal sleeping pose without another cat's sleep bubble"
 	)
-	game.avatar.poppy_sleep_face_rub_wait_remaining = 0.0
+	game.avatar.sleep_effect_wait_remaining = 0.0
 	game.avatar._process(0.01)
 	check(
-		game.avatar.poppy_sleep_face_rub_playing
-		and game.avatar.cat_sprite.texture == game.avatar.POPPY_SLEEP_FACE_RUB_FRAMES[0]
-		and game.avatar.POPPY_SLEEP_FACE_RUB_FRAMES.size() == 12,
+		game.avatar.sleep_effect_playing
+		and game.avatar.cat_sprite.texture == game.avatar.animation_frames("sleep_effect")[0]
+		and game.avatar.animation_frames("sleep_effect").size() == 12,
 		"Sleeping Poppy should occasionally play her aligned face-rub animation"
 	)
 	var poppy_station_art: Control = desktop._make_station_top_art(
@@ -1217,14 +1217,14 @@ func run_tests() -> void:
 	game.avatar.set_pet({"id": "black_cat", "name": "", "type": "Cat"})
 	game.avatar.set_mood("idle")
 	check(
-		game.avatar.cat_sprite.texture == game.avatar.BLACK_CAT_IDLE_TEXTURE,
+		game.avatar.cat_sprite.texture == game.avatar.idle_texture,
 		"The black cat should use her approved slim side-sitting pose at Home and on Desktop"
 	)
 	check(
 		game.avatar.cat_sprite.texture_filter == CanvasItem.TEXTURE_FILTER_LINEAR,
 		"Sable's side-sitting pose must keep smooth paw and tail edges at Home as well as on Desktop"
 	)
-	var black_cat_idle_image: Image = game.avatar.BLACK_CAT_IDLE_TEXTURE.get_image()
+	var black_cat_idle_image: Image = game.avatar.idle_texture.get_image()
 	var black_cat_eye_pixels_opaque := true
 	for eye_rect in [Rect2i(330, 142, 40, 23), Rect2i(386, 116, 23, 29)]:
 		for eye_y in range(eye_rect.position.y, eye_rect.end.y):
@@ -1246,22 +1246,22 @@ func run_tests() -> void:
 		"The black cat's seated tail should have a smooth black edge without pale ground pixels"
 	)
 	game.avatar.play_move(Vector2.LEFT)
-	game.avatar._process(1.0 / game.avatar.MOVE_FPS + 0.01)
+	game.avatar._process(1.0 / game.avatar.animation_clip(game.avatar._move_clip_key()).fps + 0.01)
 	check(
-		game.avatar.cat_sprite.texture in game.avatar.BLACK_CAT_MOVE_LEFT_FRAMES
-		and game.avatar.BLACK_CAT_MOVE_LEFT_FRAMES.size() == 12
-		and game.avatar.BLACK_CAT_MOVE_LEFT_FRAMES.all(
+		game.avatar.cat_sprite.texture in game.avatar.animation_frames("move_left")
+		and game.avatar.animation_frames("move_left").size() == 12
+		and game.avatar.animation_frames("move_left").all(
 			func(frame): return frame.get_size() == Vector2(704, 512)
 		),
 		"The black cat should use twelve fixed-canvas left-walk frames"
 	)
 	game.avatar.stop_move()
 	game.avatar.play_move(Vector2.RIGHT)
-	game.avatar._process(1.0 / game.avatar.MOVE_FPS + 0.01)
+	game.avatar._process(1.0 / game.avatar.animation_clip(game.avatar._move_clip_key()).fps + 0.01)
 	check(
-		game.avatar.cat_sprite.texture in game.avatar.BLACK_CAT_MOVE_RIGHT_FRAMES
-		and game.avatar.BLACK_CAT_MOVE_RIGHT_FRAMES.size() == 12
-		and game.avatar.BLACK_CAT_MOVE_RIGHT_FRAMES.all(
+		game.avatar.cat_sprite.texture in game.avatar.animation_frames("move_right")
+		and game.avatar.animation_frames("move_right").size() == 12
+		and game.avatar.animation_frames("move_right").all(
 			func(frame): return frame.get_size() == Vector2(704, 512)
 		),
 		"The black cat should use twelve genuinely directional fixed-canvas right-walk frames"
@@ -1270,13 +1270,13 @@ func run_tests() -> void:
 	game.avatar.play_belly_roll()
 	check(
 		game.avatar.is_playing_interaction()
-		and game.avatar.cat_sprite.texture == game.avatar.BLACK_CAT_LICK_PAW_FRAMES[0]
-		and game.avatar.BLACK_CAT_LICK_PAW_FRAMES.size() == 8,
+		and game.avatar.cat_sprite.texture == game.avatar.animation_frames("interaction")[0]
+		and game.avatar.animation_frames("interaction").size() == 8,
 		"Double-clicking the black cat should replay her aloof paw-lick instead of Maple's art"
 	)
 	check(
-		game.avatar.BLACK_CAT_LICK_PAW_FRAMES[5].get_image().get_data()
-		== game.avatar.BLACK_CAT_LICK_PAW_FRAMES[4].get_image().get_data(),
+		game.avatar.animation_frames("interaction")[5].get_image().get_data()
+		== game.avatar.animation_frames("interaction")[4].get_image().get_data(),
 		"The black cat's paw-lick hold frame should keep the same raised right paw instead of switching paws"
 	)
 	game.avatar.interaction_animation_active = false
@@ -1285,12 +1285,12 @@ func run_tests() -> void:
 	var black_cat_expected_sleep_scale: float = minf(
 		game.avatar.size.x / black_cat_sleep_texture_size.x,
 		game.avatar.size.y / black_cat_sleep_texture_size.y
-	) * game.avatar.BLACK_CAT_SLEEP_SCALE_MULTIPLIER
+	) * game.avatar.pet_definition.sleep_scale
 	check(
-		game.avatar.black_cat_fall_asleep_playing
-		and game.avatar.cat_sprite.texture == game.avatar.BLACK_CAT_FALL_ASLEEP_FRAMES[0]
-		and game.avatar.BLACK_CAT_FALL_ASLEEP_FRAMES.size() == 8
-		and is_equal_approx(game.avatar.BLACK_CAT_SLEEP_SCALE_MULTIPLIER, 0.76)
+		game.avatar.sleep_effect_playing
+		and game.avatar.cat_sprite.texture == game.avatar.animation_frames("sleep_effect")[0]
+		and game.avatar.animation_frames("sleep_effect").size() == 8
+		and is_equal_approx(game.avatar.pet_definition.sleep_scale, 0.76)
 		and is_equal_approx(
 			game.avatar.cat_sprite.scale.x,
 			black_cat_expected_sleep_scale
@@ -1299,24 +1299,24 @@ func run_tests() -> void:
 		"The black cat should begin her lazy blink-and-lower sleep animation at the twenty-percent-smaller size"
 	)
 	check(
-		game.avatar.BLACK_CAT_FALL_ASLEEP_FRAMES.all(
+		game.avatar.animation_frames("sleep_effect").all(
 			func(frame): return _black_cat_sleep_lower_edge_is_clean(frame)
 		)
-		and _black_cat_sleep_lower_edge_is_clean(game.avatar.BLACK_CAT_SLEEP_TEXTURE),
+		and _black_cat_sleep_lower_edge_is_clean(game.avatar.sleep_texture),
 		"Black-cat sleep frames should erase the complete warm ground shadow and debris below the cat"
 	)
 	check(
 		game.avatar.cat_sprite.texture_filter == CanvasItem.TEXTURE_FILTER_LINEAR,
 		"Sable's complete sleep sequence must use linear filtering so the lower silhouette stays smooth"
 	)
-	for black_sleep_frame_index in range(game.avatar.BLACK_CAT_FALL_ASLEEP_FRAMES.size()):
+	for black_sleep_frame_index in range(game.avatar.animation_frames("sleep_effect").size()):
 		game.avatar._process(
-			float(game.avatar.BLACK_CAT_FALL_ASLEEP_FRAME_DURATIONS[black_sleep_frame_index])
+			float(game.avatar.animation_clip("sleep_effect").frame_durations[black_sleep_frame_index])
 			+ 0.01
 		)
 	check(
-		not game.avatar.black_cat_fall_asleep_playing
-		and game.avatar.cat_sprite.texture == game.avatar.BLACK_CAT_SLEEP_TEXTURE,
+		not game.avatar.sleep_effect_playing
+		and game.avatar.cat_sprite.texture == game.avatar.sleep_texture,
 		"The black cat should finish with her head on both paws and remain asleep"
 	)
 	var black_cat_station_art: Control = desktop._make_station_top_art(
@@ -1348,22 +1348,22 @@ func run_tests() -> void:
 	game.avatar.set_pet({"id": "maine_coon", "name": "Cedar", "type": "Cat"})
 	game.avatar.set_mood("idle")
 	check(
-		game.avatar.cat_sprite.texture == game.avatar.MAINE_COON_IDLE_TEXTURE
-		and game.avatar.MAINE_COON_IDLE_TEXTURE.get_image().get_used_rect().size.x <= 300
-		and game.avatar.MAINE_COON_IDLE_TEXTURE.get_image().get_used_rect().end.y == 500
-		and not game.avatar._should_draw_ground_shadow(),
+		game.avatar.cat_sprite.texture == game.avatar.idle_texture
+		and game.avatar.idle_texture.get_image().get_used_rect().size.x <= 300
+		and game.avatar.idle_texture.get_image().get_used_rect().end.y == 500
+		and not game.avatar.pet_definition.draw_ground_shadow,
 		"The Maine Coon should use the approved grounded, shadow-free side-sitting Home pose"
 	)
 	var maine_coon_idle_scale: Vector2 = game.avatar.cat_sprite.scale
 	var maine_coon_idle_visible_height: int = (
-		game.avatar.MAINE_COON_IDLE_TEXTURE.get_image().get_used_rect().size.y
+		game.avatar.idle_texture.get_image().get_used_rect().size.y
 	)
 	game.avatar.play_move(Vector2.LEFT)
-	game.avatar._process(1.0 / game.avatar.MOVE_FPS + 0.01)
+	game.avatar._process(1.0 / game.avatar.animation_clip(game.avatar._move_clip_key()).fps + 0.01)
 	check(
-		game.avatar.cat_sprite.texture in game.avatar.MAINE_COON_MOVE_LEFT_FRAMES
-		and game.avatar.MAINE_COON_MOVE_LEFT_FRAMES.size() == 12
-		and game.avatar.MAINE_COON_MOVE_LEFT_FRAMES.all(
+		game.avatar.cat_sprite.texture in game.avatar.animation_frames("move_left")
+		and game.avatar.animation_frames("move_left").size() == 12
+		and game.avatar.animation_frames("move_left").all(
 			func(frame): return (
 				frame.get_size() == Vector2(704, 512)
 				and _walk_lower_center_transparent_ratio(frame) >= 0.25
@@ -1376,11 +1376,11 @@ func run_tests() -> void:
 	)
 	game.avatar.stop_move()
 	game.avatar.play_move(Vector2.RIGHT)
-	game.avatar._process(1.0 / game.avatar.MOVE_FPS + 0.01)
+	game.avatar._process(1.0 / game.avatar.animation_clip(game.avatar._move_clip_key()).fps + 0.01)
 	check(
-		game.avatar.cat_sprite.texture in game.avatar.MAINE_COON_MOVE_RIGHT_FRAMES
-		and game.avatar.MAINE_COON_MOVE_RIGHT_FRAMES.size() == 12
-		and game.avatar.MAINE_COON_MOVE_RIGHT_FRAMES.all(
+		game.avatar.cat_sprite.texture in game.avatar.animation_frames("move_right")
+		and game.avatar.animation_frames("move_right").size() == 12
+		and game.avatar.animation_frames("move_right").all(
 			func(frame): return (
 				frame.get_size() == Vector2(704, 512)
 				and _walk_lower_center_transparent_ratio(frame) >= 0.25
@@ -1395,11 +1395,11 @@ func run_tests() -> void:
 	game.avatar.play_belly_roll()
 	check(
 		game.avatar.is_playing_interaction()
-		and game.avatar.cat_sprite.texture == game.avatar.MAINE_COON_NUZZLE_FRAMES[0]
-		and game.avatar.MAINE_COON_NUZZLE_FRAMES.size() == 8
+		and game.avatar.cat_sprite.texture == game.avatar.animation_frames("interaction")[0]
+		and game.avatar.animation_frames("interaction").size() == 8
 		and game.avatar.cat_sprite.scale.is_equal_approx(maine_coon_idle_scale)
 		and absi(
-			game.avatar.MAINE_COON_NUZZLE_FRAMES[0].get_image().get_used_rect().size.y
+			game.avatar.animation_frames("interaction")[0].get_image().get_used_rect().size.y
 			- maine_coon_idle_visible_height
 		) <= 2,
 		"Double-clicking the Maine Coon should play her full-size forehead-nuzzle and paw-touch animation"
@@ -1407,20 +1407,20 @@ func run_tests() -> void:
 	game.avatar.interaction_animation_active = false
 	game.avatar.set_mood("sleep")
 	check(
-		game.avatar.maine_coon_sleep_paw_lick_playing
-		and game.avatar.cat_sprite.texture == game.avatar.MAINE_COON_SLEEP_PAW_LICK_FRAMES[0]
-		and game.avatar.MAINE_COON_SLEEP_PAW_LICK_FRAMES.size() == 8
+		game.avatar.sleep_effect_playing
+		and game.avatar.cat_sprite.texture == game.avatar.animation_frames("sleep_effect")[0]
+		and game.avatar.animation_frames("sleep_effect").size() == 8
 		and not game.avatar.sleep_bubble_sprite.visible,
 		"The Maine Coon should begin her aligned raise-head-and-lick-paw sleep animation"
 	)
-	for maine_sleep_frame_index in range(game.avatar.MAINE_COON_SLEEP_PAW_LICK_FRAMES.size()):
+	for maine_sleep_frame_index in range(game.avatar.animation_frames("sleep_effect").size()):
 		game.avatar._process(
-			float(game.avatar.MAINE_COON_SLEEP_PAW_LICK_FRAME_DURATIONS[maine_sleep_frame_index])
+			float(game.avatar.animation_clip("sleep_effect").frame_durations[maine_sleep_frame_index])
 			+ 0.01
 		)
 	check(
-		not game.avatar.maine_coon_sleep_paw_lick_playing
-		and game.avatar.cat_sprite.texture == game.avatar.MAINE_COON_SLEEP_TEXTURE,
+		not game.avatar.sleep_effect_playing
+		and game.avatar.cat_sprite.texture == game.avatar.sleep_texture,
 		"The Maine Coon should settle back into the approved fixed-position sleeping pose"
 	)
 	var maine_coon_station_art: Control = desktop._make_station_top_art(
@@ -1452,19 +1452,19 @@ func run_tests() -> void:
 	game.avatar.set_pet({"id": "golden_munchkin", "name": "Honey", "type": "Cat"})
 	game.avatar.set_mood("idle")
 	check(
-		game.avatar.cat_sprite.texture == game.avatar.GOLDEN_MUNCHKIN_IDLE_TEXTURE
-		and not game.avatar._should_draw_ground_shadow()
+		game.avatar.cat_sprite.texture == game.avatar.idle_texture
+		and not game.avatar.pet_definition.draw_ground_shadow
 		and not _walk_has_unsupported_floor_shadow(
-			game.avatar.GOLDEN_MUNCHKIN_IDLE_TEXTURE
+			game.avatar.idle_texture
 		),
 		"The Golden Munchkin should use the approved shadow-free side-sitting Home pose"
 	)
 	game.avatar.play_move(Vector2.LEFT)
-	game.avatar._process(1.0 / game.avatar.MOVE_FPS + 0.01)
+	game.avatar._process(1.0 / game.avatar.animation_clip(game.avatar._move_clip_key()).fps + 0.01)
 	check(
-		game.avatar.cat_sprite.texture in game.avatar.GOLDEN_MUNCHKIN_MOVE_LEFT_FRAMES
-		and game.avatar.GOLDEN_MUNCHKIN_MOVE_LEFT_FRAMES.size() == 8
-		and game.avatar.GOLDEN_MUNCHKIN_MOVE_LEFT_FRAMES.all(
+		game.avatar.cat_sprite.texture in game.avatar.animation_frames("move_left")
+		and game.avatar.animation_frames("move_left").size() == 8
+		and game.avatar.animation_frames("move_left").all(
 			func(frame): return (
 				frame.get_size() == Vector2(704, 512)
 				and not _walk_has_unsupported_floor_shadow(frame)
@@ -1474,11 +1474,11 @@ func run_tests() -> void:
 	)
 	game.avatar.stop_move()
 	game.avatar.play_move(Vector2.RIGHT)
-	game.avatar._process(1.0 / game.avatar.MOVE_FPS + 0.01)
+	game.avatar._process(1.0 / game.avatar.animation_clip(game.avatar._move_clip_key()).fps + 0.01)
 	check(
-		game.avatar.cat_sprite.texture in game.avatar.GOLDEN_MUNCHKIN_MOVE_RIGHT_FRAMES
-		and game.avatar.GOLDEN_MUNCHKIN_MOVE_RIGHT_FRAMES.size() == 8
-		and game.avatar.GOLDEN_MUNCHKIN_MOVE_RIGHT_FRAMES.all(
+		game.avatar.cat_sprite.texture in game.avatar.animation_frames("move_right")
+		and game.avatar.animation_frames("move_right").size() == 8
+		and game.avatar.animation_frames("move_right").all(
 			func(frame): return (
 				frame.get_size() == Vector2(704, 512)
 				and not _walk_has_unsupported_floor_shadow(frame)
@@ -1490,10 +1490,10 @@ func run_tests() -> void:
 	game.avatar.play_belly_roll()
 	check(
 		game.avatar.is_playing_interaction()
-		and game.avatar.cat_sprite.texture == game.avatar.GOLDEN_MUNCHKIN_FAILED_ROLL_FRAMES[0]
-		and game.avatar.GOLDEN_MUNCHKIN_FAILED_ROLL_FRAMES.size() == 12
-		and game.avatar.GOLDEN_MUNCHKIN_FAILED_ROLL_FRAME_DURATIONS.size() == 12
-		and game.avatar.GOLDEN_MUNCHKIN_FAILED_ROLL_FRAMES.all(
+		and game.avatar.cat_sprite.texture == game.avatar.animation_frames("interaction")[0]
+		and game.avatar.animation_frames("interaction").size() == 12
+		and game.avatar.animation_clip("interaction").frame_durations.size() == 12
+		and game.avatar.animation_frames("interaction").all(
 			func(frame): return frame.get_size() == Vector2(640, 512)
 		),
 		"Double-clicking the Golden Munchkin should use her approved short-legged failed-roll animation"
@@ -1501,7 +1501,7 @@ func run_tests() -> void:
 	var golden_failed_roll_position: Vector2 = game.avatar.cat_sprite.position
 	var golden_failed_roll_scale: Vector2 = game.avatar.cat_sprite.scale
 	var golden_failed_roll_canvas_is_safe := true
-	for golden_failed_roll_texture in game.avatar.GOLDEN_MUNCHKIN_FAILED_ROLL_FRAMES:
+	for golden_failed_roll_texture in game.avatar.animation_frames("interaction"):
 		var golden_failed_roll_bounds: Rect2i = golden_failed_roll_texture.get_image().get_used_rect()
 		if (
 			golden_failed_roll_bounds.position.x <= 4
@@ -1511,18 +1511,18 @@ func run_tests() -> void:
 			golden_failed_roll_canvas_is_safe = false
 	check(
 		golden_failed_roll_canvas_is_safe
-		and game.avatar.GOLDEN_MUNCHKIN_FAILED_ROLL_FRAMES[6].get_image().get_used_rect().size.x > 400
-		and game.avatar.GOLDEN_MUNCHKIN_FAILED_ROLL_FRAMES.all(
+		and game.avatar.animation_frames("interaction")[6].get_image().get_used_rect().size.x > 400
+		and game.avatar.animation_frames("interaction").all(
 			func(frame): return not _walk_has_unsupported_floor_shadow(frame)
 		),
 		"Golden Munchkin failed-roll frames should keep complete tails, transparent floors, and the corrected seventh-frame hindquarters inside one fixed canvas"
 	)
 	for golden_failed_roll_index in range(
-		game.avatar.GOLDEN_MUNCHKIN_FAILED_ROLL_FRAMES.size() - 1
+		game.avatar.animation_frames("interaction").size() - 1
 	):
 		game.avatar._process(
 			float(
-				game.avatar.GOLDEN_MUNCHKIN_FAILED_ROLL_FRAME_DURATIONS[
+				game.avatar.animation_clip("interaction").frame_durations[
 					golden_failed_roll_index
 				]
 			) + 0.001
@@ -1533,31 +1533,31 @@ func run_tests() -> void:
 			"Golden Munchkin's failed-roll body anchor and scale should remain fixed through every frame"
 		)
 	game.avatar._process(
-		float(game.avatar.GOLDEN_MUNCHKIN_FAILED_ROLL_FRAME_DURATIONS[-1]) + 0.02
+		float(game.avatar.animation_clip("interaction").frame_durations[-1]) + 0.02
 	)
 	check(
 		not game.avatar.is_playing_interaction()
-		and game.avatar.cat_sprite.texture == game.avatar.GOLDEN_MUNCHKIN_IDLE_TEXTURE,
+		and game.avatar.cat_sprite.texture == game.avatar.idle_texture,
 		"Golden Munchkin's failed roll should finish once and return to her side-sitting pose"
 	)
 	game.avatar.set_mood("sleep")
 	check(
-		not game.avatar.golden_munchkin_sleep_tail_playing
-		and game.avatar.cat_sprite.texture == game.avatar.GOLDEN_MUNCHKIN_SLEEP_TEXTURE
-		and game.avatar.GOLDEN_MUNCHKIN_SLEEP_TEXTURE.get_size() == Vector2(640, 512)
-		and game.avatar.GOLDEN_MUNCHKIN_SLEEP_TEXTURE.get_image().get_used_rect().position.y >= 220
+		not game.avatar.sleep_effect_playing
+		and game.avatar.cat_sprite.texture == game.avatar.sleep_texture
+		and game.avatar.sleep_texture.get_size() == Vector2(640, 512)
+		and game.avatar.sleep_texture.get_image().get_used_rect().position.y >= 220
 		and not _walk_has_unsupported_floor_shadow(
-			game.avatar.GOLDEN_MUNCHKIN_SLEEP_TEXTURE
+			game.avatar.sleep_texture
 		)
 		and not game.avatar.sleep_bubble_sprite.visible,
 		"The sleeping Golden Munchkin should use only the selected shadow-free static low belly-up photo"
 	)
 	game.avatar._process(
-		float(game.avatar.GOLDEN_MUNCHKIN_SLEEP_TAIL_FRAME_DURATIONS[0]) + 0.01
+		float(game.avatar.animation_clip("sleep_effect").frame_durations[0]) + 0.01
 	)
 	check(
-		not game.avatar.golden_munchkin_sleep_tail_playing
-		and game.avatar.cat_sprite.texture == game.avatar.GOLDEN_MUNCHKIN_SLEEP_TEXTURE,
+		not game.avatar.sleep_effect_playing
+		and game.avatar.cat_sprite.texture == game.avatar.sleep_texture,
 		"The Golden Munchkin sleep photo should remain static after animation time passes"
 	)
 	game.avatar.set_mood("idle")
@@ -1567,7 +1567,7 @@ func run_tests() -> void:
 	game.avatar._process(0.01)
 	check(
 		game.avatar.desktop_idle_animation == ""
-		and game.avatar.cat_sprite.texture == game.avatar.GOLDEN_MUNCHKIN_IDLE_TEXTURE,
+		and game.avatar.cat_sprite.texture == game.avatar.idle_texture,
 		"Golden Munchkin idle should never reuse the removed sleep tail animation"
 	)
 	var golden_munchkin_station_art: Control = desktop._make_station_top_art(
@@ -1597,25 +1597,25 @@ func run_tests() -> void:
 		"The Golden Munchkin Store slot should use her head portrait and front-facing full body"
 	)
 	check(
-		game.avatar.GOLDEN_MUNCHKIN_IDLE_TEXTURE.get_image().get_used_rect().size.x >= 400
-		and not _walk_has_unsupported_floor_shadow(game.avatar.GOLDEN_MUNCHKIN_IDLE_TEXTURE),
+		game.avatar.idle_texture.get_image().get_used_rect().size.x >= 400
+		and not _walk_has_unsupported_floor_shadow(game.avatar.idle_texture),
 		"The Golden Munchkin Home side pose should retain the complete tail and omit its baked floor shadow"
 	)
 	golden_munchkin_store.free()
 	game.avatar.set_pet({"id": "siamese", "name": "Pearl", "type": "Cat"})
 	game.avatar.set_mood("idle")
 	check(
-		game.avatar.cat_sprite.texture == game.avatar.SIAMESE_IDLE_TEXTURE
-		and game.avatar.SIAMESE_IDLE_TEXTURE.get_size() == Vector2(512, 512)
-		and game.avatar.SIAMESE_IDLE_TEXTURE.get_image().get_pixel(0, 0).a == 0.0,
+		game.avatar.cat_sprite.texture == game.avatar.idle_texture
+		and game.avatar.idle_texture.get_size() == Vector2(512, 512)
+		and game.avatar.idle_texture.get_image().get_pixel(0, 0).a == 0.0,
 		"The Siamese should use her approved transparent side-sitting pose at Home and on Desktop"
 	)
 	game.avatar.play_move(Vector2.LEFT)
-	game.avatar._process(1.0 / game.avatar.MOVE_FPS + 0.01)
+	game.avatar._process(1.0 / game.avatar.animation_clip(game.avatar._move_clip_key()).fps + 0.01)
 	check(
-		game.avatar.cat_sprite.texture in game.avatar.SIAMESE_MOVE_LEFT_FRAMES
-		and game.avatar.SIAMESE_MOVE_LEFT_FRAMES.size() == 4
-		and game.avatar.SIAMESE_MOVE_LEFT_FRAMES.all(
+		game.avatar.cat_sprite.texture in game.avatar.animation_frames("move_left")
+		and game.avatar.animation_frames("move_left").size() == 4
+		and game.avatar.animation_frames("move_left").all(
 			func(frame): return (
 				frame.get_size() == Vector2(704, 512)
 				and frame.get_image().get_pixel(0, 0).a == 0.0
@@ -1625,11 +1625,11 @@ func run_tests() -> void:
 	)
 	game.avatar.stop_move()
 	game.avatar.play_move(Vector2.RIGHT)
-	game.avatar._process(1.0 / game.avatar.MOVE_FPS + 0.01)
+	game.avatar._process(1.0 / game.avatar.animation_clip(game.avatar._move_clip_key()).fps + 0.01)
 	check(
-		game.avatar.cat_sprite.texture in game.avatar.SIAMESE_MOVE_RIGHT_FRAMES
-		and game.avatar.SIAMESE_MOVE_RIGHT_FRAMES.size() == 4
-		and game.avatar.SIAMESE_MOVE_RIGHT_FRAMES.all(
+		game.avatar.cat_sprite.texture in game.avatar.animation_frames("move_right")
+		and game.avatar.animation_frames("move_right").size() == 4
+		and game.avatar.animation_frames("move_right").all(
 			func(frame): return (
 				frame.get_size() == Vector2(704, 512)
 				and frame.get_image().get_pixel(0, 0).a == 0.0
@@ -1641,10 +1641,10 @@ func run_tests() -> void:
 	game.avatar.play_belly_roll()
 	check(
 		game.avatar.is_playing_interaction()
-		and game.avatar.cat_sprite.texture == game.avatar.SIAMESE_TREAT_FRAMES[0]
-		and game.avatar.SIAMESE_TREAT_FRAMES.size() == 12
-		and game.avatar.SIAMESE_TREAT_FRAME_DURATIONS.size() == 12
-		and game.avatar.SIAMESE_TREAT_FRAMES.all(
+		and game.avatar.cat_sprite.texture == game.avatar.animation_frames("interaction")[0]
+		and game.avatar.animation_frames("interaction").size() == 12
+		and game.avatar.animation_clip("interaction").frame_durations.size() == 12
+		and game.avatar.animation_frames("interaction").all(
 			func(frame): return (
 				frame.get_size() == Vector2(640, 512)
 				and frame.get_image().get_pixel(0, 0).a == 0.0
@@ -1656,20 +1656,20 @@ func run_tests() -> void:
 	var siamese_treat_body_rect := Rect2i(0, 280, 640, 232)
 	var siamese_treat_tube_rect := Rect2i(450, 185, 37, 55)
 	var siamese_treat_body_reference: PackedByteArray = (
-		game.avatar.SIAMESE_TREAT_FRAMES[0].get_image()
+		game.avatar.animation_frames("interaction")[0].get_image()
 		.get_region(siamese_treat_body_rect)
 		.get_data()
 	)
 	var siamese_treat_tube_reference: PackedByteArray = (
-		game.avatar.SIAMESE_TREAT_FRAMES[0].get_image()
+		game.avatar.animation_frames("interaction")[0].get_image()
 		.get_region(siamese_treat_tube_rect)
 		.get_data()
 	)
 	var siamese_treat_body_is_fixed := true
 	var siamese_treat_tube_is_fixed := true
 	var siamese_treat_tube_is_removed := true
-	for siamese_asset_index in range(game.avatar.SIAMESE_TREAT_FRAMES.size()):
-		var siamese_treat_image: Image = game.avatar.SIAMESE_TREAT_FRAMES[siamese_asset_index].get_image()
+	for siamese_asset_index in range(game.avatar.animation_frames("interaction").size()):
+		var siamese_treat_image: Image = game.avatar.animation_frames("interaction")[siamese_asset_index].get_image()
 		if (
 			siamese_treat_image.get_region(siamese_treat_body_rect).get_data()
 			!= siamese_treat_body_reference
@@ -1694,11 +1694,11 @@ func run_tests() -> void:
 	)
 	var siamese_treat_position: Vector2 = game.avatar.cat_sprite.position
 	var siamese_treat_scale: Vector2 = game.avatar.cat_sprite.scale
-	for siamese_treat_index in range(game.avatar.SIAMESE_TREAT_FRAMES.size()):
+	for siamese_treat_index in range(game.avatar.animation_frames("interaction").size()):
 		game.avatar._process(
-			float(game.avatar.SIAMESE_TREAT_FRAME_DURATIONS[siamese_treat_index]) + 0.01
+			float(game.avatar.animation_clip("interaction").frame_durations[siamese_treat_index]) + 0.01
 		)
-		if siamese_treat_index < game.avatar.SIAMESE_TREAT_FRAMES.size() - 1:
+		if siamese_treat_index < game.avatar.animation_frames("interaction").size() - 1:
 			check(
 				game.avatar.cat_sprite.position.is_equal_approx(siamese_treat_position)
 				and game.avatar.cat_sprite.scale.is_equal_approx(siamese_treat_scale),
@@ -1706,14 +1706,14 @@ func run_tests() -> void:
 			)
 	check(
 		not game.avatar.is_playing_interaction()
-		and game.avatar.cat_sprite.texture == game.avatar.SIAMESE_IDLE_TEXTURE,
+		and game.avatar.cat_sprite.texture == game.avatar.idle_texture,
 		"The Siamese cat-treat interaction should finish once and return to her side-sitting pose"
 	)
 	game.avatar.set_mood("sleep")
 	game.avatar._process(1.0)
 	check(
-		game.avatar.cat_sprite.texture == game.avatar.SIAMESE_SLEEP_TEXTURE
-		and game.avatar.SIAMESE_SLEEP_TEXTURE.get_size() == Vector2(640, 512)
+		game.avatar.cat_sprite.texture == game.avatar.sleep_texture
+		and game.avatar.sleep_texture.get_size() == Vector2(640, 512)
 		and not game.avatar.sleep_bubble_sprite.visible,
 		"Sleeping Siamese should use only the approved static sleep photo"
 	)
@@ -1820,88 +1820,88 @@ func run_tests() -> void:
 	game.avatar.set_pet({"id": "mochi", "name": "Mochi", "type": "Cat"})
 	game.avatar.set_mood("idle")
 	check(
-		game.avatar.cat_sprite.texture == game.avatar.MOCHI_HOME_TAIL_BLINK_FRAMES[0]
-		and game.avatar.MOCHI_HOME_TAIL_BLINK_FRAMES.size() == 8,
+		game.avatar.cat_sprite.texture == game.avatar.animation_frames("home_idle")[0]
+		and game.avatar.animation_frames("home_idle").size() == 8,
 		"Mochi should use the eight-frame blink and tail-tip Home animation"
 	)
 	game.avatar.play_move(Vector2.RIGHT)
 	game.avatar.set_pet({"id": "mochi", "name": "Mochi", "type": "Cat"})
 	check(
 		game.avatar.move_time_remaining == 0.0
-		and game.avatar.cat_sprite.texture == game.avatar.MOCHI_HOME_TAIL_BLINK_FRAMES[0],
+		and game.avatar.cat_sprite.texture == game.avatar.animation_frames("home_idle")[0],
 		"Rebuilding Mochi should clear stale walking state and restore her seated pose"
 	)
 	game.avatar.set_desktop_idle_enabled(true)
 	check(
-		game.avatar.cat_sprite.texture == game.avatar.MOCHI_HOME_TAIL_BLINK_FRAMES[0],
+		game.avatar.cat_sprite.texture == game.avatar.animation_frames("home_idle")[0],
 		"Mochi should keep the approved default seated pose in Desktop Companion mode"
 	)
 	game.avatar.desktop_idle_wait_remaining = 0.0
 	game.avatar._process(0.01)
 	check(
-		game.avatar.desktop_idle_animation == "mochi_tail_blink"
-		and game.avatar.cat_sprite.texture == game.avatar.MOCHI_HOME_TAIL_BLINK_FRAMES[0],
+		game.avatar.desktop_idle_animation == "home_idle"
+		and game.avatar.cat_sprite.texture == game.avatar.animation_frames("home_idle")[0],
 		"An active Mochi should occasionally begin her blink and tail-tip animation"
 	)
 	game.avatar.set_desktop_idle_enabled(false)
 	game.avatar.home_idle_wait_remaining = 0.0
 	game.avatar._process(0.01)
-	game.avatar._process(float(game.avatar.MOCHI_HOME_IDLE_FRAME_DURATIONS[0]) + 0.01)
+	game.avatar._process(float(game.avatar.animation_clip("home_idle").frame_durations[0]) + 0.01)
 	check(
 		game.avatar.home_idle_playing and game.avatar.home_idle_frame == 1
-		and game.avatar.cat_sprite.texture == game.avatar.MOCHI_HOME_TAIL_BLINK_FRAMES[1],
+		and game.avatar.cat_sprite.texture == game.avatar.animation_frames("home_idle")[1],
 		"Mochi's Home idle should advance through its custom animation frames"
 	)
 	game.avatar.set_mood("sleep")
 	check(
-		game.avatar.cat_sprite.texture == game.avatar.MOCHI_SLEEP_TEXTURE
+		game.avatar.cat_sprite.texture == game.avatar.sleep_texture
 		and not game.avatar.sleep_bubble_sprite.visible,
 		"Inactive Mochi should curl up asleep without using Maple's nose-bubble effect"
 	)
 	check(
-		game.avatar.mochi_sleep_ear_twitch_wait_remaining >= game.avatar.MOCHI_SLEEP_EAR_TWITCH_MIN_WAIT
-		and game.avatar.mochi_sleep_ear_twitch_wait_remaining <= game.avatar.MOCHI_SLEEP_EAR_TWITCH_MAX_WAIT,
+		game.avatar.sleep_effect_wait_remaining >= game.avatar.animation_clip("sleep_effect").wait_min
+		and game.avatar.sleep_effect_wait_remaining <= game.avatar.animation_clip("sleep_effect").wait_max,
 		"Sleeping Mochi should schedule the ear twitch after a random quiet interval"
 	)
-	game.avatar.mochi_sleep_ear_twitch_wait_remaining = 0.0
+	game.avatar.sleep_effect_wait_remaining = 0.0
 	game.avatar._process(0.01)
 	check(
-		game.avatar.mochi_sleep_ear_twitch_playing
-		and game.avatar.cat_sprite.texture == game.avatar.MOCHI_SLEEP_EAR_TWITCH_FRAMES[0],
+		game.avatar.sleep_effect_playing
+		and game.avatar.cat_sprite.texture == game.avatar.animation_frames("sleep_effect")[0],
 		"Mochi's sleeping ear-twitch animation should play only after its random wait"
 	)
-	game.avatar._process(float(game.avatar.MOCHI_SLEEP_EAR_TWITCH_FRAME_DURATIONS[0]) + 0.01)
+	game.avatar._process(float(game.avatar.animation_clip("sleep_effect").frame_durations[0]) + 0.01)
 	check(
-		game.avatar.mochi_sleep_ear_twitch_frame == 1
-		and game.avatar.cat_sprite.texture == game.avatar.MOCHI_SLEEP_EAR_TWITCH_FRAMES[1],
+		game.avatar.sleep_effect_frame == 1
+		and game.avatar.cat_sprite.texture == game.avatar.animation_frames("sleep_effect")[1],
 		"Mochi's sleeping ear twitch should advance through the custom frames"
 	)
 	game.avatar.set_mood("idle")
 	game.avatar.play_move(Vector2.LEFT)
-	game.avatar._process(1.0 / game.avatar.MOVE_FPS + 0.01)
+	game.avatar._process(1.0 / game.avatar.animation_clip(game.avatar._move_clip_key()).fps + 0.01)
 	check(
-		game.avatar.cat_sprite.texture in game.avatar.MOCHI_MOVE_LEFT_FRAMES
-		and game.avatar.MOCHI_MOVE_LEFT_FRAMES.size() == 12,
+		game.avatar.cat_sprite.texture in game.avatar.animation_frames("move_left")
+		and game.avatar.animation_frames("move_left").size() == 12,
 		"Mochi should use the second-version left walk while following or returning"
 	)
 	game.avatar.stop_move()
 	game.avatar.play_move(Vector2.RIGHT)
-	game.avatar._process(1.0 / game.avatar.MOVE_FPS + 0.01)
+	game.avatar._process(1.0 / game.avatar.animation_clip(game.avatar._move_clip_key()).fps + 0.01)
 	check(
-		game.avatar.cat_sprite.texture in game.avatar.MOCHI_MOVE_RIGHT_FRAMES
-		and game.avatar.MOCHI_MOVE_RIGHT_FRAMES.size() == 12,
+		game.avatar.cat_sprite.texture in game.avatar.animation_frames("move_right")
+		and game.avatar.animation_frames("move_right").size() == 12,
 		"Mochi should use the second-version right walk while following or returning"
 	)
 	game.avatar.play_belly_roll()
 	check(
 		game.avatar.is_playing_interaction()
-		and game.avatar.cat_sprite.texture == game.avatar.MOCHI_LICK_PAW_FRAMES[0],
+		and game.avatar.cat_sprite.texture == game.avatar.animation_frames("interaction")[0],
 		"Double-clicking Mochi should start her paw-licking interaction"
 	)
-	game.avatar._process(float(game.avatar.MOCHI_LICK_PAW_FRAME_DURATIONS[0]) + 0.01)
+	game.avatar._process(float(game.avatar.animation_clip("interaction").frame_durations[0]) + 0.01)
 	check(
 		game.avatar.interaction_frame == 1
-		and game.avatar.cat_sprite.texture == game.avatar.MOCHI_LICK_PAW_FRAMES[1],
+		and game.avatar.cat_sprite.texture == game.avatar.animation_frames("interaction")[1],
 		"Mochi's paw-licking interaction should advance through its own frames"
 	)
 	var mochi_station_art: Control = desktop._make_station_top_art(
@@ -1923,9 +1923,9 @@ func run_tests() -> void:
 	game.avatar.set_mood("idle")
 	check(not game.avatar.sleep_bubble_sprite.visible, "The standing Home cat should not show a sleeping nose bubble")
 	game.avatar.set_mood("sleep")
-	check(game.avatar.cat_sprite.texture == game.avatar.SLEEP_TEXTURE, "Sleep mood should use the curled sleeping sprite")
+	check(game.avatar.cat_sprite.texture == game.avatar.sleep_texture, "Sleep mood should use the curled sleeping sprite")
 	check(game.avatar.mood_badge.text == "" and not game.avatar.mood_badge.visible, "Sleeping pets should not show a ZZZ badge above their heads")
-	check(game.avatar.SLEEP_BUBBLE_FRAMES.size() == 14, "The sleeping nose bubble should use a smooth fourteen-frame breathing cycle")
+	check(game.avatar.animation_frames("sleep_bubble").size() == 14, "The sleeping nose bubble should use a smooth fourteen-frame breathing cycle")
 	check(game.avatar.sleep_bubble_sprite.get_parent() == game.avatar.cat_sprite, "The sleeping bubble should remain attached to the cat sprite")
 	check(not game.avatar.sleep_bubble_sprite.visible and game.avatar.sleep_bubble_sprite.z_index > 0, "Entering sleep should keep the occasional nose bubble hidden at first")
 	check(
@@ -1934,31 +1934,31 @@ func run_tests() -> void:
 		"Sleeping should schedule the next bubble after a random wait"
 	)
 	check(
-		(game.avatar.sleep_bubble_sprite.position + game.avatar.SLEEP_BUBBLE_FRAME_ANCHOR + game.avatar.SLEEP_TEXTURE.get_size() * 0.5).is_equal_approx(game.avatar.SLEEP_BUBBLE_NOSE_POSITION),
+		(game.avatar.sleep_bubble_sprite.position + game.avatar.SLEEP_BUBBLE_FRAME_ANCHOR + game.avatar.sleep_texture.get_size() * 0.5).is_equal_approx(game.avatar.pet_definition.sleep_bubble_nose_position),
 		"The bubble's pointed end should stay anchored to the cat's nostril"
 	)
 	check(
-		game.avatar.SLEEP_BUBBLE_FRAMES.all(func(frame): return frame.get_size() == Vector2(144, 96)),
+		game.avatar.animation_frames("sleep_bubble").all(func(frame): return frame.get_size() == Vector2(144, 96)),
 		"All sleeping-bubble frames should share one fixed canvas so the nostril anchor cannot jump"
 	)
 	var bubble_widths: Array[int] = []
-	for bubble_frame in game.avatar.SLEEP_BUBBLE_FRAMES:
+	for bubble_frame in game.avatar.animation_frames("sleep_bubble"):
 		bubble_widths.append(bubble_frame.get_image().get_used_rect().size.x)
 	check(bubble_widths[6] > bubble_widths[9] and bubble_widths[9] < bubble_widths[13], "One bubble cycle should grow, shrink, and grow again")
 	check(bubble_widths[6] == bubble_widths[13] and bubble_widths.max() <= 108, "Both growth peaks should keep the approved maximum bubble size")
-	check(is_equal_approx(float(game.avatar.SLEEP_BUBBLE_FRAMES.size()) / game.avatar.SLEEP_BUBBLE_FPS, 2.8), "One complete bubble cycle should take about 2.8 seconds")
+	check(is_equal_approx(float(game.avatar.animation_frames("sleep_bubble").size()) / game.avatar.animation_clip("sleep_bubble").fps, 2.8), "One complete bubble cycle should take about 2.8 seconds")
 	var sleeping_cat_position: Vector2 = game.avatar.cat_sprite.position
 	game.avatar.sleep_bubble_wait_remaining = 0.0
 	game.avatar._process(0.0)
 	check(game.avatar.sleep_bubble_active and game.avatar.sleep_bubble_sprite.visible, "The bubble should appear only when its random wait finishes")
-	check(game.avatar.sleep_bubble_sprite.texture == game.avatar.SLEEP_BUBBLE_FRAMES[0], "An occasional bubble should begin at its smallest frame")
-	game.avatar._process(1.0 / game.avatar.SLEEP_BUBBLE_FPS + 0.01)
-	check(game.avatar.sleep_bubble_sprite.texture == game.avatar.SLEEP_BUBBLE_FRAMES[1], "The sleeping bubble should visibly grow to the next frame")
+	check(game.avatar.sleep_bubble_sprite.texture == game.avatar.animation_frames("sleep_bubble")[0], "An occasional bubble should begin at its smallest frame")
+	game.avatar._process(1.0 / game.avatar.animation_clip("sleep_bubble").fps + 0.01)
+	check(game.avatar.sleep_bubble_sprite.texture == game.avatar.animation_frames("sleep_bubble")[1], "The sleeping bubble should visibly grow to the next frame")
 	check(game.avatar.cat_sprite.position.is_equal_approx(sleeping_cat_position), "Animating the bubble must not make the sleeping cat float")
-	game.avatar.sleep_bubble_frame = game.avatar.SLEEP_BUBBLE_FRAMES.size() - 1
+	game.avatar.sleep_bubble_frame = game.avatar.animation_frames("sleep_bubble").size() - 1
 	game.avatar.sleep_bubble_frame_elapsed = 0.0
 	game.avatar._update_sleep_bubble()
-	game.avatar._process(1.0 / game.avatar.SLEEP_BUBBLE_FPS + 0.01)
+	game.avatar._process(1.0 / game.avatar.animation_clip("sleep_bubble").fps + 0.01)
 	check(not game.avatar.sleep_bubble_active and not game.avatar.sleep_bubble_sprite.visible, "A completed bubble cycle should disappear instead of looping continuously")
 	for grounded_mood in ["sleep", "idle", "happy", "follow"]:
 		game.avatar.set_mood(grounded_mood)
@@ -1983,11 +1983,11 @@ func run_tests() -> void:
 		"Home should expose a double-click surface over the cat"
 	)
 	game.home_screen.handle_pet_input(pet_double_click)
-	check(game.avatar.is_playing_interaction() and game.avatar.cat_sprite.texture == game.avatar.DESKTOP_BELLY_FRAMES[0], "Double-clicking the Home cat should begin the belly-roll animation")
-	game.avatar._process(1.0 / game.avatar.DESKTOP_BELLY_FPS + 0.01)
+	check(game.avatar.is_playing_interaction() and game.avatar.cat_sprite.texture == game.avatar.animation_frames("desktop_belly")[0], "Double-clicking the Home cat should begin the belly-roll animation")
+	game.avatar._process(1.0 / game.avatar.animation_clip("desktop_belly").fps + 0.01)
 	check(game.avatar.interaction_frame == 1, "The Home belly-roll interaction should advance through its animation frames")
-	for home_roll_step in range(game.avatar.DESKTOP_BELLY_FRAMES.size() + 1):
-		game.avatar._process(1.0 / game.avatar.DESKTOP_BELLY_FPS + 0.01)
+	for home_roll_step in range(game.avatar.animation_frames("desktop_belly").size() + 1):
+		game.avatar._process(1.0 / game.avatar.animation_clip("desktop_belly").fps + 0.01)
 	check(not game.avatar.is_playing_interaction(), "The Home belly-roll interaction should finish once instead of looping forever")
 	game.home_screen.update_pointer_state(Vector2(900, 360), true, 9.9)
 	check(game.avatar.mood == "idle", "Leaving the Home wake area should keep the cat awake during the ten-second grace period")
@@ -1998,13 +1998,13 @@ func run_tests() -> void:
 	check(game.avatar.mood == "sleep", "The Home cat should sleep only after the pointer stays away for ten seconds")
 	game.avatar.set_mood("idle")
 	var movement_tests := [
-		{"vector": Vector2.LEFT, "frames": game.avatar.MOVE_LEFT_FRAMES, "name": "left"},
-		{"vector": Vector2.RIGHT, "frames": game.avatar.MOVE_RIGHT_FRAMES, "name": "right"},
+		{"vector": Vector2.LEFT, "frames": game.avatar.animation_frames("move_left"), "name": "left"},
+		{"vector": Vector2.RIGHT, "frames": game.avatar.animation_frames("move_right"), "name": "right"},
 	]
 	for movement_test in movement_tests:
 		game.avatar.move_time_remaining = 0.0
 		game.avatar.play_move(movement_test.vector)
-		game.avatar._process(1.0 / game.avatar.MOVE_FPS + 0.01)
+		game.avatar._process(1.0 / game.avatar.animation_clip(game.avatar._move_clip_key()).fps + 0.01)
 		check(game.avatar.cat_sprite.texture in movement_test.frames, "%s movement should use its directional animation" % movement_test.name.capitalize())
 		check(movement_test.frames.size() >= 10, "%s movement should contain at least ten frames" % movement_test.name.capitalize())
 		check(movement_test.frames.all(func(frame): return frame.get_size() == Vector2(704, 512)), "%s movement should use one fixed large canvas" % movement_test.name.capitalize())
@@ -2018,34 +2018,35 @@ func run_tests() -> void:
 				"%s movement frames should keep transparent padding around the whole cat" % movement_test.name.capitalize()
 			)
 	var desktop_pet_size := Vector2(400.0, 300.0)
-	var idle_visual_height: float = game.avatar.PET_TEXTURE.get_image().get_used_rect().size.y * minf(
-		desktop_pet_size.x / game.avatar.PET_TEXTURE.get_width(),
-		desktop_pet_size.y / game.avatar.PET_TEXTURE.get_height()
+	var idle_visual_height: float = game.avatar.idle_texture.get_image().get_used_rect().size.y * minf(
+		desktop_pet_size.x / game.avatar.idle_texture.get_width(),
+		desktop_pet_size.y / game.avatar.idle_texture.get_height()
 	) * 0.95
-	var movement_visual_height: float = game.avatar.MOVE_RIGHT_FRAMES[0].get_image().get_used_rect().size.y * minf(
-		desktop_pet_size.x / game.avatar.MOVE_RIGHT_FRAMES[0].get_width(),
-		desktop_pet_size.y / game.avatar.MOVE_RIGHT_FRAMES[0].get_height()
-	) * game.avatar.MOVEMENT_SCALE_MULTIPLIER
+	var maple_right_frames: Array[Texture2D] = game.avatar.animation_frames("move_right")
+	var movement_visual_height: float = maple_right_frames[0].get_image().get_used_rect().size.y * minf(
+		desktop_pet_size.x / maple_right_frames[0].get_width(),
+		desktop_pet_size.y / maple_right_frames[0].get_height()
+	) * game.avatar.animation_clip("move_right").layout_scale
 	check(absf(idle_visual_height - movement_visual_height) < 4.0, "Starting a movement animation should not make the cat visibly smaller")
 	game.avatar.move_direction = "left"
 	game.avatar.move_time_remaining = 0.0
 	game.avatar.play_move(Vector2.UP)
-	check(game.avatar.move_direction == "left" and game.avatar._get_move_frames() == game.avatar.MOVE_LEFT_FRAMES, "Vertical movement should keep the latest left-facing run animation")
+	check(game.avatar.move_direction == "left" and game.avatar.animation_frames(game.avatar._move_clip_key()) == game.avatar.animation_frames("move_left"), "Vertical movement should keep the latest left-facing run animation")
 	game.avatar.move_direction = "right"
 	game.avatar.move_time_remaining = 0.0
 	game.avatar.play_move(Vector2.DOWN)
-	check(game.avatar.move_direction == "right" and game.avatar._get_move_frames() == game.avatar.MOVE_RIGHT_FRAMES, "Vertical movement should keep the latest right-facing run animation")
+	check(game.avatar.move_direction == "right" and game.avatar.animation_frames(game.avatar._move_clip_key()) == game.avatar.animation_frames("move_right"), "Vertical movement should keep the latest right-facing run animation")
 	game.avatar.move_direction = "right"
-	game.avatar.move_frame = game.avatar.MOVE_RIGHT_FRAMES.size() - 1
+	game.avatar.move_frame = game.avatar.animation_frames("move_right").size() - 1
 	game.avatar.move_frame_elapsed = 0.0
 	game.avatar.move_time_remaining = 1.0
-	game.avatar._process(1.0 / game.avatar.MOVE_FPS + 0.01)
-	check(game.avatar.move_frame == game.avatar.MOVE_LOOP_START_FRAME, "Movement loops should skip the sitting and preparation frames after their first pass")
+	game.avatar._process(1.0 / game.avatar.animation_clip(game.avatar._move_clip_key()).fps + 0.01)
+	check(game.avatar.move_frame == game.avatar.animation_clip("move_right").loop_start_frame, "Movement loops should skip the sitting and preparation frames after their first pass")
 	game.avatar.set_mood("blush")
 	var first_shy_texture = game.avatar.cat_sprite.texture
-	check(first_shy_texture == game.avatar.SHY_FRAMES[0], "Shy mood should start on the first blush frame")
-	game.avatar._process(1.0 / game.avatar.SHY_FPS + 0.01)
-	check(game.avatar.cat_sprite.texture in game.avatar.SHY_FRAMES, "Shy mood should use the blush animation frames")
+	check(first_shy_texture == game.avatar.animation_frames("shy")[0], "Shy mood should start on the first blush frame")
+	game.avatar._process(1.0 / game.avatar.animation_clip("shy").fps + 0.01)
+	check(game.avatar.cat_sprite.texture in game.avatar.animation_frames("shy"), "Shy mood should use the blush animation frames")
 	check(game.avatar.cat_sprite.texture != first_shy_texture, "Shy tail animation should advance to the next frame")
 
 	var xp_before_fishing := int(game.get_progress_stats().experience)
@@ -2282,9 +2283,9 @@ func run_tests() -> void:
 	check(game.fishing_game.state == game.fishing_game.GameState.WAITING_FOR_FISH and game.fishing_game.pause_overlay == null, "Clicking anywhere on the pause overlay should resume the same fishing state")
 	check(game.fishing_game.FRAME_DURATIONS.size() == 6, "Fishing should keep a six-frame cooperative lift")
 	check(game.fishing_game.NET_FRAME_POSITIONS.size() == 6 and game.fishing_game.PET_FRAME_POSITIONS.size() == 6, "Net and replaceable pet layers should each define six aligned poses")
-	check(game.fishing_game.DEFAULT_FISHING_PET_FRAMES.size() == 6, "The default cat should provide six genuinely different lifting poses")
+	check(game.fishing_game.pet_presentation.default_frames.size() == 6, "The default cat should provide six genuinely different lifting poses")
 	check(game.fishing_game.net_view.texture == game.fishing_game.NET_HANDS_TEXTURE, "Fishing should use the reusable cat-free net-and-human-hands layer")
-	check(game.fishing_game.pet_view.texture == game.fishing_game.DEFAULT_FISHING_PET_FRAMES[0], "Fishing should begin with the paws-at-feet pet frame")
+	check(game.fishing_game.pet_view.texture == game.fishing_game.pet_presentation.default_frames[0], "Fishing should begin with the paws-at-feet pet frame")
 	check(game.fishing_game.net_view.visible, "The dynamic cat and net should be visible on the idle frame")
 	check(game.fishing_game.animation_frame_index == 0, "Fishing should begin on cooperative animation frame one")
 	check(game.fishing_game.NET_FRAME_POSITIONS[0].y > game.fishing_game.NET_FRAME_POSITIONS[5].y, "Frame one should start at the pet's feet and lift toward frame six")
@@ -2300,22 +2301,22 @@ func run_tests() -> void:
 	await process_frame
 	check(
 		mochi_fishing.pet_id == "mochi"
-		and mochi_fishing.pet_view.texture == mochi_fishing.MOCHI_FISHING_DEFAULT_TEXTURE,
+		and mochi_fishing.pet_view.texture == mochi_fishing.pet_presentation.default_texture,
 		"Mochi should use her approved front-facing seated pose throughout idle fishing"
 	)
 	check(
-		mochi_fishing.MOCHI_FISHING_CRY_FRAMES.size() == 8
-		and mochi_fishing.MOCHI_FISHING_SUCCESS_FRAMES.size() == 8
-		and mochi_fishing.MOCHI_FISHING_CRY_FRAMES[0] == mochi_fishing.MOCHI_FISHING_DEFAULT_TEXTURE
-		and mochi_fishing.MOCHI_FISHING_SUCCESS_FRAMES[0] == mochi_fishing.MOCHI_FISHING_DEFAULT_TEXTURE
-		and mochi_fishing.MOCHI_FISHING_SUCCESS_FRAMES[-1] == mochi_fishing.MOCHI_FISHING_DEFAULT_TEXTURE,
+		mochi_fishing.pet_presentation.empty_catch_frames.size() == 8
+		and mochi_fishing.pet_presentation.success_frames.size() == 8
+		and mochi_fishing.pet_presentation.empty_catch_frames[0] == mochi_fishing.pet_presentation.default_texture
+		and mochi_fishing.pet_presentation.success_frames[0] == mochi_fishing.pet_presentation.default_texture
+		and mochi_fishing.pet_presentation.success_frames[-1] == mochi_fishing.pet_presentation.default_texture,
 		"Mochi's empty-net cry and successful head-tilt smile should transition cleanly from the approved fishing pose"
 	)
 	check(
-		mochi_fishing.MOCHI_FISHING_CRY_FRAMES.all(
+		mochi_fishing.pet_presentation.empty_catch_frames.all(
 			func(frame): return frame.get_size() == Vector2(627, 627)
 		)
-		and mochi_fishing.MOCHI_FISHING_SUCCESS_FRAMES.all(
+		and mochi_fishing.pet_presentation.success_frames.all(
 			func(frame): return frame.get_size() == Vector2(627, 627)
 		),
 		"Every Mochi fishing reaction frame should share one fixed canvas so she cannot jump or change size"
@@ -2326,16 +2327,16 @@ func run_tests() -> void:
 	var no_caught_fish_views: Array[TextureRect] = []
 	await mochi_fishing._play_lift_animation(no_caught_fish_views, false)
 	check(
-		mochi_fishing.pet_view.texture == mochi_fishing.MOCHI_FISHING_CRY_FRAMES[-1],
+		mochi_fishing.pet_view.texture == mochi_fishing.pet_presentation.empty_catch_frames[-1],
 		"An empty Mochi net should finish on her tearful expression before the result popup"
 	)
 	await mochi_fishing._play_lift_animation(no_caught_fish_views, true)
 	check(
-		mochi_fishing.pet_view.texture == mochi_fishing.MOCHI_FISHING_SUCCESS_FRAMES[-1],
+		mochi_fishing.pet_view.texture == mochi_fishing.pet_presentation.success_frames[-1],
 		"A successful Mochi net should finish her head-tilt smile and return to the approved seated pose"
 	)
 	check(
-		mochi_fishing._failure_cat_texture() == mochi_fishing.MOCHI_FISHING_CRY_FRAMES[-1],
+		mochi_fishing._failure_cat_texture() == mochi_fishing.pet_presentation.empty_catch_frames[-1],
 		"Mochi's failed-catch popup should continue with her own final crying expression"
 	)
 	mochi_fishing.queue_free()
@@ -2348,26 +2349,26 @@ func run_tests() -> void:
 	root.add_child(biscuit_fishing)
 	await process_frame
 	check(
-		biscuit_fishing.pet_view.texture == biscuit_fishing.BISCUIT_FISHING_DEFAULT_TEXTURE,
+		biscuit_fishing.pet_view.texture == biscuit_fishing.pet_presentation.default_texture,
 		"Biscuit should sit front-facing behind the net while fishing"
 	)
 	check(
-		biscuit_fishing.BISCUIT_FISHING_WINK_FRAMES.size() == 8
-		and biscuit_fishing.BISCUIT_FISHING_WINK_FRAMES[0] == biscuit_fishing.BISCUIT_FISHING_DEFAULT_TEXTURE
-		and biscuit_fishing.BISCUIT_FISHING_WINK_FRAMES[-1] == biscuit_fishing.BISCUIT_FISHING_DEFAULT_TEXTURE
-		and biscuit_fishing.BISCUIT_FISHING_WINK_FRAMES.all(
+		biscuit_fishing.pet_presentation.success_frames.size() == 8
+		and biscuit_fishing.pet_presentation.success_frames[0] == biscuit_fishing.pet_presentation.default_texture
+		and biscuit_fishing.pet_presentation.success_frames[-1] == biscuit_fishing.pet_presentation.default_texture
+		and biscuit_fishing.pet_presentation.success_frames.all(
 			func(frame): return frame.get_size() == Vector2(512, 512)
 		),
 		"Biscuit's successful catch should have a fixed-size wink sequence that returns to her approved fishing pose"
 	)
 	check(
-		biscuit_fishing._failure_cat_texture() == biscuit_fishing.BISCUIT_FISHING_FAILURE_TEXTURE
-		and biscuit_fishing._round_failure_cat_texture() == biscuit_fishing.BISCUIT_FISHING_FAILURE_TEXTURE,
+		biscuit_fishing._failure_cat_texture() == biscuit_fishing.pet_presentation.catch_failure_texture
+		and biscuit_fishing._round_failure_cat_texture() == biscuit_fishing.pet_presentation.catch_failure_texture,
 		"Both failed catches and failed rounds should use Biscuit's own disappointed static art"
 	)
 	biscuit_fishing._apply_animation_frame(5)
 	check(
-		biscuit_fishing.pet_view.texture == biscuit_fishing.BISCUIT_FISHING_DEFAULT_TEXTURE,
+		biscuit_fishing.pet_view.texture == biscuit_fishing.pet_presentation.default_texture,
 		"Lifting the net should never swap Biscuit to Maple's animation frames"
 	)
 	biscuit_fishing._start_round_from_goal_popup()
@@ -2375,7 +2376,7 @@ func run_tests() -> void:
 	biscuit_fishing.state = biscuit_fishing.GameState.LIFTING_NET
 	await biscuit_fishing._play_lift_animation(no_caught_fish_views, true)
 	check(
-		biscuit_fishing.pet_view.texture == biscuit_fishing.BISCUIT_FISHING_WINK_FRAMES[-1],
+		biscuit_fishing.pet_view.texture == biscuit_fishing.pet_presentation.success_frames[-1],
 		"Catching at least one fish as Biscuit should play her wink and return to the default fishing pose"
 	)
 	biscuit_fishing.queue_free()
@@ -2388,36 +2389,36 @@ func run_tests() -> void:
 	root.add_child(luna_fishing)
 	await process_frame
 	check(
-		luna_fishing.pet_view.texture == luna_fishing.LUNA_FISHING_DEFAULT_TEXTURE,
+		luna_fishing.pet_view.texture == luna_fishing.pet_presentation.default_texture,
 		"Luna should use her own front-sitting Russian Blue art behind the fishing net"
 	)
 	check(
-		not _texture_lower_half_has_green_chroma(luna_fishing.LUNA_FISHING_DEFAULT_TEXTURE),
+		not _texture_lower_half_has_green_chroma(luna_fishing.pet_presentation.default_texture),
 		"Luna's front-sitting paws should not retain green-screen pixels"
 	)
 	check(
-		luna_fishing.LUNA_FISHING_SUCCESS_FRAMES.size() == 8
-		and luna_fishing.LUNA_FISHING_SUCCESS_FRAMES[0] == luna_fishing.LUNA_FISHING_DEFAULT_TEXTURE
-		and luna_fishing.LUNA_FISHING_SUCCESS_FRAMES[-1] == luna_fishing.LUNA_FISHING_DEFAULT_TEXTURE
-		and luna_fishing.LUNA_FISHING_SUCCESS_FRAMES.all(
+		luna_fishing.pet_presentation.success_frames.size() == 8
+		and luna_fishing.pet_presentation.success_frames[0] == luna_fishing.pet_presentation.default_texture
+		and luna_fishing.pet_presentation.success_frames[-1] == luna_fishing.pet_presentation.default_texture
+		and luna_fishing.pet_presentation.success_frames.all(
 			func(frame): return frame.get_size() == Vector2(512, 512)
 		),
 		"Luna's successful catch should use an eight-frame fixed-canvas reaction that returns to her fishing pose"
 	)
 	check(
-		luna_fishing.LUNA_FISHING_SUCCESS_FRAMES.all(
+		luna_fishing.pet_presentation.success_frames.all(
 			func(frame): return frame.get_image().get_pixel(0, 0).a == 0.0
 		),
 		"Every Luna success frame should have a transparent keyed background"
 	)
 	check(
-		luna_fishing._failure_cat_texture() == luna_fishing.LUNA_FISHING_FAILURE_TEXTURE
-		and luna_fishing._round_failure_cat_texture() == luna_fishing.LUNA_FISHING_FAILURE_TEXTURE,
+		luna_fishing._failure_cat_texture() == luna_fishing.pet_presentation.catch_failure_texture
+		and luna_fishing._round_failure_cat_texture() == luna_fishing.pet_presentation.catch_failure_texture,
 		"Luna's failed catch and failed round should both use her own sighing static art"
 	)
 	luna_fishing._apply_animation_frame(5)
 	check(
-		luna_fishing.pet_view.texture == luna_fishing.LUNA_FISHING_DEFAULT_TEXTURE,
+		luna_fishing.pet_view.texture == luna_fishing.pet_presentation.default_texture,
 		"Lifting the net should keep Luna's own static pose before her catch reaction"
 	)
 	luna_fishing._start_round_from_goal_popup()
@@ -2425,7 +2426,7 @@ func run_tests() -> void:
 	luna_fishing.state = luna_fishing.GameState.LIFTING_NET
 	await luna_fishing._play_lift_animation(no_caught_fish_views, true)
 	check(
-		luna_fishing.pet_view.texture == luna_fishing.LUNA_FISHING_SUCCESS_FRAMES[-1],
+		luna_fishing.pet_view.texture == luna_fishing.pet_presentation.success_frames[-1],
 		"Catching at least one fish as Luna should play her custom success animation and return to the default pose"
 	)
 	luna_fishing.queue_free()
@@ -2438,19 +2439,19 @@ func run_tests() -> void:
 	root.add_child(poppy_fishing)
 	await process_frame
 	check(
-		poppy_fishing.pet_view.texture == poppy_fishing.POPPY_FISHING_DEFAULT_TEXTURE,
+		poppy_fishing.pet_view.texture == poppy_fishing.pet_presentation.default_texture,
 		"Poppy should use her own front-sitting pose behind the fishing net"
 	)
 	check(
-		poppy_fishing.POPPY_FISHING_SUCCESS_FRAMES.size() == 8
-		and poppy_fishing.POPPY_FISHING_SUCCESS_FRAMES.all(
+		poppy_fishing.pet_presentation.success_frames.size() == 8
+		and poppy_fishing.pet_presentation.success_frames.all(
 			func(frame): return frame.get_size() == Vector2(512, 512)
 		),
 		"Poppy's successful catch should use the approved eight-frame head-tilt animation"
 	)
 	check(
-		poppy_fishing._failure_cat_texture() == poppy_fishing.POPPY_FISHING_FAILURE_TEXTURE
-		and poppy_fishing._round_failure_cat_texture() == poppy_fishing.POPPY_FISHING_FAILURE_TEXTURE,
+		poppy_fishing._failure_cat_texture() == poppy_fishing.pet_presentation.catch_failure_texture
+		and poppy_fishing._round_failure_cat_texture() == poppy_fishing.pet_presentation.catch_failure_texture,
 		"Poppy's failed catch and failed round should use her own static disappointed pose"
 	)
 	poppy_fishing.queue_free()
@@ -2464,12 +2465,12 @@ func run_tests() -> void:
 	await process_frame
 	check(
 		black_cat_fishing.pet_view.texture
-		== black_cat_fishing.BLACK_CAT_FISHING_DEFAULT_TEXTURE,
+		== black_cat_fishing.pet_presentation.default_texture,
 		"The black cat should use her front-facing half-lidded pose behind the fishing net"
 	)
 	check(
-		black_cat_fishing.BLACK_CAT_FISHING_SUCCESS_FRAMES.size() == 8
-		and black_cat_fishing.BLACK_CAT_FISHING_SUCCESS_FRAMES.all(
+		black_cat_fishing.pet_presentation.success_frames.size() == 8
+		and black_cat_fishing.pet_presentation.success_frames.all(
 			func(frame): return (
 				frame.get_size() == Vector2(512, 512)
 				and frame.get_image().get_pixel(0, 0).a == 0.0
@@ -2479,9 +2480,9 @@ func run_tests() -> void:
 	)
 	check(
 		black_cat_fishing._failure_cat_texture()
-		== black_cat_fishing.BLACK_CAT_FISHING_FAILURE_TEXTURE
+		== black_cat_fishing.pet_presentation.catch_failure_texture
 		and black_cat_fishing._round_failure_cat_texture()
-		== black_cat_fishing.BLACK_CAT_FISHING_FAILURE_TEXTURE,
+		== black_cat_fishing.pet_presentation.catch_failure_texture,
 		"The black cat's failed catch and failed round should use her disdainful sigh"
 	)
 	black_cat_fishing._start_round_from_goal_popup()
@@ -2490,7 +2491,7 @@ func run_tests() -> void:
 	await black_cat_fishing._play_lift_animation(no_caught_fish_views, true)
 	check(
 		black_cat_fishing.pet_view.texture
-		== black_cat_fishing.BLACK_CAT_FISHING_SUCCESS_FRAMES[-1],
+		== black_cat_fishing.pet_presentation.success_frames[-1],
 		"Catching a fish as the black cat should finish her proud paw-lick animation"
 	)
 	black_cat_fishing.queue_free()
@@ -2504,14 +2505,14 @@ func run_tests() -> void:
 	await process_frame
 	check(
 		maine_coon_fishing.pet_view.texture
-		== maine_coon_fishing.MAINE_COON_FISHING_DEFAULT_TEXTURE
-		and maine_coon_fishing.MAINE_COON_FISHING_DEFAULT_TEXTURE.get_image().get_used_rect().size.x <= 300
-		and maine_coon_fishing.MAINE_COON_FISHING_DEFAULT_TEXTURE.get_image().get_used_rect().end.y == 500,
+		== maine_coon_fishing.pet_presentation.default_texture
+		and maine_coon_fishing.pet_presentation.default_texture.get_image().get_used_rect().size.x <= 300
+		and maine_coon_fishing.pet_presentation.default_texture.get_image().get_used_rect().end.y == 500,
 		"The Maine Coon should always use her grounded, shadow-free front-sitting pose behind the fishing net"
 	)
 	check(
-		maine_coon_fishing.MAINE_COON_FISHING_SUCCESS_FRAMES.size() == 8
-		and maine_coon_fishing.MAINE_COON_FISHING_SUCCESS_FRAMES.all(
+		maine_coon_fishing.pet_presentation.success_frames.size() == 8
+		and maine_coon_fishing.pet_presentation.success_frames.all(
 			func(frame): return (
 				frame.get_size() == Vector2(512, 512)
 				and frame.get_image().get_pixel(0, 0).a == 0.0
@@ -2521,9 +2522,9 @@ func run_tests() -> void:
 	)
 	check(
 		maine_coon_fishing._failure_cat_texture()
-		== maine_coon_fishing.MAINE_COON_FISHING_FAILURE_TEXTURE
+		== maine_coon_fishing.pet_presentation.catch_failure_texture
 		and maine_coon_fishing._round_failure_cat_texture()
-		== maine_coon_fishing.MAINE_COON_FISHING_FAILURE_TEXTURE,
+		== maine_coon_fishing.pet_presentation.catch_failure_texture,
 		"The Maine Coon's failed catch and failed round should use her closed-eyes face-paw pose"
 	)
 	maine_coon_fishing._start_round_from_goal_popup()
@@ -2532,7 +2533,7 @@ func run_tests() -> void:
 	await maine_coon_fishing._play_lift_animation(no_caught_fish_views, true)
 	check(
 		maine_coon_fishing.pet_view.texture
-		== maine_coon_fishing.MAINE_COON_FISHING_SUCCESS_FRAMES[-1],
+		== maine_coon_fishing.pet_presentation.success_frames[-1],
 		"Catching a fish as the Maine Coon should finish her proud paw-wave animation"
 	)
 	maine_coon_fishing.queue_free()
@@ -2546,15 +2547,15 @@ func run_tests() -> void:
 	await process_frame
 	check(
 		golden_munchkin_fishing.pet_view.texture
-		== golden_munchkin_fishing.GOLDEN_MUNCHKIN_FISHING_DEFAULT_TEXTURE
+		== golden_munchkin_fishing.pet_presentation.default_texture
 		and not _walk_has_unsupported_floor_shadow(
-			golden_munchkin_fishing.GOLDEN_MUNCHKIN_FISHING_DEFAULT_TEXTURE
+			golden_munchkin_fishing.pet_presentation.default_texture
 		),
 		"The Golden Munchkin should use her shadow-free front-sitting pose behind the fishing net"
 	)
 	check(
-		golden_munchkin_fishing.GOLDEN_MUNCHKIN_FISHING_SUCCESS_FRAMES.size() == 8
-		and golden_munchkin_fishing.GOLDEN_MUNCHKIN_FISHING_SUCCESS_FRAMES.all(
+		golden_munchkin_fishing.pet_presentation.success_frames.size() == 8
+		and golden_munchkin_fishing.pet_presentation.success_frames.all(
 			func(frame): return (
 				frame.get_size() == Vector2(512, 512)
 				and frame.get_image().get_pixel(0, 0).a == 0.0
@@ -2565,11 +2566,11 @@ func run_tests() -> void:
 	)
 	check(
 		golden_munchkin_fishing._failure_cat_texture()
-		== golden_munchkin_fishing.GOLDEN_MUNCHKIN_FISHING_FAILURE_TEXTURE
+		== golden_munchkin_fishing.pet_presentation.catch_failure_texture
 		and golden_munchkin_fishing._round_failure_cat_texture()
-		== golden_munchkin_fishing.GOLDEN_MUNCHKIN_FISHING_FAILURE_TEXTURE
+		== golden_munchkin_fishing.pet_presentation.catch_failure_texture
 		and not _walk_has_unsupported_floor_shadow(
-			golden_munchkin_fishing.GOLDEN_MUNCHKIN_FISHING_FAILURE_TEXTURE
+			golden_munchkin_fishing.pet_presentation.catch_failure_texture
 		),
 		"The Golden Munchkin's failed catch and failed round should use her shadow-free teary static pose"
 	)
@@ -2579,7 +2580,7 @@ func run_tests() -> void:
 	await golden_munchkin_fishing._play_lift_animation(no_caught_fish_views, true)
 	check(
 		golden_munchkin_fishing.pet_view.texture
-		== golden_munchkin_fishing.GOLDEN_MUNCHKIN_FISHING_SUCCESS_FRAMES[-1],
+		== golden_munchkin_fishing.pet_presentation.success_frames[-1],
 		"Catching a fish as the Golden Munchkin should finish her fish-hug animation"
 	)
 	golden_munchkin_fishing.queue_free()
@@ -2593,12 +2594,12 @@ func run_tests() -> void:
 	await process_frame
 	check(
 		siamese_fishing.pet_view.texture
-		== siamese_fishing.SIAMESE_FISHING_DEFAULT_TEXTURE,
+		== siamese_fishing.pet_presentation.default_texture,
 		"The Siamese should use her approved front-facing pose behind the fishing net"
 	)
 	check(
-		siamese_fishing.SIAMESE_FISHING_SUCCESS_FRAMES.size() == 8
-		and siamese_fishing.SIAMESE_FISHING_SUCCESS_FRAMES.all(
+		siamese_fishing.pet_presentation.success_frames.size() == 8
+		and siamese_fishing.pet_presentation.success_frames.all(
 			func(frame): return (
 				frame.get_size() == Vector2(512, 512)
 				and frame.get_image().get_pixel(0, 0).a == 0.0
@@ -2608,9 +2609,9 @@ func run_tests() -> void:
 	)
 	check(
 		siamese_fishing._failure_cat_texture()
-		== siamese_fishing.SIAMESE_FISHING_FAILURE_TEXTURE
+		== siamese_fishing.pet_presentation.catch_failure_texture
 		and siamese_fishing._round_failure_cat_texture()
-		== siamese_fishing.SIAMESE_FISHING_FAILURE_TEXTURE,
+		== siamese_fishing.pet_presentation.catch_failure_texture,
 		"The Siamese failed catch and failed round should use her approved static disappointed pose"
 	)
 	siamese_fishing._start_round_from_goal_popup()
@@ -2619,7 +2620,7 @@ func run_tests() -> void:
 	await siamese_fishing._play_lift_animation(no_caught_fish_views, true)
 	check(
 		siamese_fishing.pet_view.texture
-		== siamese_fishing.SIAMESE_FISHING_SUCCESS_FRAMES[-1],
+		== siamese_fishing.pet_presentation.success_frames[-1],
 		"Catching a fish as the Siamese should finish her tail-wag and pleased head tilt"
 	)
 	siamese_fishing.queue_free()
@@ -2944,7 +2945,7 @@ func run_tests() -> void:
 	await create_timer(1.15).timeout
 	check(game.fishing_game.state == game.fishing_game.GameState.SHOWING_RESULT, "The real Catch flow should finish on a result screen")
 	check(game.fishing_game.animation_frame_index == 5, "The lift animation should finish on frame six")
-	check(game.fishing_game.pet_view.texture == game.fishing_game.DEFAULT_FISHING_PET_FRAMES[5], "Frame six should use the opposite tilted, closed-eye happy pet pose")
+	check(game.fishing_game.pet_view.texture == game.fishing_game.pet_presentation.default_frames[5], "Frame six should use the opposite tilted, closed-eye happy pet pose")
 	check(game.fishing_game.result_overlay != null, "The animated Catch flow should show success or failure")
 	var time_during_animated_popup: float = game.fishing_game.round_time_remaining
 	game.fishing_game._process(3.0)
@@ -3017,8 +3018,8 @@ func run_tests() -> void:
 	)
 	check(
 		no_hearts_fishing.hearts == 0
-		and mochi_failed_cat.texture == no_hearts_fishing.MOCHI_FISHING_FAILURE_STATIC_TEXTURE
-		and no_hearts_fishing.MOCHI_FISHING_FAILURE_STATIC_TEXTURE.get_image().get_used_rect().position.x > 0,
+		and mochi_failed_cat.texture == no_hearts_fishing.pet_presentation.round_failure_texture
+		and no_hearts_fishing.pet_presentation.round_failure_texture.get_image().get_used_rect().position.x > 0,
 		"Mochi's level-failure popup should use the complete-tail static crying illustration and consume the last heart"
 	)
 	var no_hearts_retry_button: Button = no_hearts_fishing.result_overlay.find_child(
@@ -3264,16 +3265,16 @@ func run_tests() -> void:
 	check(desktop.widget_pet_position.y + desktop.get_pet_widget_pixel_size().y > desktop.widget_station_position.y + desktop.STATION_CONTROLS_Y * desktop.widget_screen_scale, "The enlarged pet should visually meet the grass instead of floating above it")
 	desktop._on_pet_drag_input(pet_double_click)
 	check(game.avatar.is_playing_interaction() and not desktop.widget_pet_dragging, "Double-clicking the cat on its Station should roll without starting a drag")
-	for station_roll_step in range(game.avatar.DESKTOP_BELLY_FRAMES.size() + 1):
-		game.avatar._process(1.0 / game.avatar.DESKTOP_BELLY_FPS + 0.01)
+	for station_roll_step in range(game.avatar.animation_frames("desktop_belly").size() + 1):
+		game.avatar._process(1.0 / game.avatar.animation_clip("desktop_belly").fps + 0.01)
 	check(not game.avatar.is_playing_interaction(), "The Station belly-roll interaction should complete and return to the seated state")
-	check(game.avatar.DESKTOP_WINK_FRAMES.size() == 9 and game.avatar.DESKTOP_BELLY_FRAMES.size() == 21, "Desktop idle gestures should use a smooth chronological timeline with the inserted kneading cycle")
+	check(game.avatar.animation_frames("desktop_wink").size() == 9 and game.avatar.animation_frames("desktop_belly").size() == 21, "Desktop idle gestures should use a smooth chronological timeline with the inserted kneading cycle")
 	check(
-		game.avatar.DESKTOP_WINK_FRAMES.all(func(frame): return frame.get_size() == Vector2(418, 418))
-		and game.avatar.DESKTOP_BELLY_FRAMES.all(func(frame): return frame.get_size() == Vector2(418, 418)),
+		game.avatar.animation_frames("desktop_wink").all(func(frame): return frame.get_size() == Vector2(418, 418))
+		and game.avatar.animation_frames("desktop_belly").all(func(frame): return frame.get_size() == Vector2(418, 418)),
 		"Every Desktop idle frame should keep one fixed canvas"
 	)
-	for safe_frame in game.avatar.DESKTOP_WINK_FRAMES + game.avatar.DESKTOP_BELLY_FRAMES:
+	for safe_frame in game.avatar.animation_frames("desktop_wink") + game.avatar.animation_frames("desktop_belly"):
 		var safe_rect: Rect2i = safe_frame.get_image().get_used_rect()
 		check(
 			safe_rect.position.x >= 5
@@ -3283,22 +3284,22 @@ func run_tests() -> void:
 			"Every Desktop idle frame should retain transparent padding so tails cannot wrap across cell boundaries"
 		)
 	check(
-		game.avatar.DESKTOP_BELLY_FRAMES[5] == game.avatar.DESKTOP_BELLY_FRAMES[15]
-		and game.avatar.DESKTOP_BELLY_FRAMES[4] == game.avatar.DESKTOP_BELLY_FRAMES[16]
-		and game.avatar.DESKTOP_BELLY_FRAMES[3] == game.avatar.DESKTOP_BELLY_FRAMES[17]
-		and game.avatar.DESKTOP_BELLY_FRAMES[2] == game.avatar.DESKTOP_BELLY_FRAMES[18]
-		and game.avatar.DESKTOP_BELLY_FRAMES[1] == game.avatar.DESKTOP_BELLY_FRAMES[19]
-		and game.avatar.DESKTOP_BELLY_FRAMES[0] == game.avatar.DESKTOP_BELLY_FRAMES[20],
+		game.avatar.animation_frames("desktop_belly")[5] == game.avatar.animation_frames("desktop_belly")[15]
+		and game.avatar.animation_frames("desktop_belly")[4] == game.avatar.animation_frames("desktop_belly")[16]
+		and game.avatar.animation_frames("desktop_belly")[3] == game.avatar.animation_frames("desktop_belly")[17]
+		and game.avatar.animation_frames("desktop_belly")[2] == game.avatar.animation_frames("desktop_belly")[18]
+		and game.avatar.animation_frames("desktop_belly")[1] == game.avatar.animation_frames("desktop_belly")[19]
+		and game.avatar.animation_frames("desktop_belly")[0] == game.avatar.animation_frames("desktop_belly")[20],
 		"The belly reveal should return along the exact same poses instead of jumping to unrelated recovery art"
 	)
 	check(
-		game.avatar.DESKTOP_BELLY_FRAMES[6].resource_path.contains("desktop_biscuit")
-		and game.avatar.DESKTOP_BELLY_FRAMES[14].resource_path.contains("desktop_biscuit"),
+		game.avatar.animation_frames("desktop_belly")[6].resource_path.contains("desktop_biscuit")
+		and game.avatar.animation_frames("desktop_belly")[14].resource_path.contains("desktop_biscuit"),
 		"The side-lying peak should contain the inserted right-paw making-biscuits frames"
 	)
 	for biscuit_pair in [[7, 8], [10, 11], [13, 14]]:
-		var complete_ear_rect: Rect2i = game.avatar.DESKTOP_BELLY_FRAMES[biscuit_pair[0]].get_image().get_used_rect()
-		var repaired_ear_rect: Rect2i = game.avatar.DESKTOP_BELLY_FRAMES[biscuit_pair[1]].get_image().get_used_rect()
+		var complete_ear_rect: Rect2i = game.avatar.animation_frames("desktop_belly")[biscuit_pair[0]].get_image().get_used_rect()
+		var repaired_ear_rect: Rect2i = game.avatar.animation_frames("desktop_belly")[biscuit_pair[1]].get_image().get_used_rect()
 		check(
 			repaired_ear_rect.end.x >= complete_ear_rect.end.x - 2,
 			"Every right-column biscuit frame should retain the complete screen-right ear"
@@ -3309,9 +3310,9 @@ func run_tests() -> void:
 		and game.avatar.desktop_idle_wait_remaining <= game.avatar.DESKTOP_IDLE_MAX_WAIT,
 		"Desktop idle gestures should wait a random interval instead of playing continuously"
 	)
-	game.avatar._start_desktop_idle_animation("wink")
-	check(game.avatar.desktop_idle_animation == "wink" and game.avatar.cat_sprite.texture == game.avatar.DESKTOP_WINK_FRAMES[0], "The synchronized wink gesture should start from its seated frame")
-	for wink_frame_index in range(game.avatar.DESKTOP_WINK_FRAMES.size()):
+	game.avatar._start_desktop_idle_animation("desktop_wink")
+	check(game.avatar.desktop_idle_animation == "desktop_wink" and game.avatar.cat_sprite.texture == game.avatar.animation_frames("desktop_wink")[0], "The synchronized wink gesture should start from its seated frame")
+	for wink_frame_index in range(game.avatar.animation_frames("desktop_wink").size()):
 		game.avatar.desktop_idle_frame = wink_frame_index
 		game.avatar._apply_current_texture()
 		game.avatar._update_layout()
@@ -3319,9 +3320,9 @@ func run_tests() -> void:
 		var wink_texture_size: Vector2 = game.avatar.cat_sprite.texture.get_size()
 		var wink_visual_bottom: float = game.avatar.cat_sprite.position.y + (wink_bounds.end.y - wink_texture_size.y * 0.5) * game.avatar.cat_sprite.scale.y
 		check(is_equal_approx(wink_visual_bottom, game.avatar.size.y * game.avatar.SHADOW_CENTER_Y_RATIO), "Every wink frame should stay planted on the Station shadow")
-	game.avatar._start_desktop_idle_animation("belly")
-	check(game.avatar.desktop_idle_animation == "belly" and game.avatar.cat_sprite.texture == game.avatar.DESKTOP_BELLY_FRAMES[0], "The belly reveal should start from its seated frame")
-	for roll_frame_index in range(game.avatar.DESKTOP_BELLY_FRAMES.size()):
+	game.avatar._start_desktop_idle_animation("desktop_belly")
+	check(game.avatar.desktop_idle_animation == "desktop_belly" and game.avatar.cat_sprite.texture == game.avatar.animation_frames("desktop_belly")[0], "The belly reveal should start from its seated frame")
+	for roll_frame_index in range(game.avatar.animation_frames("desktop_belly").size()):
 		game.avatar.desktop_idle_frame = roll_frame_index
 		game.avatar._apply_current_texture()
 		game.avatar._update_layout()
@@ -3420,7 +3421,7 @@ func run_tests() -> void:
 	var slow_follow_distance: float = desktop.widget_pet_position.distance_to(before_follow_position)
 	check(slow_follow_distance > 0.0 and slow_follow_distance <= desktop.PET_FOLLOW_RUN_SPEED * desktop.widget_screen_scale * 0.1 + 0.1, "The following pet should run at the new slower fixed speed")
 	check(station_top.visible and not desktop.pet_station_top_art.visible, "The Station should restore its own mat after the cat walks away")
-	check(game.avatar.cat_sprite.texture in game.avatar.MOVE_LEFT_FRAMES + game.avatar.MOVE_RIGHT_FRAMES, "Follow Me should use only the left or right running animation")
+	check(game.avatar.cat_sprite.texture in game.avatar.animation_frames("move_left") + game.avatar.animation_frames("move_right"), "Follow Me should use only the left or right running animation")
 	var position_before_new_reaction: Vector2 = desktop.widget_pet_position
 	var second_follow_pointer := follow_pointer + Vector2(120.0, 0.0)
 	desktop.update(0.0, second_follow_pointer)
@@ -3428,8 +3429,8 @@ func run_tests() -> void:
 	desktop._on_pet_drag_input(pet_double_click)
 	desktop.update(0.4, second_follow_pointer)
 	check(game.avatar.is_playing_interaction() and desktop.widget_pet_position.is_equal_approx(position_before_new_reaction), "Double-clicking during Follow Me should pause movement while the cat rolls")
-	for follow_roll_step in range(game.avatar.DESKTOP_BELLY_FRAMES.size() + 1):
-		game.avatar._process(1.0 / game.avatar.DESKTOP_BELLY_FPS + 0.01)
+	for follow_roll_step in range(game.avatar.animation_frames("desktop_belly").size() + 1):
+		game.avatar._process(1.0 / game.avatar.animation_clip("desktop_belly").fps + 0.01)
 	check(not game.avatar.is_playing_interaction() and desktop.widget_following, "Follow Me should remain enabled after the double-click roll finishes")
 	check(not game.avatar.desktop_idle_enabled and game.avatar.desktop_idle_animation == "", "Following the pointer should cancel seated Desktop idle gestures")
 	desktop.set_widget_following(false)

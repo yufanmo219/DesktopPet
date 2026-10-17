@@ -16,9 +16,12 @@ func _check(condition: bool, message: String) -> void:
 
 
 func _run() -> void:
-	var frames := FishingScript.MOCHI_FISHING_CRY_FRAMES
+	var game := FishingScript.new()
+	game.configure({"id": "mochi", "name": "Mochi"}, {"hearts": 5, "unlocked_fish_ids": ["green"]})
+	var presentation: FishingPetPresentation = game.pet_presentation
+	var frames := presentation.empty_catch_frames
 	_check(frames.size() == 8, "Mochi must retain her eight-frame crying reaction")
-	_check(frames[0] == FishingScript.MOCHI_FISHING_DEFAULT_TEXTURE, "The empty-net reaction must still start on the approved idle frame")
+	_check(frames[0] == presentation.default_texture, "The empty-net reaction must still start on the approved idle frame")
 	for index in range(1, frames.size()):
 		var image := Image.load_from_file(ProjectSettings.globalize_path(
 			frames[index].resource_path
@@ -32,8 +35,6 @@ func _run() -> void:
 		if index in CLIPPED_INDICES:
 			_check(_left_edge_run(image, bounds) < 28, "Frame %d must have a curved left tail edge, not the old straight cutoff" % (index + 1))
 
-	var game := FishingScript.new()
-	game.configure({"id": "mochi", "name": "Mochi"}, {"hearts": 5, "unlocked_fish_ids": ["green"]})
 	root.add_child(game)
 	await process_frame
 	game.set_process(false)
@@ -52,12 +53,12 @@ func _run() -> void:
 	game._clear_result_overlay()
 	game._show_round_failure()
 	var round_cat: TextureRect = game.result_overlay.find_child("FishingRoundFailureCat", true, false)
-	_check(round_cat.texture == FishingScript.MOCHI_FISHING_FAILURE_STATIC_TEXTURE, "The already complete round-failure artwork must remain unchanged")
+	_check(round_cat.texture == presentation.round_failure_texture, "The already complete round-failure artwork must remain unchanged")
 	_check(game.result_overlay.find_child("FishingRoundFailureHomeButton", true, false) != null and game.result_overlay.find_child("FishingRoundFailureRetryButton", true, false) != null, "Go Home and Try Again must remain available")
 	game._clear_result_overlay()
 	game._show_no_hearts_popup()
 	var no_hearts_cat: TextureRect = game.result_overlay.find_child("FishingNoHeartsCat", true, false)
-	_check(no_hearts_cat.texture == FishingScript.MOCHI_FISHING_FAILURE_STATIC_TEXTURE, "No-hearts popup must retain the complete static cat")
+	_check(no_hearts_cat.texture == presentation.round_failure_texture, "No-hearts popup must retain the complete static cat")
 	game.queue_free()
 	await process_frame
 	if failures.is_empty():
